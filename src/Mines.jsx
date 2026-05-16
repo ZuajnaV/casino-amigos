@@ -55,7 +55,8 @@ export default function MinesGame({ balance, setBalance, onBack }) {
     if (betAmount > balance)           { setMsg("Saldo insuficiente");             return; }
     if (numMines < 1 || numMines > 24) { setMsg("Minas: entre 1 y 24");           return; }
 
-    setBalance((b) => b - betAmount);
+    //setBalance((b) => b - betAmount);
+    setBalance(balance - betAmount);
     const grid = generateGrid(numMines);
     setMineGrid(grid);
     setCells(blankCells());
@@ -108,7 +109,8 @@ export default function MinesGame({ balance, setBalance, onBack }) {
   }
 
   function finishCashOut(win, mult, gems, isFullWin) {
-    setBalance((b) => b + win);
+    //setBalance((b) => b + win);
+    setBalance(balance - betAmount + win);
     setPhase("won");
     setMultiplier(mult);
     setPotentialWin(win);
