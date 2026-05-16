@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 import RouletteGame from "./Roulette.jsx";
 import BlackjackGame from "./Blackjack.jsx";
@@ -203,6 +203,15 @@ export default function App() {
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
+
+    const balanceRef = useRef(balance);
+    useEffect(() => { balanceRef.current = balance; }, [balance]);
+
+
+
+
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
@@ -267,7 +276,7 @@ async function saveBalance(newBalance) {
     await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
   }
 }
-
+/*
 // handleBack guarda el balance al volver al lobby
 async function handleBack() {
   await saveBalance(balance);
@@ -275,6 +284,27 @@ async function handleBack() {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) await loadProfile(session.user.id);
 }
+*/
+
+async function handleBack() {
+  await saveBalance(balanceRef.current);
+  setGame(null);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) await loadProfile(session.user.id);
+}
+
+async function handleLogout() {
+  await saveBalance(balanceRef.current);
+  await supabase.auth.signOut();
+  window.location.reload();
+}
+
+
+
+
+
+
+
 
   async function handleDeposit(amount) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -293,11 +323,12 @@ async function handleBack() {
     }
   }
 
+  /*
   async function handleLogout() {
     await supabase.auth.signOut();
     window.location.reload();
   }
-
+  */
 
 
 
