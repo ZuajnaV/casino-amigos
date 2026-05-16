@@ -138,17 +138,17 @@ export default function MinesGame({ balance, setBalance, onBack, onGameEnd }) {
   function cellStyle(state) {
     const base = {
       width: "100%", aspectRatio: "1", border: "none", borderRadius: 7,
-      fontSize: 30, display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 40, display: "flex", alignItems: "center", justifyContent: "center",
       cursor: phase === "playing" && state === "hidden" ? "pointer" : "default",
       transition: "transform 0.1s, background 0.15s",
       fontWeight: 700, userSelect: "none",
     };
     switch (state) {
-      case "hidden":     return { ...base, background: "#1a2a6c", border: "1px solid #2a3d9f", color: "#4a6adf" };
-      case "gem":        return { ...base, background: "#0a5c32", border: "1px solid #0e9e55", color: "#fff" };
-      case "mine":       return { ...base, background: "#8b0e0e", border: "1px solid #cc2222", color: "#fff" };
-      case "ghost-mine": return { ...base, background: "#3a0a0a", border: "1px solid #6b1010", color: "#993333" };
-      case "ghost-gem":  return { ...base, background: "#0a2a17", border: "1px solid #0a5c32", color: "#0a5c32" };
+      case "hidden":     return { ...base, background: "#1a2a6c", border: "3px solid #2a3d9f", color: "#4a6adf" };
+      case "gem":        return { ...base, background: "#0a5c32", border: "3px solid #0e9e55", color: "#fff" };
+      case "mine":       return { ...base, background: "#8b0e0e", border: "3px solid #cc2222", color: "#fff" };
+      case "ghost-mine": return { ...base, background: "#3a0a0a", border: "3px solid #6b1010", color: "#993333" };
+      case "ghost-gem":  return { ...base, background: "#0a2a17", border: "3px solid #0a5c32", color: "#0a5c32" };
       default:           return base;
     }
   }
@@ -330,7 +330,7 @@ const S = {
   // layout dos columnas
   mainRow:   { display: "flex", gap: 14, alignItems: "flex-start" },
   leftCol:   { flex: "0 0 auto" },
-  grid:      { display: "grid", gridTemplateColumns: "repeat(5, 80px)", gap: 8 },
+  grid:      { display: "grid", gridTemplateColumns: "repeat(5, 100px)", gap: 8 },
   rightCol:  { flex: 1, display: "flex", flexDirection: "column", minWidth: 0 },
 
   // panel config
