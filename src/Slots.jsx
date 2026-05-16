@@ -348,7 +348,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
                 {NUM_LINES} líneas · {Math.floor(bet / NUM_LINES)} por línea
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
-                {[100, 500, 1000, 2500, 5000, 10000].map(v => (
+                {[500, 1000, 5000, 10000, 20000, 50000, 100000].map(v => (
                   <button key={v} onClick={() => setBet(v)} disabled={phase === "spinning"} style={{
                     ...ST.betBtn,
                     background: bet === v ? "#FFD700" : "#1a1a2a",

@@ -565,7 +565,7 @@ function runAnimation(order, horseList, mult) {
               <div>
                 <div style={{ color: "#ffffff", fontSize: 15, marginBottom: 4 }}>APUESTA</div>
                 <div style={{ display: "flex", gap: 5 }}>
-                  {[50, 100, 250, 500, 1000].map(v => (
+                  {[1000, 2000, 5000, 10000, 20000, 50000, 100000].map(v => (
                     <button key={v} onClick={() => setBetAmount(v)} style={{
                       ...S.betBtn,
                       background: betAmount === v ? "#FFD700" : "#1a1a2a",

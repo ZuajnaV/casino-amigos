@@ -336,7 +336,7 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
                 <div style={{ marginBottom: 12 }}>
                   <div style={S.label}>APUESTA</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                    {[50, 100, 250, 500, 1000].map((v) => (
+                    {[100, 500, 1000, 5000, 10000, 50000, 100000].map((v) => (
                       <button
                         key={v}
                         onClick={() => setBet(v)}
