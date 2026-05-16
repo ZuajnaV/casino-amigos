@@ -9,18 +9,17 @@ import HorseRace from "./HorseRace.jsx";
 import SlotsGame from "./Slots.jsx";
 
 const GAMES = [
-  { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                      color: "#ff6b35" },
-  { id: "blackjack",   name: "Blackjack",     icon: "🃏", desc: "Planta o pide. 21 gana.",                      color: "#00d4aa" },
-  { id: "roulette",    name: "Ruleta",        icon: "🎡", desc: "Rojo, negro o tu número de la suerte",          color: "#c084fc" },
-  { id: "mines",       name: "Mines",         icon: "💣", desc: "Encuentra las minas sin explotar",             color: "#491cff" },
-  { id: "spaceman",    name: "Spaceman",      icon: "🚀", desc: "Explora el espacio y evita estrellar",          color: "#8b5cf6" },
-  { id: "chickenroad", name: "Chicken Road",  icon: "🐔", desc: "Corre por la carretera y evita los obstáculos", color: "#f59e0b" },
-  { id: "horses",      name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",             color: "#ef4444" },
+  { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                       color: "#ff6b35" },
+  { id: "blackjack",   name: "Blackjack",     icon: "🃏", desc: "Planta o pide. 21 gana.",                       color: "#00d4aa" },
+  { id: "roulette",    name: "Ruleta",        icon: "🎡", desc: "Rojo, negro o tu número de la suerte",           color: "#c084fc" },
+  { id: "mines",       name: "Mines",         icon: "💣", desc: "Encuentra las minas sin explotar",              color: "#491cff" },
+  { id: "spaceman",    name: "Spaceman",      icon: "🚀", desc: "Explora el espacio y evita estrellar",           color: "#8b5cf6" },
+  { id: "chickenroad", name: "Chicken Road",  icon: "🐔", desc: "Corre por la carretera y evita los obstáculos",  color: "#f59e0b" },
+  { id: "horses",      name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",              color: "#ef4444" },
 ];
 
-const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈​","​🗿​","​🚨​","🗽​","🛸​","🛰️​"];
+const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈","🗿","🚨","🗽","🛸","🛰️"];
 
-// ─── LOBBY ───────────────────────────────────────────────────────────────────
 function Lobby({ profile, balance, setGame, onDeposit }) {
   const [profiles, setProfiles] = useState([]);
   const [showDeposit, setShowDeposit] = useState(false);
@@ -28,9 +27,15 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
   const [depositLoading, setDepositLoading] = useState(false);
 
   useEffect(() => {
-    supabase.from("profiles").select("username, avatar, balance")
-      .order("balance", { ascending: false })
-      .then(({ data }) => { if (data) setProfiles(data); });
+    supabase.from("profiles").select("username, avatar, balance, total_deposited")
+      .then(({ data }) => {
+        if (data) {
+          const sorted = data
+            .map(u => ({ ...u, neto: u.balance - (u.total_deposited || 0) }))
+            .sort((a, b) => b.neto - a.neto);
+          setProfiles(sorted);
+        }
+      });
   }, [balance]);
 
   async function handleDeposit() {
@@ -75,11 +80,7 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
               onChange={e => setDepositAmount(e.target.value)}
               style={{ ...styles.input, marginBottom: 0, flex: 1 }}
             />
-            <button
-              onClick={handleDeposit}
-              disabled={depositLoading}
-              style={{ ...styles.loginBtn, width: "auto", padding: "12px 16px" }}
-            >
+            <button onClick={handleDeposit} disabled={depositLoading} style={{ ...styles.loginBtn, width: "auto", padding: "12px 16px" }}>
               {depositLoading ? "..." : "Añadir"}
             </button>
           </div>
@@ -110,7 +111,9 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
             <span style={{ color: i===0?"#fbbf24":i===1?"#aaa":i===2?"#cd7f32":"#666" }}>
               {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} {u.avatar} {u.username}
             </span>
-            <span style={{ color: "#fff", fontSize: 13 }}>{u.balance.toLocaleString()}</span>
+            <span style={{ color: u.neto >= 0 ? "#00d4aa" : "#ff4444", fontSize: 13, fontWeight: 700 }}>
+              {u.neto >= 0 ? "+" : ""}{u.neto.toLocaleString()}
+            </span>
           </div>
         ))}
       </div>
@@ -118,7 +121,6 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
   );
 }
 
-// ─── LOGIN / REGISTRO ─────────────────────────────────────────────────────────
 function Login() {
   const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
@@ -139,13 +141,10 @@ function Login() {
     setLoading(true); setErr("");
     if (!username || !email || !pass) { setErr("Completa todos los campos"); setLoading(false); return; }
     if (pass.length < 6) { setErr("La contraseña debe tener al menos 6 caracteres"); setLoading(false); return; }
-
     const { data: existing } = await supabase.from("profiles").select("id").eq("username", username).single();
     if (existing) { setErr("Ese nombre de usuario ya está en uso"); setLoading(false); return; }
-
     const { error } = await supabase.auth.signUp({ email, password: pass });
     if (error) { setErr(error.message); setLoading(false); return; }
-
     localStorage.setItem("pending_username", username);
     localStorage.setItem("pending_avatar", avatar);
     setLoading(false);
@@ -157,16 +156,10 @@ function Login() {
         <div style={{ fontSize: 48, marginBottom: 8 }}>🎰</div>
         <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: -1, marginBottom: 4, color: "#FFD700" }}>Casino</h1>
         <p style={{ color: "#aaa", fontSize: 13, marginBottom: 24 }}>A apostar 🎲</p>
-
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          <button onClick={() => setMode("login")} style={{ ...styles.tabBtn, background: mode==="login" ? "#ff6b35" : "transparent", color: mode==="login" ? "#fff" : "#666" }}>
-            Entrar
-          </button>
-          <button onClick={() => setMode("register")} style={{ ...styles.tabBtn, background: mode==="register" ? "#ff6b35" : "transparent", color: mode==="register" ? "#fff" : "#666" }}>
-            Registrarse
-          </button>
+          <button onClick={() => setMode("login")} style={{ ...styles.tabBtn, background: mode==="login" ? "#ff6b35" : "transparent", color: mode==="login" ? "#fff" : "#666" }}>Entrar</button>
+          <button onClick={() => setMode("register")} style={{ ...styles.tabBtn, background: mode==="register" ? "#ff6b35" : "transparent", color: mode==="register" ? "#fff" : "#666" }}>Registrarse</button>
         </div>
-
         {mode === "register" && (
           <>
             <input placeholder="Nombre de usuario" value={username} onChange={e => setUsername(e.target.value)} style={styles.input} />
@@ -182,12 +175,9 @@ function Login() {
             </div>
           </>
         )}
-
         <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} onKeyDown={e => e.key==="Enter" && (mode==="login" ? handleLogin() : handleRegister())} />
         <input placeholder="Contraseña" type="password" value={pass} onChange={e => setPass(e.target.value)} style={styles.input} onKeyDown={e => e.key==="Enter" && (mode==="login" ? handleLogin() : handleRegister())} />
-
         {err && <div style={{ color: "#ff6b35", fontSize: 13, marginBottom: 10 }}>{err}</div>}
-
         <button onClick={mode==="login" ? handleLogin : handleRegister} disabled={loading} style={styles.loginBtn}>
           {loading ? "..." : mode==="login" ? "Entrar →" : "Crear cuenta →"}
         </button>
@@ -196,17 +186,14 @@ function Login() {
   );
 }
 
-// ─── APP PRINCIPAL ────────────────────────────────────────────────────────────
 export default function App() {
   const [profile, setProfile] = useState(null);
   const [balance, setBalanceState] = useState(0);
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
-
-    const balanceRef = useRef(balance);
-    useEffect(() => { balanceRef.current = balance; }, [balance]);
+  const balanceRef = useRef(balance);
+  useEffect(() => { balanceRef.current = balance; }, [balance]);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -219,27 +206,20 @@ export default function App() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log("Auth event:", event);
-  if (event === "SIGNED_OUT") {
-    setProfile(null);
-    setBalanceState(0);
-    setGame(null);
-    setLoading(false);
-  //}
-    //});
-
-  } else if (event === "SIGNED_IN") {
-    // Solo procesar si no tenemos perfil aún
-    setProfile(prev => {
-      if (!prev) {
-        maybeCreateProfile(session.user.id).then(() => loadProfile(session.user.id));
+      if (event === "SIGNED_OUT") {
+        setProfile(null);
+        setBalanceState(0);
+        setGame(null);
+        setLoading(false);
+      } else if (event === "SIGNED_IN") {
+        setProfile(prev => {
+          if (!prev) {
+            maybeCreateProfile(session.user.id).then(() => loadProfile(session.user.id));
+          }
+          return prev;
+        });
       }
-      return prev;
     });
-  } else if (event === "TOKEN_REFRESHED") {
-    // Solo refrescar token, no recargar perfil
-  }
-});
 
     return () => subscription.unsubscribe();
   }, []);
@@ -263,31 +243,29 @@ export default function App() {
     setLoading(false);
   }
 
-  // Esta función solo actualiza la UI, no Supabase
-function setBalance(newBalance) {
-  setBalanceState(newBalance);
-}
-
-// Esta guarda en Supabase
-async function saveBalance(newBalance) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
+  function setBalance(newBalance) {
+    setBalanceState(newBalance);
   }
-}
 
-async function handleBack() {
-  await saveBalance(balanceRef.current);
-  setGame(null);
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) await loadProfile(session.user.id);
-}
+  async function saveBalance(newBalance) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
+    }
+  }
 
-async function handleLogout() {
-  await saveBalance(balanceRef.current);
-  await supabase.auth.signOut();
-  window.location.reload();
-}
+  async function handleBack() {
+    await saveBalance(balanceRef.current);
+    setGame(null);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) await loadProfile(session.user.id);
+  }
+
+  async function handleLogout() {
+    await saveBalance(balanceRef.current);
+    await supabase.auth.signOut();
+    window.location.reload();
+  }
 
   async function handleDeposit(amount) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -305,6 +283,7 @@ async function handleLogout() {
       console.error("Error depósito:", error);
     }
   }
+
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#0d0d14", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", fontSize: 24 }}>
       🎰 Cargando...
@@ -327,8 +306,7 @@ async function handleLogout() {
         {game === "slots"       && <SlotsGame       balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "blackjack"   && <BlackjackGame   balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "roulette"    && <RouletteGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
-        {/* {game === "mines"       && <MinesGames      balance={balance} setBalance={setBalance} onBack={handleBack} />} */}
-        {game === "mines" && <MinesGames balance={balance} setBalance={setBalance} onBack={handleBack} onGameEnd={(fb) => { balanceRef.current = fb; }} />}
+        {game === "mines"       && <MinesGames      balance={balance} setBalance={setBalance} onBack={handleBack} onGameEnd={(fb) => { balanceRef.current = fb; }} />}
         {game === "spaceman"    && <SpacemanGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={handleBack} />}
         {game === "horses"      && <HorseRace       balance={balance} setBalance={setBalance} onBack={handleBack} />}

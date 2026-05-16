@@ -1,5 +1,6 @@
 // Blackjack.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
 
 // ─── Mazo ────────────────────────────────────────────────────────────────────
 const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
@@ -186,6 +187,25 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
   const [insured, setInsured]     = useState(false);
   const [resultMsg, setResultMsg] = useState("");
   const [stats, setStats]         = useState({ wins: 0, losses: 0, ties: 0, bj: 0 });
+
+
+
+
+
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data } = await supabase.from("blackjack_stats")
+        .select("*").eq("user_id", session.user.id).single();
+      if (data) setStats({ wins: data.wins, losses: data.losses, ties: data.ties, bj: data.blackjacks });
+      });
+  }, []);
+
+
+
+
+
 
   // FIX 2: soporte para split — manos múltiples
   // hands: [{ cards: [], bet, done: false, result: null, isAceSplit: false }]
@@ -401,6 +421,28 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
       bj: s.bj + bjs,
     }));
     setPhase("result");
+
+
+
+
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      await supabase.from("blackjack_stats").update({
+        wins: stats.wins + wins,
+        losses: stats.losses + losses,
+        ties: stats.ties + ties,
+        blackjacks: stats.bj + bjs,
+      }).eq("user_id", session.user.id);
+    });
+
+
+
+
+
+
+
+
   }
 
   function newHand() {
