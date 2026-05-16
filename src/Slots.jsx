@@ -169,10 +169,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
   const newPool = jackpotPool + Math.floor(bet * 0.1);
   setJackpotPool(newPool);
   //supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1);
-
-
-  const { error } = await supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1);
-  console.log("Jackpot update:", newPool, "error:", error);
+  await supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1);
 
 }
 
