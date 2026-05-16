@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
 import RouletteGame from "./Roulette.jsx";
 import BlackjackGame from "./Blackjack.jsx";
 import MinesGames from "./Mines.jsx";
@@ -6,13 +7,6 @@ import SpacemanGame from "./Spaceman.jsx";
 import ChickenRoadGame from "./ChickenRoad.jsx";
 import HorseRace from "./HorseRace.jsx";
 import SlotsGame from "./Slots.jsx";
-
-const USERS = [
-  { user: "Juan", pass: "1234", avatar: "🎩", balance: 100000 },
-  { user: "Santiago",    pass: "1234", avatar: "💃", balance: 100000 },
-  { user: "Angel",  pass: "1234", avatar: "🕶️", balance: 100000 },
-  { user: "Mauricio",  pass: "1234", avatar: "👑", balance: 100000 },
-];
 
 const GAMES = [
   { id: "slots",      name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",        color: "#ff6b35" },
@@ -24,19 +18,82 @@ const GAMES = [
   { id: "horses",   name: "Horse Race",   icon: "🐎", desc: "Apuesta en la carrera de caballos",       color: "#ef4444" },
 ];
 
-function Lobby({ user, balance, setGame }) {
+const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲"];
+
+// ─── LOBBY ───────────────────────────────────────────────────────────────────
+function Lobby({ profile, balance, setGame, onDeposit, onLogout }) {
+  const [profiles, setProfiles] = useState([]);
+  const [showDeposit, setShowDeposit] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositLoading, setDepositLoading] = useState(false);
+
+  useEffect(() => {
+    supabase.from("profiles").select("username, avatar, balance")
+      .order("balance", { ascending: false })
+      .then(({ data }) => { if (data) setProfiles(data); });
+  }, [balance]);
+
+  async function handleDeposit() {
+    const amount = parseInt(depositAmount);
+    if (!amount || amount <= 0) return;
+    setDepositLoading(true);
+    await onDeposit(amount);
+    setDepositAmount("");
+    setShowDeposit(false);
+    setDepositLoading(false);
+  }
+
+  const neto = balance - profile.total_deposited;
+
   return (
     <div>
       <div style={styles.lobbyHeader}>
         <div>
           <div style={{ fontSize: 13, color: "#555" }}>Bienvenido</div>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>{user.avatar} {user.user}</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{profile.avatar} {profile.username}</div>
+          <div style={{ fontSize: 12, color: neto >= 0 ? "#00d4aa" : "#ff4444", marginTop: 2 }}>
+            {neto >= 0 ? "📈" : "📉"} Neto: {neto >= 0 ? "+" : ""}{neto.toLocaleString()}
+          </div>
         </div>
-        <div style={styles.balancePill}>
-          💰 {balance.toLocaleString()} fichas
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+          <div style={styles.balancePill}>💰 {balance.toLocaleString()} fichas</div>
+          <button onClick={() => setShowDeposit(!showDeposit)} style={styles.depositBtn}>💵 Bolsillo</button>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+
+      {showDeposit && (
+        <div style={styles.depositBox}>
+          <div style={{ fontWeight: 700, marginBottom: 8, color: "#fbbf24" }}>💵 Recargar Bolsillo</div>
+          <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>
+            Total ingresado: {profile.total_deposited.toLocaleString()} fichas
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="number"
+              placeholder="Cantidad de fichas"
+              value={depositAmount}
+              onChange={e => setDepositAmount(e.target.value)}
+              style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+            />
+            <button
+              onClick={handleDeposit}
+              disabled={depositLoading}
+              style={{ ...styles.loginBtn, width: "auto", padding: "12px 16px" }}
+            >
+              {depositLoading ? "..." : "Añadir"}
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+            {[50000, 100000, 500000, 1000000].map(a => (
+              <button key={a} onClick={() => setDepositAmount(String(a))} style={styles.quickBtn}>
+                +{a.toLocaleString()}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 16 }}>
         {GAMES.map(g => (
           <button key={g.id} onClick={() => setGame(g.id)} style={{ ...styles.gameBtn, borderColor: g.color }}>
             <div style={{ fontSize: 36, marginBottom: 6 }}>{g.icon}</div>
@@ -45,12 +102,13 @@ function Lobby({ user, balance, setGame }) {
           </button>
         ))}
       </div>
+
       <div style={styles.rankingBox}>
         <div style={{ color: "#555", fontSize: 12, marginBottom: 8, letterSpacing: 2 }}>RANKING</div>
-        {USERS.sort((a,b) => b.balance - a.balance).map((u, i) => (
-          <div key={u.user} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+        {profiles.map((u, i) => (
+          <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
             <span style={{ color: i===0?"#fbbf24":i===1?"#aaa":i===2?"#cd7f32":"#666" }}>
-              {i===0?"🥇":i===1?"🥈":"🥉"} {u.avatar} {u.user}
+              {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} {u.avatar} {u.username}
             </span>
             <span style={{ color: "#fff", fontSize: 13 }}>{u.balance.toLocaleString()}</span>
           </div>
@@ -60,40 +118,163 @@ function Lobby({ user, balance, setGame }) {
   );
 }
 
+// ─── LOGIN / REGISTRO ─────────────────────────────────────────────────────────
 function Login({ onLogin }) {
-  const [u, setU] = useState(""); const [p, setP] = useState(""); const [err, setErr] = useState("");
-  function submit() {
-    const found = USERS.find(x => x.user === u && x.pass === p);
-    if (found) onLogin(found);
-    else setErr("Usuario o contraseña incorrectos");
+  const [mode, setMode] = useState("login"); // "login" | "register"
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [avatar, setAvatar] = useState("🎰");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin() {
+    setLoading(true); setErr("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) setErr("Usuario o contraseña incorrectos");
+    setLoading(false);
   }
+
+  async function handleRegister() {
+    setLoading(true); setErr("");
+    if (!username || !email || !pass) { setErr("Completa todos los campos"); setLoading(false); return; }
+    if (pass.length < 6) { setErr("La contraseña debe tener al menos 6 caracteres"); setLoading(false); return; }
+
+    // Verificar si el username ya existe
+    const { data: existing } = await supabase.from("profiles").select("id").eq("username", username).single();
+    if (existing) { setErr("Ese nombre de usuario ya está en uso"); setLoading(false); return; }
+
+    const { error } = await supabase.auth.signUp({ email, password: pass });
+    if (error) { setErr(error.message); setLoading(false); return; }
+
+    // El perfil se crea en el onAuthStateChange del App
+    // Guardamos username y avatar temporalmente
+    localStorage.setItem("pending_username", username);
+    localStorage.setItem("pending_avatar", avatar);
+    setLoading(false);
+  }
+
   return (
     <div style={styles.loginWrap}>
       <div style={styles.loginCard}>
-        <div style={{ fontSize: 48, marginBottom: 8, color: "#ffffff" }}>🎰</div>
+        <div style={{ fontSize: 48, marginBottom: 8 }}>🎰</div>
         <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: -1, marginBottom: 4, color: "#FFD700" }}>Casino</h1>
-        <p style={{ color: "#ffffff", fontSize: 13, marginBottom: 28 }}>Solo para amigos 🎲</p>
-        <input placeholder="Usuario" value={u} onChange={e => setU(e.target.value)}
-          style={styles.input} onKeyDown={e => e.key==="Enter" && submit()} />
-        <input placeholder="Contraseña" type="password" value={p} onChange={e => setP(e.target.value)}
-          style={styles.input} onKeyDown={e => e.key==="Enter" && submit()} />
+        <p style={{ color: "#aaa", fontSize: 13, marginBottom: 24 }}>Solo para amigos 🎲</p>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+          <button onClick={() => setMode("login")} style={{ ...styles.tabBtn, background: mode==="login" ? "#ff6b35" : "transparent", color: mode==="login" ? "#fff" : "#666" }}>
+            Entrar
+          </button>
+          <button onClick={() => setMode("register")} style={{ ...styles.tabBtn, background: mode==="register" ? "#ff6b35" : "transparent", color: mode==="register" ? "#fff" : "#666" }}>
+            Registrarse
+          </button>
+        </div>
+
+        {mode === "register" && (
+          <>
+            <input placeholder="Nombre de usuario" value={username} onChange={e => setUsername(e.target.value)} style={styles.input} />
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>Elige tu avatar:</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                {AVATARS.map(a => (
+                  <button key={a} onClick={() => setAvatar(a)} style={{ fontSize: 22, background: avatar===a ? "#ff6b35" : "#0d0d14", border: `2px solid ${avatar===a ? "#ff6b35" : "#2a2a3a"}`, borderRadius: 8, padding: "4px 8px", cursor: "pointer" }}>
+                    {a}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={styles.input} onKeyDown={e => e.key==="Enter" && (mode==="login" ? handleLogin() : handleRegister())} />
+        <input placeholder="Contraseña" type="password" value={pass} onChange={e => setPass(e.target.value)} style={styles.input} onKeyDown={e => e.key==="Enter" && (mode==="login" ? handleLogin() : handleRegister())} />
+
         {err && <div style={{ color: "#ff6b35", fontSize: 13, marginBottom: 10 }}>{err}</div>}
-        <button onClick={submit} style={styles.loginBtn}>Entrar →</button>
-        <p style={{ color: "#ffffff", fontSize: 13, marginTop: 16 }}>Demo: carlos / 1234 · ana / 1234 · pablo / 1234</p>
+
+        <button onClick={mode==="login" ? handleLogin : handleRegister} disabled={loading} style={styles.loginBtn}>
+          {loading ? "..." : mode==="login" ? "Entrar →" : "Crear cuenta →"}
+        </button>
       </div>
     </div>
   );
 }
 
+// ─── APP PRINCIPAL ────────────────────────────────────────────────────────────
 export default function App() {
-  const [logged, setLogged] = useState(null);
-  const [balance, setBalance] = useState(0);
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [balance, setBalanceState] = useState(0);
   const [game, setGame] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  function handleLogin(user) { setLogged(user); setBalance(user.balance); }
-  function handleLogout() { setLogged(null); setGame(null); }
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) loadProfile(session.user.id);
+      else setLoading(false);
+    });
 
-  if (!logged) return <Login onLogin={handleLogin} />;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      if (session) {
+        if (event === "SIGNED_IN") {
+          await maybeCreateProfile(session.user.id);
+          await loadProfile(session.user.id);
+        }
+      } else {
+        setProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function maybeCreateProfile(userId) {
+    const { data } = await supabase.from("profiles").select("id").eq("id", userId).single();
+    if (!data) {
+      const username = localStorage.getItem("pending_username") || "jugador";
+      const avatar = localStorage.getItem("pending_avatar") || "🎰";
+      await supabase.from("profiles").insert({ id: userId, username, avatar, balance: 100000, total_deposited: 0 });
+      await supabase.from("blackjack_stats").insert({ user_id: userId });
+      await supabase.from("chickenroad_stats").insert({ user_id: userId, hist_net: 0 });
+      localStorage.removeItem("pending_username");
+      localStorage.removeItem("pending_avatar");
+    }
+  }
+
+  async function loadProfile(userId) {
+    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
+    if (data) { setProfile(data); setBalanceState(data.balance); }
+    setLoading(false);
+  }
+
+  async function setBalance(newBalance) {
+    setBalanceState(newBalance);
+    await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
+  }
+
+  async function handleDeposit(amount) {
+    const newBalance = balance + amount;
+    const newTotal = profile.total_deposited + amount;
+    await supabase.from("profiles").update({ balance: newBalance, total_deposited: newTotal }).eq("id", session.user.id);
+    await supabase.from("deposits").insert({ user_id: session.user.id, amount });
+    setBalanceState(newBalance);
+    setProfile(p => ({ ...p, balance: newBalance, total_deposited: newTotal }));
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setGame(null);
+  }
+
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: "#0d0d14", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", fontSize: 24 }}>
+      🎰 Cargando...
+    </div>
+  );
+
+  if (!session || !profile) return <Login onLogin={() => {}} />;
 
   return (
     <div style={styles.appWrap}>
@@ -105,11 +286,11 @@ export default function App() {
         </div>
       </div>
       <div style={{ padding: "20px 16px" }}>
-        {!game && <Lobby user={logged} balance={balance} setGame={setGame} />}
+        {!game && <Lobby user={profile} profile={profile} balance={balance} setGame={setGame} onDeposit={handleDeposit} onLogout={handleLogout} />}
         {game === "slots" && <SlotsGame balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
         {game === "blackjack" && <BlackjackGame balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
         {game === "roulette" && <RouletteGame balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "mines" && <MinesGames balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />} 
+        {game === "mines" && <MinesGames balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
         {game === "spaceman" && <SpacemanGame balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={() => setGame(null)} />}
         {game === "horses" && <HorseRace balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
@@ -122,21 +303,17 @@ const styles = {
   appWrap: { minHeight: "100vh", background: "#0d0d14", color: "#ffffff", fontFamily: "'Georgia', serif" },
   topBar: { background: "#16161f", borderBottom: "1px solid #1e1e2e", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 },
   loginWrap: { minHeight: "100vh", background: "#0d0d14", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Georgia', serif" },
-  loginCard: { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 16, padding: "40px 32px", width: "100%", maxWidth: 340, textAlign: "center" },
-  input: { width: "100%", background: "#0d0d14", border: "1px solid #ffffff", borderRadius: 8, padding: "12px 14px", color: "#ffffff", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" },
+  loginCard: { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 16, padding: "40px 32px", width: "100%", maxWidth: 360, textAlign: "center" },
+  input: { width: "100%", background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 8, padding: "12px 14px", color: "#ffffff", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" },
   loginBtn: { width: "100%", background: "#ff6b35", border: "none", borderRadius: 8, padding: "14px", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" },
   logoutBtn: { background: "transparent", border: "1px solid #2a2a3a", borderRadius: 6, color: "#666", fontSize: 12, padding: "4px 10px", cursor: "pointer" },
-  lobbyHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  lobbyHeader: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
   balancePill: { background: "#1e1e2e", border: "1px solid #2a2a3a", borderRadius: 20, padding: "6px 14px", fontSize: 14, fontWeight: 700, color: "#fbbf24" },
+  depositBtn: { background: "#1e1e2e", border: "1px solid #2a2a3a", borderRadius: 20, padding: "6px 14px", fontSize: 13, color: "#aaa", cursor: "pointer" },
+  depositBox: { background: "#16161f", border: "1px solid #2a2a3a", borderRadius: 12, padding: 16, marginBottom: 16 },
+  quickBtn: { background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 6, color: "#aaa", fontSize: 12, padding: "6px 10px", cursor: "pointer" },
   gameBtn: { background: "#16161f", border: "1px solid", borderRadius: 12, padding: "16px 10px", cursor: "pointer", textAlign: "center", transition: "transform 0.1s", color: "#fff" },
   rankingBox: { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 12, padding: "14px 16px", marginTop: 20 },
+  tabBtn: { flex: 1, border: "1px solid #2a2a3a", borderRadius: 8, padding: "10px", cursor: "pointer", fontSize: 14, fontWeight: 600 },
   gameCard: { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 14, padding: 20 },
-  reelsRow: { display: "flex", gap: 12, justifyContent: "center", margin: "20px 0" },
-  reel: { fontSize: 52, background: "#0d0d14", border: "2px solid #2a2a3a", borderRadius: 10, width: 80, height: 80, display: "flex", alignItems: "center", justifyContent: "center" },
-  betRow: { display: "flex", gap: 8, alignItems: "center", margin: "12px 0", flexWrap: "wrap" },
-  betBtn: { border: "none", borderRadius: 6, padding: "6px 12px", color: "#fff", cursor: "pointer", fontSize: 13 },
-  spinBtn: { width: "100%", background: "#ff6b35", border: "none", borderRadius: 8, padding: "13px", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", marginTop: 8 },
-  msgBox: { textAlign: "center", fontWeight: 700, fontSize: 16, margin: "10px 0", padding: "10px", background: "#0d0d14", borderRadius: 8 },
-  backBtn: { background: "transparent", border: "none", color: "#555", fontSize: 14, cursor: "pointer", marginBottom: 12, padding: 0 },
-  card: { background: "#1e1e2e", border: "1px solid #2a2a3a", borderRadius: 8, padding: "10px 8px", fontSize: 20, minWidth: 44, textAlign: "center" },
 };
