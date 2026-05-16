@@ -10,68 +10,50 @@ import SlotsGame from "./Slots.jsx";
 
 const GAMES = [
   { id: "slots",      name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",        color: "#ff6b35" },
-  { id: "blackjack",  name: "Blackjack",    icon: "🃏", desc: "Planta o pide. 21 gana.",        color: "#00d4aa" },
-  { id: "roulette",   name: "Ruleta",       icon: "🎡", desc: "Rojo, negro o tu número de la suerte", color: "#c084fc" },
-  { id: "mines",      name: "Mines",        icon: "💣", desc: "Encuentra las minas sin explotar",   color: "#491cff" },
-  { id: "spaceman",   name: "Spaceman",     icon: "🚀", desc: "Explora el espacio y evita estrellar",   color: "#8b5cf6" },
-  { id: "chickenroad", name: "Chicken Road", icon: "🐔", desc: "Corre por la carretera y evita los obstáculos", color: "#f59e0b" },
-  { id: "horses",   name: "Horse Race",   icon: "🐎", desc: "Apuesta en la carrera de caballos",       color: "#ef4444" },
+  { id: "blackjack",  name: "Blackjack",     icon: "🃏", desc: "Planta o pide. 21 gana.",        color: "#00d4aa" },
+  { id: "roulette",   name: "Ruleta",        icon: "🎡", desc: "Rojo, negro o tu número de la suerte", color: "#c084fc" },
+  { id: "mines",      name: "Mines",         icon: "💣", desc: "Encuentra las minas sin explotar",    color: "#491cff" },
+  { id: "spaceman",   name: "Spaceman",      icon: "🚀", desc: "Explora el espacio y evita estrellar",    color: "#8b5cf6" },
+  { id: "chickenroad",name: "Chicken Road",  icon: "🐔", desc: "Corre por la carretera y evita los obstáculos", color: "#f59e0b" },
+  { id: "horses",     name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",        color: "#ef4444" },
 ];
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲"];
 
 // ─── LOBBY ───────────────────────────────────────────────────────────────────
-function Lobby({ profile, balance, setGame, onDeposit, onLogout }) {
+function Lobby({ profile, balance, setGame, onDeposit }) {
   const [profiles, setProfiles] = useState([]);
   const [showDeposit, setShowDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositLoading, setDepositLoading] = useState(false);
 
-  /*useEffect(() => {
-    supabase.from("profiles").select("username, avatar, balance")
-      .order("balance", { ascending: false })
-      .then(({ data }) => { if (data) setProfiles(data); });
-  }, [balance]);
-  */
-
-
-
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log("Session:", session, "Error:", error);
-      setSession(session);
-      if (session) loadProfile(session.user.id);
-      else setLoading(false);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        await maybeCreateProfile(session.user.id);
+        await loadProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth event:", event, session);
-      setSession(session);
-      if (session) {
-        if (event === "SIGNED_IN") {
-          await maybeCreateProfile(session.user.id);
-          await loadProfile(session.user.id);
-        }
-      } else {
+      if (event === "SIGNED_OUT") {
+        setSession(null);
         setProfile(null);
+        setBalanceState(0);
+        setGame(null);
         setLoading(false);
+      } else if (event === "SIGNED_IN") {
+        setSession(session);
+        await maybeCreateProfile(session.user.id);
+        await loadProfile(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-
-
-
-
-
-
-
-
-
-
 
   async function handleDeposit() {
     const amount = parseInt(depositAmount);
@@ -83,7 +65,7 @@ function Lobby({ profile, balance, setGame, onDeposit, onLogout }) {
     setDepositLoading(false);
   }
 
-  const neto = balance - profile.total_deposited;
+  const neto = balance - (profile.total_deposited || 0);
 
   return (
     <div>
@@ -105,7 +87,7 @@ function Lobby({ profile, balance, setGame, onDeposit, onLogout }) {
         <div style={styles.depositBox}>
           <div style={{ fontWeight: 700, marginBottom: 8, color: "#fbbf24" }}>💵 Recargar Bolsillo</div>
           <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>
-            Total ingresado: {profile.total_deposited.toLocaleString()} fichas
+            Total ingresado: {(profile.total_deposited || 0).toLocaleString()} fichas
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <input
@@ -159,8 +141,8 @@ function Lobby({ profile, balance, setGame, onDeposit, onLogout }) {
 }
 
 // ─── LOGIN / REGISTRO ─────────────────────────────────────────────────────────
-function Login({ onLogin }) {
-  const [mode, setMode] = useState("login"); // "login" | "register"
+function Login() {
+  const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
@@ -180,15 +162,12 @@ function Login({ onLogin }) {
     if (!username || !email || !pass) { setErr("Completa todos los campos"); setLoading(false); return; }
     if (pass.length < 6) { setErr("La contraseña debe tener al menos 6 caracteres"); setLoading(false); return; }
 
-    // Verificar si el username ya existe
     const { data: existing } = await supabase.from("profiles").select("id").eq("username", username).single();
     if (existing) { setErr("Ese nombre de usuario ya está en uso"); setLoading(false); return; }
 
     const { error } = await supabase.auth.signUp({ email, password: pass });
     if (error) { setErr(error.message); setLoading(false); return; }
 
-    // El perfil se crea en el onAuthStateChange del App
-    // Guardamos username y avatar temporalmente
     localStorage.setItem("pending_username", username);
     localStorage.setItem("pending_avatar", avatar);
     setLoading(false);
@@ -199,7 +178,7 @@ function Login({ onLogin }) {
       <div style={styles.loginCard}>
         <div style={{ fontSize: 48, marginBottom: 8 }}>🎰</div>
         <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: -1, marginBottom: 4, color: "#FFD700" }}>Casino</h1>
-        <p style={{ color: "#aaa", fontSize: 13, marginBottom: 24 }}>Solo para amigos 🎲</p>
+        <p style={{ color: "#aaa", fontSize: 13, marginBottom: 24 }}>A apostar 🎲</p>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
           <button onClick={() => setMode("login")} style={{ ...styles.tabBtn, background: mode==="login" ? "#ff6b35" : "transparent", color: mode==="login" ? "#fff" : "#666" }}>
@@ -255,15 +234,16 @@ export default function App() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      if (session) {
-        if (event === "SIGNED_IN") {
-          await maybeCreateProfile(session.user.id);
-          await loadProfile(session.user.id);
-        }
-      } else {
+      if (event === "SIGNED_OUT") {
+        setSession(null);
         setProfile(null);
+        setBalanceState(0);
+        setGame(null);
         setLoading(false);
+      } else if (event === "SIGNED_IN") {
+        setSession(session);
+        await maybeCreateProfile(session.user.id);
+        await loadProfile(session.user.id);
       }
     });
 
@@ -291,20 +271,20 @@ export default function App() {
 
   async function setBalance(newBalance) {
     setBalanceState(newBalance);
-    await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (currentSession) {
+      await supabase.from("profiles").update({ balance: newBalance }).eq("id", currentSession.user.id);
+    }
   }
 
   async function handleDeposit(amount) {
-  const newBalance = balance + amount;
-  const newTotal = (profile.total_deposited || 0) + amount;
-  
-  const { error } = await supabase.from("profiles")
-    .update({ balance: newBalance, total_deposited: newTotal })
-    .eq("id", session.user.id);
-    
+    const newBalance = balance + amount;
+    const newTotal = (profile.total_deposited || 0) + amount;
+    const { error } = await supabase.from("profiles")
+      .update({ balance: newBalance, total_deposited: newTotal })
+      .eq("id", session.user.id);
     if (!error) {
-      await supabase.from("deposits")
-        .insert({ user_id: session.user.id, amount });
+      await supabase.from("deposits").insert({ user_id: session.user.id, amount });
       setBalanceState(newBalance);
       setProfile(p => ({ ...p, balance: newBalance, total_deposited: newTotal }));
     } else {
@@ -314,7 +294,6 @@ export default function App() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    setGame(null);
   }
 
   if (loading) return (
@@ -323,7 +302,7 @@ export default function App() {
     </div>
   );
 
-  if (!session || !profile) return <Login onLogin={() => {}} />;
+  if (!session || !profile) return <Login />;
 
   return (
     <div style={styles.appWrap}>
@@ -335,34 +314,34 @@ export default function App() {
         </div>
       </div>
       <div style={{ padding: "20px 16px" }}>
-        {!game && <Lobby user={profile} profile={profile} balance={balance} setGame={setGame} onDeposit={handleDeposit} onLogout={handleLogout} />}
-        {game === "slots" && <SlotsGame balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "blackjack" && <BlackjackGame balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "roulette" && <RouletteGame balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "mines" && <MinesGames balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "spaceman" && <SpacemanGame balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {!game && <Lobby profile={profile} balance={balance} setGame={setGame} onDeposit={handleDeposit} />}
+        {game === "slots"       && <SlotsGame      balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "blackjack"   && <BlackjackGame  balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "roulette"    && <RouletteGame   balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "mines"       && <MinesGames     balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "spaceman"    && <SpacemanGame   balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={() => setGame(null)} />}
-        {game === "horses" && <HorseRace balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "horses"      && <HorseRace      balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
       </div>
     </div>
   );
 }
 
 const styles = {
-  appWrap: { minHeight: "100vh", background: "#0d0d14", color: "#ffffff", fontFamily: "'Georgia', serif" },
-  topBar: { background: "#16161f", borderBottom: "1px solid #1e1e2e", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 },
-  loginWrap: { minHeight: "100vh", background: "#0d0d14", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Georgia', serif" },
-  loginCard: { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 16, padding: "40px 32px", width: "100%", maxWidth: 360, textAlign: "center" },
-  input: { width: "100%", background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 8, padding: "12px 14px", color: "#ffffff", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" },
-  loginBtn: { width: "100%", background: "#ff6b35", border: "none", borderRadius: 8, padding: "14px", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" },
-  logoutBtn: { background: "transparent", border: "1px solid #2a2a3a", borderRadius: 6, color: "#666", fontSize: 12, padding: "4px 10px", cursor: "pointer" },
+  appWrap:     { minHeight: "100vh", background: "#0d0d14", color: "#ffffff", fontFamily: "'Georgia', serif" },
+  topBar:      { background: "#16161f", borderBottom: "1px solid #1e1e2e", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 },
+  loginWrap:   { minHeight: "100vh", background: "#0d0d14", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Georgia', serif" },
+  loginCard:   { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 16, padding: "40px 32px", width: "100%", maxWidth: 360, textAlign: "center" },
+  input:       { width: "100%", background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 8, padding: "12px 14px", color: "#ffffff", fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" },
+  loginBtn:    { width: "100%", background: "#ff6b35", border: "none", borderRadius: 8, padding: "14px", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" },
+  logoutBtn:   { background: "transparent", border: "1px solid #2a2a3a", borderRadius: 6, color: "#666", fontSize: 12, padding: "4px 10px", cursor: "pointer" },
   lobbyHeader: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
   balancePill: { background: "#1e1e2e", border: "1px solid #2a2a3a", borderRadius: 20, padding: "6px 14px", fontSize: 14, fontWeight: 700, color: "#fbbf24" },
-  depositBtn: { background: "#1e1e2e", border: "1px solid #2a2a3a", borderRadius: 20, padding: "6px 14px", fontSize: 13, color: "#aaa", cursor: "pointer" },
-  depositBox: { background: "#16161f", border: "1px solid #2a2a3a", borderRadius: 12, padding: 16, marginBottom: 16 },
-  quickBtn: { background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 6, color: "#aaa", fontSize: 12, padding: "6px 10px", cursor: "pointer" },
-  gameBtn: { background: "#16161f", border: "1px solid", borderRadius: 12, padding: "16px 10px", cursor: "pointer", textAlign: "center", transition: "transform 0.1s", color: "#fff" },
-  rankingBox: { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 12, padding: "14px 16px", marginTop: 20 },
-  tabBtn: { flex: 1, border: "1px solid #2a2a3a", borderRadius: 8, padding: "10px", cursor: "pointer", fontSize: 14, fontWeight: 600 },
-  gameCard: { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 14, padding: 20 },
+  depositBtn:  { background: "#1e1e2e", border: "1px solid #2a2a3a", borderRadius: 20, padding: "6px 14px", fontSize: 13, color: "#aaa", cursor: "pointer" },
+  depositBox:  { background: "#16161f", border: "1px solid #2a2a3a", borderRadius: 12, padding: 16, marginBottom: 16 },
+  quickBtn:    { background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 6, color: "#aaa", fontSize: 12, padding: "6px 10px", cursor: "pointer" },
+  gameBtn:     { background: "#16161f", border: "1px solid", borderRadius: 12, padding: "16px 10px", cursor: "pointer", textAlign: "center", transition: "transform 0.1s", color: "#fff" },
+  rankingBox:  { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 12, padding: "14px 16px", marginTop: 20 },
+  tabBtn:      { flex: 1, border: "1px solid #2a2a3a", borderRadius: 8, padding: "10px", cursor: "pointer", fontSize: 14, fontWeight: 600 },
+  gameCard:    { background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 14, padding: 20 },
 };
