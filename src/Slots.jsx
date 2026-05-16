@@ -162,7 +162,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     if (spinning) return;
     if (!isFree && balance < bet) { setMsg("¡Sin saldo suficiente!"); return; }
     setMsg(""); setWinningLines([]); setLastResult(null);
-    if (!isFree) { setBalance(balance - bet); setJackpotPool(p => p + Math.floor(bet * 0.1)); }
+    if (!isFree) { setBalance(b => b - bet); setJackpotPool(p => p + Math.floor(bet * 0.1)); }
     const sc = spinCount % 3;
     if (sc === 0) playBg("SonidoFondoGiro1.wav");
     else if (sc === 1) playBg("SonidoFondoGiro2.wav");
@@ -195,8 +195,8 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       const FIXED_JACKPOT = 60000;
       setPhase("jackpotEvent"); playSfx(jackpotWon ? "Jackpot.wav" : "NoJackpot.wav");
       setLastResult({ type: "jackpotFijo", jackpotWon, roll, jackpotAmt: FIXED_JACKPOT, payout: totalPayout, freeSpinsWon, wildBonus, lines });
-      if (jackpotWon) setBalance(balance + FIXED_JACKPOT + totalPayout);
-      else if (totalPayout > 0) setBalance(balance + totalPayout);
+      if (jackpotWon) setBalance(b => b + FIXED_JACKPOT + totalPayout);
+      else if (totalPayout > 0) setBalance(b => b + totalPayout);
       addHistory(lines, totalPayout + (jackpotWon ? FIXED_JACKPOT : 0), freeSpinsWon);
       return;
     }
@@ -209,14 +209,14 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     if (jackpotAcumTriggered && jackpotPool > 0) {
       playSfx("Jackpot.wav"); setPhase("jackpotEvent");
       setLastResult({ type: "jackpotAcumulado", jackpotWon: true, jackpotAmt: jackpotPool, payout: totalPayout, freeSpinsWon, wildBonus, lines });
-      setBalance(balance + jackpotPool + totalPayout); setJackpotPool(0);
+      setBalance(b => b + jackpotPool + totalPayout); setJackpotPool(0);
       addHistory(lines, totalPayout + jackpotPool, freeSpinsWon);
       return;
     }
 
     if (freeSpinsWon > 0) setFreeSpinsLeft(n => n + freeSpinsWon);
     if (totalPayout > 0) {
-      setBalance(balance + jackpotPool + totalPayout);
+      setBalance(b => b + totalPayout);
       const bgIdx = Math.floor(Math.random() * 3);
       playBg(["fondoTragamonedasUNO.wav","fondoTragamonedasDOS.wav","fondoTragamonedasTRES.wav"][bgIdx]);
       setTimeout(stopBg, 3000);
