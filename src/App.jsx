@@ -9,13 +9,13 @@ import HorseRace from "./HorseRace.jsx";
 import SlotsGame from "./Slots.jsx";
 
 const GAMES = [
-  { id: "slots",      name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",        color: "#ff6b35" },
-  { id: "blackjack",  name: "Blackjack",     icon: "🃏", desc: "Planta o pide. 21 gana.",        color: "#00d4aa" },
-  { id: "roulette",   name: "Ruleta",        icon: "🎡", desc: "Rojo, negro o tu número de la suerte", color: "#c084fc" },
-  { id: "mines",      name: "Mines",         icon: "💣", desc: "Encuentra las minas sin explotar",    color: "#491cff" },
-  { id: "spaceman",   name: "Spaceman",      icon: "🚀", desc: "Explora el espacio y evita estrellar",    color: "#8b5cf6" },
-  { id: "chickenroad",name: "Chicken Road",  icon: "🐔", desc: "Corre por la carretera y evita los obstáculos", color: "#f59e0b" },
-  { id: "horses",     name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",        color: "#ef4444" },
+  { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                      color: "#ff6b35" },
+  { id: "blackjack",   name: "Blackjack",     icon: "🃏", desc: "Planta o pide. 21 gana.",                      color: "#00d4aa" },
+  { id: "roulette",    name: "Ruleta",        icon: "🎡", desc: "Rojo, negro o tu número de la suerte",          color: "#c084fc" },
+  { id: "mines",       name: "Mines",         icon: "💣", desc: "Encuentra las minas sin explotar",             color: "#491cff" },
+  { id: "spaceman",    name: "Spaceman",      icon: "🚀", desc: "Explora el espacio y evita estrellar",          color: "#8b5cf6" },
+  { id: "chickenroad", name: "Chicken Road",  icon: "🐔", desc: "Corre por la carretera y evita los obstáculos", color: "#f59e0b" },
+  { id: "horses",      name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",             color: "#ef4444" },
 ];
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲"];
@@ -33,25 +33,15 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
       .then(({ data }) => { if (data) setProfiles(data); });
   }, [balance]);
 
-  async function handleDeposit(amount) {
-  const { data: { session: currentSession } } = await supabase.auth.getSession();
-  if (!currentSession) { console.error("Sin sesión"); return; }
-  
-  const newBalance = balance + amount;
-  const newTotal = (profile.total_deposited || 0) + amount;
-  
-  const { error } = await supabase.from("profiles")
-    .update({ balance: newBalance, total_deposited: newTotal })
-    .eq("id", currentSession.user.id);
-    
-  if (!error) {
-    await supabase.from("deposits").insert({ user_id: currentSession.user.id, amount });
-    setBalanceState(newBalance);
-    setProfile(p => ({ ...p, balance: newBalance, total_deposited: newTotal }));
-  } else {
-    console.error("Error depósito:", error);
+  async function handleDeposit() {
+    const amount = parseInt(depositAmount);
+    if (!amount || amount <= 0) return;
+    setDepositLoading(true);
+    await onDeposit(amount);
+    setDepositAmount("");
+    setShowDeposit(false);
+    setDepositLoading(false);
   }
-}
 
   const neto = balance - (profile.total_deposited || 0);
 
@@ -208,28 +198,28 @@ function Login() {
 
 // ─── APP PRINCIPAL ────────────────────────────────────────────────────────────
 export default function App() {
-  const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [balance, setBalanceState] = useState(0);
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) loadProfile(session.user.id);
-      else setLoading(false);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        await maybeCreateProfile(session.user.id);
+        await loadProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_OUT") {
-        setSession(null);
         setProfile(null);
         setBalanceState(0);
         setGame(null);
         setLoading(false);
-      } else if (event === "SIGNED_IN") {
-        setSession(session);
+      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         await maybeCreateProfile(session.user.id);
         await loadProfile(session.user.id);
       }
@@ -259,13 +249,15 @@ export default function App() {
 
   async function setBalance(newBalance) {
     setBalanceState(newBalance);
-    const { data: { session: currentSession } } = await supabase.auth.getSession();
-    if (currentSession) {
-      await supabase.from("profiles").update({ balance: newBalance }).eq("id", currentSession.user.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
     }
   }
 
   async function handleDeposit(amount) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { console.error("Sin sesión"); return; }
     const newBalance = balance + amount;
     const newTotal = (profile.total_deposited || 0) + amount;
     const { error } = await supabase.from("profiles")
@@ -281,6 +273,7 @@ export default function App() {
   }
 
   async function handleLogout() {
+    setLoading(true);
     await supabase.auth.signOut();
   }
 
@@ -290,7 +283,7 @@ export default function App() {
     </div>
   );
 
-  if (!session || !profile) return <Login />;
+  if (!profile) return <Login />;
 
   return (
     <div style={styles.appWrap}>
@@ -303,13 +296,13 @@ export default function App() {
       </div>
       <div style={{ padding: "20px 16px" }}>
         {!game && <Lobby profile={profile} balance={balance} setGame={setGame} onDeposit={handleDeposit} />}
-        {game === "slots"       && <SlotsGame      balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "blackjack"   && <BlackjackGame  balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "roulette"    && <RouletteGame   balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "mines"       && <MinesGames     balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "spaceman"    && <SpacemanGame   balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "slots"       && <SlotsGame       balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "blackjack"   && <BlackjackGame   balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "roulette"    && <RouletteGame    balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "mines"       && <MinesGames      balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "spaceman"    && <SpacemanGame    balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={() => setGame(null)} />}
-        {game === "horses"      && <HorseRace      balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "horses"      && <HorseRace       balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
       </div>
     </div>
   );
