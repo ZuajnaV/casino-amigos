@@ -98,7 +98,8 @@ export default function MinesGame({ balance, setBalance, onBack }) {
         setMsg(`✅ Gema ${newSafe}/${safeCells} · ${safeCells - newSafe} restantes · x${mult.toFixed(4)}`);
       }
     }
-  }, [phase, mineGrid, safeRevealed, betAmount, numMines, safeCells]);
+  //}, [phase, mineGrid, safeRevealed, betAmount, numMines, safeCells]);
+  }, [phase, mineGrid, safeRevealed, betAmount, numMines, safeCells, balance]);
 
   function cashOut() {
     if (phase !== "playing") return;
