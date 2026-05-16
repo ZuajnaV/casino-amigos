@@ -214,16 +214,17 @@ export default function App() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT") {
-        setProfile(null);
-        setBalanceState(0);
-        setGame(null);
-        setLoading(false);
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        await maybeCreateProfile(session.user.id);
-        await loadProfile(session.user.id);
-      }
-    });
+  console.log("Auth event:", event); // <-- agrega esto
+  if (event === "SIGNED_OUT") {
+    setProfile(null);
+    setBalanceState(0);
+    setGame(null);
+    setLoading(false);
+  } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+    await maybeCreateProfile(session.user.id);
+    await loadProfile(session.user.id);
+  }
+});
 
     return () => subscription.unsubscribe();
   }, []);
