@@ -276,7 +276,21 @@ export default function App() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
+    window.location.reload();
   }
+
+
+
+  function handleBack() {
+    setGame(null);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+        if (session) await loadProfile(session.user.id);
+    });
+    }
+
+
+
+
 
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#0d0d14", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", fontSize: 24 }}>
@@ -297,13 +311,13 @@ export default function App() {
       </div>
       <div style={{ padding: "20px 16px" }}>
         {!game && <Lobby profile={profile} balance={balance} setGame={setGame} onDeposit={handleDeposit} />}
-        {game === "slots"       && <SlotsGame       balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "blackjack"   && <BlackjackGame   balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "roulette"    && <RouletteGame    balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "mines"       && <MinesGames      balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "spaceman"    && <SpacemanGame    balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
-        {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={() => setGame(null)} />}
-        {game === "horses"      && <HorseRace       balance={balance} setBalance={setBalance} onBack={() => setGame(null)} />}
+        {game === "slots"       && <SlotsGame       balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {game === "blackjack"   && <BlackjackGame   balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {game === "roulette"    && <RouletteGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {game === "mines"       && <MinesGames      balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {game === "spaceman"    && <SpacemanGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={handleBack} />}
+        {game === "horses"      && <HorseRace       balance={balance} setBalance={setBalance} onBack={handleBack} />}
       </div>
     </div>
   );
