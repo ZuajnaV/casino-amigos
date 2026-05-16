@@ -222,6 +222,7 @@ export default function App() {
       }
     });
 
+    /*
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("Auth event:", event);
   if (event === "SIGNED_OUT") {
@@ -229,6 +230,18 @@ export default function App() {
     setBalanceState(0);
     setGame(null);
     setLoading(false);
+    */
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log("Auth event:", event);
+  if (event === "SIGNED_OUT") {
+    setProfile(null);
+    setBalanceState(0);
+    setGame(null);
+    setLoading(false);
+  //}
+    //});
+
   } else if (event === "SIGNED_IN") {
     // Solo procesar si no tenemos perfil aún
     setProfile(prev => {

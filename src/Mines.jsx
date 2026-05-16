@@ -94,6 +94,7 @@ export default function MinesGame({ balance, setBalance, onBack, onGameEnd }) {
       setMultiplier(mult);
       setPotentialWin(win);
       if (newSafe === safeCells) {
+        const win = Math.round(betAmount * mult);
         finishCashOut(win, mult, newSafe, true);
       } else {
         setMsg(`✅ Gema ${newSafe}/${safeCells} · ${safeCells - newSafe} restantes · x${mult.toFixed(4)}`);
@@ -106,7 +107,8 @@ export default function MinesGame({ balance, setBalance, onBack, onGameEnd }) {
     if (phase !== "playing") return;
     if (safeRevealed === 0) { setMsg("Revela al menos 1 celda antes de cobrar"); return; }
     const mult = calcMultiplier(numMines, safeRevealed);
-    const win  = parseFloat((betAmount * mult).toFixed(2));
+    //const win  = parseFloat((betAmount * mult).toFixed(2));
+    const win = Math.round(betAmount * mult);
     finishCashOut(win, mult, safeRevealed, false);
   }
 
