@@ -379,7 +379,7 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
             {/* Selector de fichas */}
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
               <span style={{ color: "#ffffff", fontSize: 20, letterSpacing: 1 }}>FICHA:</span>
-              {[1, 5, 10, 15].map(v => (
+              {[500, 1000, 5000, 10000, 50000].map(v => (
                 <button key={v} onClick={() => setChipValue(v)} style={{
                   ...S.chip,
                   background: chipValue === v ? "#c084fc" : "#2a2a3a",
