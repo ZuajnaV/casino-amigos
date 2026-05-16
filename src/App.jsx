@@ -255,12 +255,21 @@ export default function App() {
   }
 
   async function handleDeposit(amount) {
-    const newBalance = balance + amount;
-    const newTotal = profile.total_deposited + amount;
-    await supabase.from("profiles").update({ balance: newBalance, total_deposited: newTotal }).eq("id", session.user.id);
-    await supabase.from("deposits").insert({ user_id: session.user.id, amount });
-    setBalanceState(newBalance);
-    setProfile(p => ({ ...p, balance: newBalance, total_deposited: newTotal }));
+  const newBalance = balance + amount;
+  const newTotal = (profile.total_deposited || 0) + amount;
+  
+  const { error } = await supabase.from("profiles")
+    .update({ balance: newBalance, total_deposited: newTotal })
+    .eq("id", session.user.id);
+    
+    if (!error) {
+      await supabase.from("deposits")
+        .insert({ user_id: session.user.id, amount });
+      setBalanceState(newBalance);
+      setProfile(p => ({ ...p, balance: newBalance, total_deposited: newTotal }));
+    } else {
+      console.error("Error depósito:", error);
+    }
   }
 
   async function handleLogout() {
