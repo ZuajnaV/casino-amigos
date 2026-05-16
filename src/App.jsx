@@ -18,7 +18,7 @@ const GAMES = [
   { id: "horses",      name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",             color: "#ef4444" },
 ];
 
-const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲"];
+const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈​","​🗿​","​🚨​","🗽​","🛸​","🛰️​"];
 
 // ─── LOBBY ───────────────────────────────────────────────────────────────────
 function Lobby({ profile, balance, setGame, onDeposit }) {
@@ -208,10 +208,6 @@ export default function App() {
     const balanceRef = useRef(balance);
     useEffect(() => { balanceRef.current = balance; }, [balance]);
 
-
-
-
-
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
@@ -221,16 +217,6 @@ export default function App() {
         setLoading(false);
       }
     });
-
-    /*
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log("Auth event:", event);
-  if (event === "SIGNED_OUT") {
-    setProfile(null);
-    setBalanceState(0);
-    setGame(null);
-    setLoading(false);
-    */
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("Auth event:", event);
@@ -289,15 +275,6 @@ async function saveBalance(newBalance) {
     await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
   }
 }
-/*
-// handleBack guarda el balance al volver al lobby
-async function handleBack() {
-  await saveBalance(balance);
-  setGame(null);
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) await loadProfile(session.user.id);
-}
-*/
 
 async function handleBack() {
   await saveBalance(balanceRef.current);
@@ -311,13 +288,6 @@ async function handleLogout() {
   await supabase.auth.signOut();
   window.location.reload();
 }
-
-
-
-
-
-
-
 
   async function handleDeposit(amount) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -335,16 +305,6 @@ async function handleLogout() {
       console.error("Error depósito:", error);
     }
   }
-
-  /*
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    window.location.reload();
-  }
-  */
-
-
-
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#0d0d14", display: "flex", alignItems: "center", justifyContent: "center", color: "#fbbf24", fontSize: 24 }}>
       🎰 Cargando...
