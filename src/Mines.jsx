@@ -110,7 +110,7 @@ export default function MinesGame({ balance, setBalance, onBack }) {
 
   function finishCashOut(win, mult, gems, isFullWin) {
     //setBalance((b) => b + win);
-    setBalance(balance - betAmount + win);
+    setBalance(balance + win);
     setPhase("won");
     setMultiplier(mult);
     setPotentialWin(win);
