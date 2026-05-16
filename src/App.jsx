@@ -214,15 +214,22 @@ export default function App() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log("Auth event:", event); // <-- agrega esto
+  console.log("Auth event:", event);
   if (event === "SIGNED_OUT") {
     setProfile(null);
     setBalanceState(0);
     setGame(null);
     setLoading(false);
-  } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-    await maybeCreateProfile(session.user.id);
-    await loadProfile(session.user.id);
+  } else if (event === "SIGNED_IN") {
+    // Solo procesar si no tenemos perfil aún
+    setProfile(prev => {
+      if (!prev) {
+        maybeCreateProfile(session.user.id).then(() => loadProfile(session.user.id));
+      }
+      return prev;
+    });
+  } else if (event === "TOKEN_REFRESHED") {
+    // Solo refrescar token, no recargar perfil
   }
 });
 
