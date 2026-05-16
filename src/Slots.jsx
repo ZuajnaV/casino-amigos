@@ -163,21 +163,12 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     if (spinning) return;
     if (!isFree && balance < bet) { setMsg("¡Sin saldo suficiente!"); return; }
     setMsg(""); setWinningLines([]); setLastResult(null);
-    //if (!isFree) { setBalance(b => b - bet); setJackpotPool(p => p + Math.floor(bet * 0.1)); }
-   /* if (!isFree) {
-  setBalance(balance - bet);
-  const newPool = jackpotPool + Math.floor(bet * 0.1);
-  setJackpotPool(newPool);
-  //supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1);
-  await supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1); */
-  if (!isFree) {
-  setBalance(balance - bet);
-  const increment = Math.floor(bet * 0.1);
-  const newPool = jackpotPool + increment;
-  setJackpotPool(newPool);
-  await supabase.rpc("increment_jackpot", { amount: increment });
-
-
+    if (!isFree) {
+    setBalance(balance - bet);
+    const increment = Math.floor(bet * 0.1);
+    const newPool = jackpotPool + increment;
+    setJackpotPool(newPool);
+    await supabase.rpc("increment_jackpot", { amount: increment });
 }
 
 
