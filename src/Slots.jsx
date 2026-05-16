@@ -159,7 +159,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
   const [stoppedCols, setStoppedCols] = useState(new Set());
   const spinTimersRef = useRef([]);
 
-  function doSpin(isFree = false) {
+  async function doSpin(isFree = false) {
     if (spinning) return;
     if (!isFree && balance < bet) { setMsg("¡Sin saldo suficiente!"); return; }
     setMsg(""); setWinningLines([]); setLastResult(null);
@@ -168,7 +168,12 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
   setBalance(balance - bet);
   const newPool = jackpotPool + Math.floor(bet * 0.1);
   setJackpotPool(newPool);
-  supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1);
+  //supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1);
+
+
+  const { error } = await supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1);
+  console.log("Jackpot update:", newPool, "error:", error);
+
 }
 
 
@@ -236,16 +241,6 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     addHistory(lines, totalPayout, freeSpinsWon);
   }
 
-  /*
-  function addHistory(lines, payout, fs) {
-    setHistory(h => [{ lines: lines.length, payout, freeSpins: fs, time: new Date().toLocaleTimeString() }, ...h.slice(0, 6)]);
-  }
-  */
-
-
-
-
-
   function addHistory(lines, payout, fs) {
     const entry = { bet, payout, freeSpins: fs };
     setHistory(h => [entry, ...h.slice(0, 6)]);
@@ -260,14 +255,6 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       });
     });
   }
-
-
-
-
-
-
-
-
   function continueAfterResult() {
     setPhase("idle"); setLastResult(null); setWinningLines([]);
     if (freeSpinsLeft > 0) { setFreeSpinsLeft(n => n - 1); setTimeout(() => doSpin(true), 400); }
