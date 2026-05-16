@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "./supabase";
 
 // ── Símbolos ────────────────────────────────────────────────────────────────
 const SYMBOLS = [
@@ -162,7 +163,15 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     if (spinning) return;
     if (!isFree && balance < bet) { setMsg("¡Sin saldo suficiente!"); return; }
     setMsg(""); setWinningLines([]); setLastResult(null);
-    if (!isFree) { setBalance(b => b - bet); setJackpotPool(p => p + Math.floor(bet * 0.1)); }
+    //if (!isFree) { setBalance(b => b - bet); setJackpotPool(p => p + Math.floor(bet * 0.1)); }
+    if (!isFree) {
+  setBalance(balance - bet);
+  const newPool = jackpotPool + Math.floor(bet * 0.1);
+  setJackpotPool(newPool);
+  supabase.from("slots_jackpot").update({ pool: newPool }).eq("id", 1);
+}
+
+
     const sc = spinCount % 3;
     if (sc === 0) playBg("SonidoFondoGiro1.wav");
     else if (sc === 1) playBg("SonidoFondoGiro2.wav");
@@ -210,6 +219,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       playSfx("Jackpot.wav"); setPhase("jackpotEvent");
       setLastResult({ type: "jackpotAcumulado", jackpotWon: true, jackpotAmt: jackpotPool, payout: totalPayout, freeSpinsWon, wildBonus, lines });
       setBalance(b => b + jackpotPool + totalPayout); setJackpotPool(0);
+      supabase.from("slots_jackpot").update({ pool: 0 }).eq("id", 1);
       addHistory(lines, totalPayout + jackpotPool, freeSpinsWon);
       return;
     }
@@ -226,16 +236,64 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     addHistory(lines, totalPayout, freeSpinsWon);
   }
 
+  /*
   function addHistory(lines, payout, fs) {
     setHistory(h => [{ lines: lines.length, payout, freeSpins: fs, time: new Date().toLocaleTimeString() }, ...h.slice(0, 6)]);
   }
+  */
+
+
+
+
+
+  function addHistory(lines, payout, fs) {
+    const entry = { bet, payout, freeSpins: fs };
+    setHistory(h => [entry, ...h.slice(0, 6)]);
+  
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      await supabase.from("slots_history").insert({
+        user_id: session.user.id,
+        time: String(bet),
+        payout,
+        free_spins: fs,
+      });
+    });
+  }
+
+
+
+
+
+
+
 
   function continueAfterResult() {
     setPhase("idle"); setLastResult(null); setWinningLines([]);
     if (freeSpinsLeft > 0) { setFreeSpinsLeft(n => n - 1); setTimeout(() => doSpin(true), 400); }
   }
 
+ 
   useEffect(() => () => { spinTimersRef.current.forEach(t => { clearTimeout(t); clearInterval(t); }); stopBg(); }, []);
+
+// Cargar jackpot global
+useEffect(() => {
+  supabase.from("slots_jackpot").select("pool").eq("id", 1).single()
+    .then(({ data }) => { if (data) setJackpotPool(data.pool); });
+}, []);
+
+// Cargar historial previo
+useEffect(() => {
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    const { data } = await supabase.from("slots_history")
+      .select("*").eq("user_id", session.user.id)
+      .order("created_at", { ascending: false }).limit(7);
+    if (data) setHistory(data.map(h => ({ bet: parseInt(h.time), payout: h.payout, freeSpins: h.free_spins })));
+  });
+}, []);
+
+
 
   // ── Controles (reutilizables en columna derecha) ────────────────────────
   const showControls = phase === "idle";
@@ -433,7 +491,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
                 <div style={{ color: "#ffffff", fontSize: 15, letterSpacing: 2, marginBottom: 6 }}>ÚLTIMOS GIROS</div>
                 {history.map((h, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 6px", borderRadius: 5, marginBottom: 3, fontSize: 15, background: h.payout > 0 ? "#0a2a0a" : "#0a0a0a" }}>
-                    <span style={{ color: "#ffffff" }}>{h.time}</span>
+                    <span style={{ color: "#ffffff" }}>💰{(h.bet ?? h.time).toLocaleString()}</span>
                     {h.freeSpins > 0 && <span style={{ color: "#c084fc" }}>+{h.freeSpins}FS</span>}
                     <span style={{ color: h.payout > 0 ? "#00d4aa" : "#444", fontWeight: 700 }}>
                       {h.payout > 0 ? `+${h.payout.toLocaleString()}` : "−"}
