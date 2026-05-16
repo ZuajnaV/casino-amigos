@@ -257,7 +257,8 @@ export default function HorseRace({ balance, setBalance, onBack }) {
     if (!validSelection) return;
     if (balance < betAmount) return;
 
-    setBalance(b => b - betAmount);
+    //setBalance(b => b - betAmount);
+    setBalance(balance - betAmount);
     const newHorses = initHorses();
     setHorses(newHorses);
 
@@ -408,7 +409,8 @@ function runAnimation(order, horseList, mult) {
       setFinishOrder([...order]);
       const won = checkBet(betType, selectedHorses, order);
       const net = won ? Math.round(betAmount * mult - betAmount) : -betAmount;
-      if (won) setBalance(b => b + betAmount + Math.round(betAmount * mult));
+      //if (won) setBalance(b => b + betAmount + Math.round(betAmount * mult));
+      if (won) setBalance(balance - betAmount + Math.round(betAmount * mult));
       setResult({ won, multiplier: mult, netResult: net, order });
       setHistory(h => [{
         won, order: order.slice(0, 3),
