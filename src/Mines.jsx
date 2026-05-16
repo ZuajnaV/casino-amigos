@@ -36,7 +36,7 @@ function blankCells() {
   return Array(25).fill(null).map(() => ({ state: "hidden" }));
 }
 
-export default function MinesGame({ balance, setBalance, onBack }) {
+export default function MinesGame({ balance, setBalance, onBack, onGameEnd }) {
   const [phase, setPhase]               = useState("idle");
   const [cells, setCells]               = useState(blankCells);
   const [mineGrid, setMineGrid]         = useState([]);
@@ -84,6 +84,7 @@ export default function MinesGame({ balance, setBalance, onBack }) {
       setPotentialWin(0);
       setMsg(`💥 ¡BOOM! Perdiste $${betAmount}`);
       setHistory((h) => [{ delta: -betAmount, mines: numMines, gems: safeRevealed }, ...h.slice(0, 8)]);
+      onGameEnd(balance); // balance ya tiene descontada la apuesta
     } else {
       const newSafe = safeRevealed + 1;
       const mult    = calcMultiplier(numMines, newSafe);
@@ -111,7 +112,11 @@ export default function MinesGame({ balance, setBalance, onBack }) {
 
   function finishCashOut(win, mult, gems, isFullWin) {
     //setBalance((b) => b + win);
-    setBalance(balance + win);
+    //setBalance(balance + win);
+    const finalBalance = balance + win;
+    setBalance(finalBalance);
+    onGameEnd(finalBalance);
+
     setPhase("won");
     setMultiplier(mult);
     setPotentialWin(win);

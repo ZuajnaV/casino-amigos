@@ -354,7 +354,8 @@ async function handleLogout() {
         {game === "slots"       && <SlotsGame       balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "blackjack"   && <BlackjackGame   balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "roulette"    && <RouletteGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
-        {game === "mines"       && <MinesGames      balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {/* {game === "mines"       && <MinesGames      balance={balance} setBalance={setBalance} onBack={handleBack} />} */}
+        {game === "mines" && <MinesGames balance={balance} setBalance={setBalance} onBack={handleBack} onGameEnd={(fb) => { balanceRef.current = fb; }} />}
         {game === "spaceman"    && <SpacemanGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={handleBack} />}
         {game === "horses"      && <HorseRace       balance={balance} setBalance={setBalance} onBack={handleBack} />}
