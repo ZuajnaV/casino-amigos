@@ -330,15 +330,11 @@ function runAnimation(order, horseList, mult) {
       let accelRate = 0.05; 
       let randomNoise = 0.2; 
 
-      // ─────────────────────────────────────────────────────────────────
-      // PANEL DE CONTROL OPTIMIZADO (MÁS CAOS INICIAL)
-      // ─────────────────────────────────────────────────────────────────
-
       if (phase === 1) {
         // ETAPA 1: SALIDA IMPREDECIBLE (0% a 25%)
         // Ampliamos el rango de velocidad drásticamente (de 1.5 a 7.0).
         // Bajamos el accelRate a 0.05 para que si un caballo arranca lento, se note bastante el rezago.
-        targetSpd = 1.5 + Math.random() * 5.5; 
+        targetSpd = 1 + Math.random() * 5.5;    //1.5   5.5
         accelRate = 0.05; 
         randomNoise = 0.8; // Alta vibración y saltos orgánicos
 
@@ -346,7 +342,7 @@ function runAnimation(order, horseList, mult) {
         // ETAPA 2: ESTIRAMIENTO DEL PELOTÓN (25% a 50%)
         // Aquí la pista se rompe. Mantenemos una alta dispersión puramente aleatoria.
         // El rankFactor influye de forma mínima (0.4) para mantener el engaño visual.
-        targetSpd = 1.8 + Math.random() * 5.0 + (rankFactor * 0.4); 
+        targetSpd = 1.8 + Math.random() * 5.0 + (rankFactor * 1);       // 1.8   5.0   0.4
         accelRate = 0.04; // Transición muy lenta, permitiendo que las distancias se consoliden
         randomNoise = 0.5;
 
@@ -362,7 +358,7 @@ function runAnimation(order, horseList, mult) {
         const lag = expectedPct - pct;
 
         // Fuerza de empuje según el caballo
-        const sprintPower = rankFactor * phaseProgress * 2.5; 
+        const sprintPower = rankFactor * phaseProgress * 1;     // Hasta +2.5 para el favorito en la fase final de esta etapa
         const correctiveBoost = Math.max(0, lag * 10); // Mitiga las distancias exageradas de la fase 1 y 2
         
         targetSpd = 2.8 + sprintPower + correctiveBoost;
@@ -426,27 +422,6 @@ function runAnimation(order, horseList, mult) {
 
   animRef.current = requestAnimationFrame(tick);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
