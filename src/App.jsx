@@ -247,14 +247,25 @@ export default function App() {
     setLoading(false);
   }
 
-  async function setBalance(newBalance) {
+  // Esta función solo actualiza la UI, no Supabase
+function setBalance(newBalance) {
   setBalanceState(newBalance);
-  const { data: { session }, error } = await supabase.auth.getSession();
-  console.log("setBalance - session:", session?.user?.id, "error:", error);
+}
+
+// Esta guarda en Supabase
+async function saveBalance(newBalance) {
+  const { data: { session } } = await supabase.auth.getSession();
   if (session) {
-    const { error: updateError } = await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
-    console.log("update error:", updateError);
+    await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
   }
+}
+
+// handleBack guarda el balance al volver al lobby
+async function handleBack() {
+  await saveBalance(balance);
+  setGame(null);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) await loadProfile(session.user.id);
 }
 
   async function handleDeposit(amount) {
@@ -278,16 +289,6 @@ export default function App() {
     await supabase.auth.signOut();
     window.location.reload();
   }
-
-
-
-  function handleBack() {
-    setGame(null);
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-        if (session) await loadProfile(session.user.id);
-    });
-    }
-
 
 
 
