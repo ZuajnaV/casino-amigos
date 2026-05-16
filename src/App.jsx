@@ -33,15 +33,25 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
       .then(({ data }) => { if (data) setProfiles(data); });
   }, [balance]);
 
-  async function handleDeposit() {
-    const amount = parseInt(depositAmount);
-    if (!amount || amount <= 0) return;
-    setDepositLoading(true);
-    await onDeposit(amount);
-    setDepositAmount("");
-    setShowDeposit(false);
-    setDepositLoading(false);
+  async function handleDeposit(amount) {
+  const { data: { session: currentSession } } = await supabase.auth.getSession();
+  if (!currentSession) { console.error("Sin sesión"); return; }
+  
+  const newBalance = balance + amount;
+  const newTotal = (profile.total_deposited || 0) + amount;
+  
+  const { error } = await supabase.from("profiles")
+    .update({ balance: newBalance, total_deposited: newTotal })
+    .eq("id", currentSession.user.id);
+    
+  if (!error) {
+    await supabase.from("deposits").insert({ user_id: currentSession.user.id, amount });
+    setBalanceState(newBalance);
+    setProfile(p => ({ ...p, balance: newBalance, total_deposited: newTotal }));
+  } else {
+    console.error("Error depósito:", error);
   }
+}
 
   const neto = balance - (profile.total_deposited || 0);
 
