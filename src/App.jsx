@@ -27,11 +27,51 @@ function Lobby({ profile, balance, setGame, onDeposit, onLogout }) {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositLoading, setDepositLoading] = useState(false);
 
-  useEffect(() => {
+  /*useEffect(() => {
     supabase.from("profiles").select("username, avatar, balance")
       .order("balance", { ascending: false })
       .then(({ data }) => { if (data) setProfiles(data); });
   }, [balance]);
+  */
+
+
+
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("Session:", session, "Error:", error);
+      setSession(session);
+      if (session) loadProfile(session.user.id);
+      else setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth event:", event, session);
+      setSession(session);
+      if (session) {
+        if (event === "SIGNED_IN") {
+          await maybeCreateProfile(session.user.id);
+          await loadProfile(session.user.id);
+        }
+      } else {
+        setProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+
+
+
+
+
+
+
+
+
+
 
   async function handleDeposit() {
     const amount = parseInt(depositAmount);
