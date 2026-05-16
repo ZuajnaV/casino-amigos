@@ -1,8 +1,6 @@
 // Spaceman.jsx
-// Conversión del crash game VBA Spaceman a React
-// Imágenes: coloca barra.png y explosion.png en /public/
-
 import { useState, useRef, useEffect, useCallback } from "react";
+import { supabase } from "./supabase";
 
 // ─── Constantes (igual que VBA) ──────────────────────────────────────────────
 const SP_TICK   = 100;      //150 ms por tick (VBA: 0.2s = 200ms, reducido para fluidez)
@@ -51,6 +49,15 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
   const [msg, setMsg]           = useState("");
   const [history, setHistory]   = useState([]);       // [{mult, win}]
   const [chartData, setChartData] = useState([1]);
+
+
+
+
+
+  const [netoTotal, setNetoTotal] = useState(0);
+
+
+
 
   // Refs para acceso en el intervalo sin closures viejas
   const gameRef = useRef({
@@ -110,6 +117,29 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
         const origBet = g.halfDone ? g.activeBet * 2 : g.activeBet;
         const net     = g.halfAmt - origBet;
         setHistory((h) => [{ m: g.crashAt, net, crash: true }, ...h.slice(0, 11)]);
+
+
+
+
+
+        setNetoTotal(n => n + net);
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
+          if (!session) return;
+          await supabase.from("spaceman_history").insert({
+            user_id: session.user.id,
+            crash: true,
+            multiplier: g.crashAt,
+            net: net,
+          });
+        });
+
+
+
+
+
+
+
+
         setMsg(`💥 CRASH en x${g.crashAt.toFixed(2)} · Perdiste $${g.activeBet.toFixed(2)}${g.halfDone ? ` (parcial salvado: $${g.halfAmt.toFixed(2)})` : ""}`);
         return;
       }
@@ -161,6 +191,30 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
     setMult(currentMult);
     setPotWin(winAmt);
     setHistory((h) => [{ m: currentMult, net, crash: false }, ...h.slice(0, 11)]);
+
+
+
+
+    setNetoTotal(n => n + net);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      await supabase.from("spaceman_history").insert({
+        user_id: session.user.id,
+        crash: false,
+        multiplier: currentMult,
+        net: net,
+      });
+    });
+
+
+
+
+
+
+
+
+
+
     setMsg(
       isAuto
         ? `🤖 AUTO CO en x${currentMult.toFixed(2)} · Total: $${(winAmt + g.halfAmt).toFixed(2)}`
@@ -401,8 +455,23 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
 
             {/* Historial */}
             {history.length > 0 && (
+
+
+
+
+
               <div style={{ marginTop: 14 }}>
                 <div style={S.label}>HISTORIAL</div>
+                
+                
+                
+                
+                <div style={{ color: netoTotal >= 0 ? "#00d4aa" : "#ff4444", fontSize: 13, fontWeight: 700, textAlign: "right", marginBottom: 4 }}>
+                Neto sesión: {netoTotal >= 0 ? "+" : ""}{netoTotal.toFixed(2)}
+                </div>
+
+
+
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 5 }}>
                   {history.map((h, i) => (
                     <div key={i} style={S.histRow}>
