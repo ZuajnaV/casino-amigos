@@ -75,6 +75,42 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
   // ── LIMPIAR intervalo al desmontar ──────────────────────────────────────────
   useEffect(() => () => clearInterval(intervalRef.current), []);
 
+
+
+
+
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data } = await supabase.from("spaceman_history")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false })
+        .limit(12);
+      if (data && data.length > 0) {
+        setHistory(data.map(h => ({ m: h.multiplier, net: h.net, crash: h.crash })));
+        setNetoTotal(data.reduce((sum, h) => sum + h.net, 0));
+      }
+    });
+  }, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── NUEVA RONDA (SpNewRound) ────────────────────────────────────────────────
   function newRound() {
     if (bet <= 0)        { setMsg("La apuesta debe ser mayor a 0"); return; }
