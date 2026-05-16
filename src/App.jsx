@@ -248,12 +248,14 @@ export default function App() {
   }
 
   async function setBalance(newBalance) {
-    setBalanceState(newBalance);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
-    }
+  setBalanceState(newBalance);
+  const { data: { session }, error } = await supabase.auth.getSession();
+  console.log("setBalance - session:", session?.user?.id, "error:", error);
+  if (session) {
+    const { error: updateError } = await supabase.from("profiles").update({ balance: newBalance }).eq("id", session.user.id);
+    console.log("update error:", updateError);
   }
+}
 
   async function handleDeposit(amount) {
     const { data: { session } } = await supabase.auth.getSession();
