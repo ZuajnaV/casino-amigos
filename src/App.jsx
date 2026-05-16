@@ -8,10 +8,10 @@ import HorseRace from "./HorseRace.jsx";
 import SlotsGame from "./Slots.jsx";
 
 const USERS = [
-  { user: "Juan", pass: "1234", avatar: "🎩", balance: 10000000 },
-  { user: "Santiago",    pass: "1234", avatar: "💃", balance: 10000000 },
-  { user: "Angel",  pass: "1234", avatar: "🕶️", balance: 10000000 },
-  { user: "Mauricio",  pass: "1234", avatar: "👑", balance: 10000000 },
+  { user: "Juan", pass: "1234", avatar: "🎩", balance: 100000 },
+  { user: "Santiago",    pass: "1234", avatar: "💃", balance: 100000 },
+  { user: "Angel",  pass: "1234", avatar: "🕶️", balance: 100000 },
+  { user: "Mauricio",  pass: "1234", avatar: "👑", balance: 100000 },
 ];
 
 const GAMES = [
