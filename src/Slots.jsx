@@ -218,7 +218,7 @@ const autoSpinRef = useRef(false);
       const t = setTimeout(() => {
         stopped.add(col); setStoppedCols(new Set(stopped));
         if (stopped.size === 5) { clearInterval(animInterval); setGrid(finalGrid); setSpinning(false); stopBg(); resolveResult(finalGrid, isFree, activeBet); }
-      }, 1000 + col * 1000);
+      }, 1000 + col * 700);    // 1000 + col*1000 ms para cada columna
       spinTimersRef.current.push(t);
     }
   }
