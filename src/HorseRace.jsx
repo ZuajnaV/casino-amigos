@@ -208,7 +208,7 @@ export default function HorseRace({ balance, setBalance, onBack }) {
   const [horses, setHorses] = useState(() => initHorses());
   const [betType, setBetType] = useState(1);
   const [selectedHorses, setSelectedHorses] = useState([null, null, null, null]);
-  const [betAmount, setBetAmount] = useState(100);
+  const [betAmount, setBetAmount] = useState(1000);
   const [phase, setPhase] = useState("bet"); // bet | racing | result
   const [positions, setPositions] = useState({});
   const [finished, setFinished] = useState({});
