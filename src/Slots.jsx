@@ -355,6 +355,24 @@ function continueAfterResult() {
     });
   }, []);
 
+
+
+
+useEffect(() => {
+  if (phase === "result" && autoSpinRef.current && autoSpinsLeft > 0) {
+    const t = setTimeout(() => continueAfterResult(), 800);
+    return () => clearTimeout(t);
+  }
+}, [phase, autoSpinsLeft]);
+
+
+
+
+
+
+
+
+
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", fontFamily: "'Georgia', serif" }}>
       <button onClick={onBack} style={ST.backBtn}>← Lobby</button>
