@@ -1,5 +1,5 @@
 // Mines.jsx
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect} from "react";
 import { supabase } from "./supabase";
 
 const TOTAL_CELLS = 25;
