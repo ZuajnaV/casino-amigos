@@ -156,7 +156,7 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
   const [msg, setMsg] = useState("");
-  const [chipValue, setChipValue] = useState(5);
+  const [chipValue, setChipValue] = useState(500);
   const [bets, setBets] = useState({});
   // fullHistory: hasta 114 tiradas para estadísticas
   const [fullHistory, setFullHistory] = useState([]);
