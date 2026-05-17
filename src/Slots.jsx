@@ -368,18 +368,18 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       <button onClick={onBack} style={ST.backBtn}>← Lobby</button>
 
       <div style={ST.card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div>
-            <h2 style={{ color: "#FFD700", margin: 0, fontSize: 20, letterSpacing: 2 }}>TRAGAMONEDAS</h2>
-            <div style={{ fontSize: 13, color: "#ffffff", marginTop: 2 }}>5×5 · Filas y Columnas</div>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={ST.balancePill}>💰 {balance.toLocaleString()}</div>
-            <div style={{ marginTop: 4, fontSize: 13, color: "#FFD700", fontWeight: 700 }}>
-              🏆 Fijo: 60.000 · Acum: {jackpotPool.toLocaleString()}
-            </div>
-          </div>
-        </div>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+  <div>
+    <h2 style={{ color: "#FFD700", margin: 0, fontSize: 20, letterSpacing: 2 }}>TRAGAMONEDAS</h2>
+    <div style={{ fontSize: 13, color: "#ffffff", marginTop: 2 }}>5×5 · Filas y Columnas</div>
+  </div>
+  <div style={{ textAlign: "right" }}>
+    <div style={ST.balancePill}>💰 {balance.toLocaleString()}</div>
+    <div style={{ marginTop: 4, fontSize: 13, color: "#FFD700", fontWeight: 700 }}>
+      🏆 Fijo: {(JACKPOT_FIJO_MAP[freeSpinsLeft > 0 ? freeBet : bet] ?? 60000).toLocaleString()} · Acum: {jackpotPool.toLocaleString()}
+    </div>
+  </div>
+</div>
 
         {freeSpinsLeft > 0 && (
           <div style={{ background: "#1a0a2a", border: "2px solid #c084fc", borderRadius: 8, textAlign: "center", padding: "6px", marginBottom: 8, color: "#c084fc", fontWeight: 700 }}>
