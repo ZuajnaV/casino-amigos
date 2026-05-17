@@ -132,7 +132,7 @@ function SlotGrid({ grid, spinning, stoppedCols, winningLines }) {
               {sym.type === "jackpot" ? "⭐" : sym.type === "wild" ? "🃏" : sym.type === "scatter" ? "🍬" : sym.type === "premium" ? "💎" : "🎰"}
             </div>
             {(sym.type === "wild" || sym.type === "scatter" || sym.type === "jackpot") && (
-              <div style={{ position: "absolute", top: 2, right: 2, fontSize: 8, fontWeight: 900, color: sym.type === "jackpot" ? "#FFD700" : sym.type === "scatter" ? "#ff6b35" : "#00d4aa", background: "#000a", borderRadius: 3, padding: "1px 3px" }}>
+              <div style={{ position: "absolute", top: 2, right: 2, fontSize: 14, fontWeight: 900, color: sym.type === "jackpot" ? "#FFD700" : sym.type === "scatter" ? "#ff6b35" : "#00d4aa", background: "#000a", borderRadius: 3, padding: "1px 3px" }}>
                 {sym.type === "wild" ? "W" : sym.type === "scatter" ? "S" : "J"}
               </div>
             )}
@@ -355,23 +355,12 @@ function continueAfterResult() {
     });
   }, []);
 
-
-
-
 useEffect(() => {
   if (phase === "result" && autoSpinRef.current && autoSpinsLeft > 0) {
     const t = setTimeout(() => continueAfterResult(), 800);
     return () => clearTimeout(t);
   }
 }, [phase, autoSpinsLeft]);
-
-
-
-
-
-
-
-
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", fontFamily: "'Georgia', serif" }}>
@@ -385,7 +374,7 @@ useEffect(() => {
   </div>
   <div style={{ textAlign: "right" }}>
     <div style={ST.balancePill}>💰 {balance.toLocaleString()}</div>
-    <div style={{ marginTop: 4, fontSize: 13, color: "#FFD700", fontWeight: 700 }}>
+    <div style={{ marginTop: 4, fontSize: 20, color: "#FFD700", fontWeight: 700 }}>
       🏆 Fijo: {(JACKPOT_FIJO_MAP[freeSpinsLeft > 0 ? freeBet : bet] ?? 60000).toLocaleString()} · Acum: {jackpotPool.toLocaleString()}
     </div>
   </div>
