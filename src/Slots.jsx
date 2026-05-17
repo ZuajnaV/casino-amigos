@@ -283,6 +283,25 @@ useEffect(() => {
     .then(({ data }) => { if (data) setJackpotPool(data.pool); });
 }, []);
 
+
+
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    supabase.from("slots_jackpot").select("pool").eq("id", 1).single()
+      .then(({ data }) => { if (data) setJackpotPool(data.pool); });
+  }, 10000);
+  return () => clearInterval(interval);
+}, []);
+
+
+
+
+
+
+
+
+
 // Cargar historial previo
 useEffect(() => {
   supabase.auth.getSession().then(async ({ data: { session } }) => {
