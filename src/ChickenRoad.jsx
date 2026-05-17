@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "./supabase";
 
 // ─── CONSTANTS ────────────────────────────────────────────────
 const VISUAL_LANES = 10;
@@ -84,6 +85,33 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
 
   // sync external balance
   useEffect(() => { setBal(balance); }, [balance]);
+
+
+
+  useEffect(() => {
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    const { data } = await supabase.from("chickenroad_stats")
+      .select("hist_net").eq("user_id", session.user.id).single();
+    if (data) setHist(data.hist_net);
+  });
+}, []);
+
+
+
+  useEffect(() => {
+  if (hist === 0) return;
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    await supabase.from("chickenroad_stats")
+      .update({ hist_net: hist }).eq("user_id", session.user.id);
+  });
+}, [hist]);
+
+
+
+
+
 
   const currentProb = probArray.length > 0 && level < probArray.length
     ? probArray[level]
