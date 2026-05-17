@@ -256,7 +256,28 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       const roll = Math.floor(Math.random() * 5000) + 1;
       const jackpotWon = roll < 750;
       //const FIXED_JACKPOT = 60000;
-      const FIXED_JACKPOT = JACKPOT_FIJO_MAP[activeBet] ?? 60000;
+
+
+
+
+      console.log("activeBet:", activeBet, "FIXED_JACKPOT:", JACKPOT_FIJO_MAP[activeBet]);
+
+
+
+
+
+
+
+
+      const FIXED_JACKPOT = JACKPOT_FIJO_MAP[Number(activeBet)] ?? 60000;
+
+
+      
+
+
+
+
+
       setPhase("jackpotEvent"); playSfx(jackpotWon ? "Jackpot.wav" : "NoJackpot.wav");
       setLastResult({ type: "jackpotFijo", jackpotWon, roll, jackpotAmt: FIXED_JACKPOT, payout: totalPayout, freeSpinsWon, wildBonus, lines });
       if (jackpotWon) setBalance(b => b + FIXED_JACKPOT + totalPayout);
