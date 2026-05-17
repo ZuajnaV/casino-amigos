@@ -159,6 +159,24 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
   const [msg, setMsg] = useState("");
   const [chipValue, setChipValue] = useState(500);
   const [bets, setBets] = useState({});
+
+
+
+
+
+
+  const [lastBets, setLastBets] = useState({});
+
+
+
+
+
+
+
+
+
+
+
   // fullHistory: hasta 114 tiradas para estadísticas
   const [fullHistory, setFullHistory] = useState([]);
 
@@ -314,27 +332,31 @@ supabase.from("roulette_stats").update({
   even_count: evenCount + (isEven ? 1 : 0),
   odd_count: oddCount + (!isGreen && !isEven ? 1 : 0),
 }).eq("id", 1);
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
     if (net > 0) setMsg(`🎉 ¡Ganaste ${net} fichas!`);
     else if (net === 0) setMsg("🤝 Recuperas tu apuesta");
     else setMsg(`😔 Perdiste ${Math.abs(net)} fichas`);
-    setBets({});
+    //setBets({});
+
+
+
+
+
+
+  setLastBets(bets);
+setBets({});
+
+
+
+
+
+
+
+
+
+
+
+
+
     setSpinning(false);
 
 
@@ -347,10 +369,6 @@ const { error: errStats } = await supabase.from("roulette_stats").update({
   odd_count: oddCount + (!isGreen && !isEven ? 1 : 0),
 }).eq("id", 1);
 console.log("history error:", errHistory, "stats error:", errStats);
-
-
-
-
   }
 
   // ─── Celda de apuesta ───────────────────────────────────────────────────
@@ -457,6 +475,42 @@ console.log("history error:", errHistory, "stats error:", errStats);
                 <button onClick={clearBets} disabled={spinning} style={S.clearBtn}>✕ Limpiar</button>
               </div>
             </div>
+
+
+
+
+
+
+
+              {Object.keys(lastBets).length > 0 && (
+  <button
+    onClick={() => {
+      if (spinning) return;
+      const total = Object.values(lastBets).reduce((a, b) => a + b, 0);
+      if (balance < total) { setMsg("Saldo insuficiente para repetir"); return; }
+      setBets(lastBets);
+    }}
+    disabled={spinning}
+    style={{ ...S.clearBtn, borderColor: "#c084fc", color: "#c084fc" }}
+  >
+    🔄 Repetir
+  </button>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* Mesa de apuestas */}
             <div style={{ overflowX: "auto" }}>
