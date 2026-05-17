@@ -1,18 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabase";
 
-// ── Símbolos ────────────────────────────────────────────────────────────────
 const SYMBOLS = [
   { id: "cereza",    img: "/cereza.png",   prob: 15, type: "common",  pay: [0, 0, 1,  4,   8]   },
-  { id: "sandia",    img: "/sandia.png",   prob: 14, type: "common",  pay: [0, 0, 1,  5,   10]   },
+  { id: "sandia",    img: "/sandia.png",   prob: 14, type: "common",  pay: [0, 0, 1,  5,   10]  },
   { id: "fresa",     img: "/fresa.png",    prob: 12, type: "common",  pay: [0, 0, 1,  6,  12]   },
   { id: "banano",    img: "/banano.png",   prob: 9,  type: "common",  pay: [0, 0, 3,  7,  14]   },
   { id: "uvas",      img: "/uvas.png",     prob: 9,  type: "common",  pay: [0, 0, 3,  8,  16]   },
   { id: "corazon",   img: "/corazon.png",  prob: 9,  type: "common",  pay: [0, 0, 5,  9,  18]   },
-  { id: "campana",   img: "/campana.png",  prob: 8,  type: "premium", pay: [0, 0, 9,  20,  70]   },
-  { id: "esmeralda", img: "/esmeralda.png",prob: 6,  type: "premium", pay: [0, 0, 12, 40,  80]   },
-  { id: "rubi",      img: "/rubi.png",     prob: 5,  type: "premium", pay: [0, 0, 20, 50,  110]  },
-  { id: "diamante",  img: "/diamante.png", prob: 5,  type: "premium", pay: [0, 0, 50, 250, 1000] },
+  { id: "campana",   img: "/campana.png",  prob: 8,  type: "premium", pay: [0, 0, 9,  20,  70]  },
+  { id: "esmeralda", img: "/esmeralda.png",prob: 6,  type: "premium", pay: [0, 0, 12, 40,  80]  },
+  { id: "rubi",      img: "/rubi.png",     prob: 5,  type: "premium", pay: [0, 0, 20, 50,  110] },
+  { id: "diamante",  img: "/diamante.png", prob: 5,  type: "premium", pay: [0, 0, 50, 250, 1000]},
   { id: "trebol",    img: "/trebol.png",   prob: 1,  type: "wild"  },
   { id: "hongo",     img: "/hongo.png",    prob: 1,  type: "wild"  },
   { id: "dulce",     img: "/dulce.png",    prob: 5,  type: "scatter", freeSpins: [0,0,6,25,70] },
@@ -148,6 +147,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
   const [spinning, setSpinning] = useState(false);
   const [phase, setPhase] = useState("idle");
   const [bet, setBet] = useState(1000);
+  const [freeBet, setFreeBet] = useState(0);
   const [winningLines, setWinningLines] = useState([]);
   const [lastResult, setLastResult] = useState(null);
   const [freeSpinsLeft, setFreeSpinsLeft] = useState(0);
@@ -160,17 +160,17 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
   const spinTimersRef = useRef([]);
 
   async function doSpin(isFree = false) {
+    const activeBet = isFree ? freeBet : bet;
     if (spinning) return;
-    if (!isFree && balance < bet) { setMsg("¡Sin saldo suficiente!"); return; }
+    if (!isFree && balance < activeBet) { setMsg("¡Sin saldo suficiente!"); return; }
     setMsg(""); setWinningLines([]); setLastResult(null);
     if (!isFree) {
-    setBalance(balance - bet);
-    const increment = Math.floor(bet * 0.1);
-    const newPool = jackpotPool + increment;
-    setJackpotPool(newPool);
-    await supabase.rpc("increment_jackpot", { amount: increment });
-}
-
+      setBalance(balance - activeBet);
+      const increment = Math.floor(activeBet * 0.1);
+      const newPool = jackpotPool + increment;
+      setJackpotPool(newPool);
+      await supabase.rpc("increment_jackpot", { amount: increment });
+    }
 
     const sc = spinCount % 3;
     if (sc === 0) playBg("SonidoFondoGiro1.wav");
@@ -187,14 +187,14 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     for (let col = 0; col < 5; col++) {
       const t = setTimeout(() => {
         stopped.add(col); setStoppedCols(new Set(stopped));
-        if (stopped.size === 5) { clearInterval(animInterval); setGrid(finalGrid); setSpinning(false); stopBg(); resolveResult(finalGrid, isFree); }
+        if (stopped.size === 5) { clearInterval(animInterval); setGrid(finalGrid); setSpinning(false); stopBg(); resolveResult(finalGrid, isFree, activeBet); }
       }, 1000 + col * 1000);
       spinTimersRef.current.push(t);
     }
   }
 
-  async function resolveResult(finalGrid, isFree) {
-    const betPerLine = Math.floor(bet / NUM_LINES);
+  async function resolveResult(finalGrid, isFree, activeBet) {
+    const betPerLine = Math.floor(activeBet / NUM_LINES);
     const { totalPayout, winningLines: lines, freeSpinsWon, jackpotCount, wildBonus } = evaluateGrid(finalGrid, betPerLine);
     setWinningLines(lines);
 
@@ -206,7 +206,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       setLastResult({ type: "jackpotFijo", jackpotWon, roll, jackpotAmt: FIXED_JACKPOT, payout: totalPayout, freeSpinsWon, wildBonus, lines });
       if (jackpotWon) setBalance(b => b + FIXED_JACKPOT + totalPayout);
       else if (totalPayout > 0) setBalance(b => b + totalPayout);
-      addHistory(lines, totalPayout + (jackpotWon ? FIXED_JACKPOT : 0), freeSpinsWon);
+      addHistory(lines, totalPayout + (jackpotWon ? FIXED_JACKPOT : 0), freeSpinsWon, activeBet);
       return;
     }
 
@@ -215,35 +215,23 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       for (let c = 0; c < 5; c++) if (checkJackpotAcum(finalGrid.map(row => row[c]))) return true;
       return false;
     })();
-    /*
+
     if (jackpotAcumTriggered && jackpotPool > 0) {
       playSfx("Jackpot.wav"); setPhase("jackpotEvent");
-      setLastResult({ type: "jackpotAcumulado", jackpotWon: true, jackpotAmt: jackpotPool, payout: totalPayout, freeSpinsWon, wildBonus, lines });
-      setBalance(b => b + jackpotPool + totalPayout); setJackpotPool(0);
+      const jackpotGanado = jackpotPool;
+      setLastResult({ type: "jackpotAcumulado", jackpotWon: true, jackpotAmt: jackpotGanado, payout: totalPayout, freeSpinsWon, wildBonus, lines });
+      setBalance(balance + jackpotGanado + totalPayout);
+      setJackpotPool(0);
       supabase.from("slots_jackpot").update({ pool: 0 }).eq("id", 1);
-      addHistory(lines, totalPayout + jackpotPool, freeSpinsWon);
+      addHistory(lines, totalPayout + jackpotGanado, freeSpinsWon, activeBet);
       return;
     }
-    */
 
+    if (freeSpinsWon > 0) {
+      setFreeSpinsLeft(n => n + freeSpinsWon);
+      setFreeBet(activeBet);
+    }
 
-    if (jackpotAcumTriggered && jackpotPool > 0) {
-  playSfx("Jackpot.wav"); setPhase("jackpotEvent");
-  const jackpotWon = jackpotPool;
-  setLastResult({ type: "jackpotAcumulado", jackpotWon: true, jackpotAmt: jackpotWon, payout: totalPayout, freeSpinsWon, wildBonus, lines });
-  setBalance(balance + jackpotWon + totalPayout);
-  setJackpotPool(0);
-  await supabase.from("slots_jackpot").update({ pool: 0 }).eq("id", 1);
-  addHistory(lines, totalPayout + jackpotWon, freeSpinsWon);
-  return;
-}
-
-
-
-
-
-
-    if (freeSpinsWon > 0) setFreeSpinsLeft(n => n + freeSpinsWon);
     if (totalPayout > 0) {
       setBalance(b => b + totalPayout);
       const bgIdx = Math.floor(Math.random() * 3);
@@ -252,78 +240,58 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     }
     setLastResult({ type: "normal", payout: totalPayout, freeSpinsWon, wildBonus, lines });
     setPhase("result");
-    addHistory(lines, totalPayout, freeSpinsWon);
+    addHistory(lines, totalPayout, freeSpinsWon, activeBet);
   }
 
-  function addHistory(lines, payout, fs) {
-    const entry = { bet, payout, freeSpins: fs };
+  function addHistory(lines, payout, fs, activeBet) {
+    const entry = { bet: activeBet, payout, freeSpins: fs };
     setHistory(h => [entry, ...h.slice(0, 6)]);
-  
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
       await supabase.from("slots_history").insert({
         user_id: session.user.id,
-        time: String(bet),
+        time: String(activeBet),
         payout,
         free_spins: fs,
       });
     });
   }
+
   function continueAfterResult() {
     setPhase("idle"); setLastResult(null); setWinningLines([]);
     if (freeSpinsLeft > 0) { setFreeSpinsLeft(n => n - 1); setTimeout(() => doSpin(true), 400); }
   }
 
- 
   useEffect(() => () => { spinTimersRef.current.forEach(t => { clearTimeout(t); clearInterval(t); }); stopBg(); }, []);
 
-// Cargar jackpot global
-useEffect(() => {
-  supabase.from("slots_jackpot").select("pool").eq("id", 1).single()
-    .then(({ data }) => { if (data) setJackpotPool(data.pool); });
-}, []);
-
-
-
-
   useEffect(() => {
-  const interval = setInterval(() => {
     supabase.from("slots_jackpot").select("pool").eq("id", 1).single()
       .then(({ data }) => { if (data) setJackpotPool(data.pool); });
-  }, 10000);
-  return () => clearInterval(interval);
-}, []);
+  }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      supabase.from("slots_jackpot").select("pool").eq("id", 1).single()
+        .then(({ data }) => { if (data) setJackpotPool(data.pool); });
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
-
-
-
-
-
-
-
-// Cargar historial previo
-useEffect(() => {
-  supabase.auth.getSession().then(async ({ data: { session } }) => {
-    if (!session) return;
-    const { data } = await supabase.from("slots_history")
-      .select("*").eq("user_id", session.user.id)
-      .order("created_at", { ascending: false }).limit(7);
-    if (data) setHistory(data.map(h => ({ bet: parseInt(h.time), payout: h.payout, freeSpins: h.free_spins })));
-  });
-}, []);
-
-
-
-  // ── Controles (reutilizables en columna derecha) ────────────────────────
-  const showControls = phase === "idle";
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data } = await supabase.from("slots_history")
+        .select("*").eq("user_id", session.user.id)
+        .order("created_at", { ascending: false }).limit(7);
+      if (data) setHistory(data.map(h => ({ bet: parseInt(h.time), payout: h.payout, freeSpins: h.free_spins })));
+    });
+  }, []);
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", fontFamily: "'Georgia', serif" }}>
       <button onClick={onBack} style={ST.backBtn}>← Lobby</button>
 
       <div style={ST.card}>
-        {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div>
             <h2 style={{ color: "#FFD700", margin: 0, fontSize: 20, letterSpacing: 2 }}>TRAGAMONEDAS</h2>
@@ -337,24 +305,19 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Free spins banner */}
         {freeSpinsLeft > 0 && (
           <div style={{ background: "#1a0a2a", border: "2px solid #c084fc", borderRadius: 8, textAlign: "center", padding: "6px", marginBottom: 8, color: "#c084fc", fontWeight: 700 }}>
-            🎁 TIROS GRATIS: {freeSpinsLeft} restantes
+            🎁 TIROS GRATIS: {freeSpinsLeft} restantes · Apuesta fija: {freeBet.toLocaleString()}
           </div>
         )}
 
-        {/* ── Fila principal: grid izquierda + controles derecha ── */}
         <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-
-          {/* Columna izquierda: grid + resultados */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <SlotGrid
               grid={grid} spinning={spinning} stoppedCols={stoppedCols}
               winningLines={phase === "result" || phase === "jackpotEvent" ? winningLines : []}
             />
 
-            {/* Leyenda */}
             <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 6, fontSize: 15, color: "#ffffff" }}>
               <span>↔ Filas</span><span>↕ Columnas</span>
               <span style={{ color: "#00d4aa" }}>W = Wild ×2</span>
@@ -362,7 +325,6 @@ useEffect(() => {
               <span style={{ color: "#FFD700" }}>J = Jackpot</span>
             </div>
 
-            {/* Jackpot event */}
             {phase === "jackpotEvent" && lastResult && (
               <div style={{ margin: "10px 0", padding: 16, borderRadius: 10, textAlign: "center", background: lastResult.jackpotWon ? "#0a1a0a" : "#1a0a0a", border: `3px solid ${lastResult.jackpotWon ? "#FFD700" : "#ff4444"}` }}>
                 {lastResult.jackpotWon ? (
@@ -383,7 +345,6 @@ useEffect(() => {
               </div>
             )}
 
-            {/* Tabla de pagos */}
             <details style={{ marginTop: 14 }}>
               <summary style={{ color: "#ffffff", fontSize: 18, cursor: "pointer", userSelect: "none" }}>Ver tabla de pagos</summary>
               <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
@@ -408,56 +369,49 @@ useEffect(() => {
             </details>
           </div>
 
-          {/* ── Columna derecha: controles ── */}
           <div style={{ flex: "0 0 200px", display: "flex", flexDirection: "column", gap: 10 }}>
-
-            {/* Saldo */}
             <div style={{ background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 10, padding: "10px 12px" }}>
               <div style={{ color: "#ffffff", fontSize: 15, marginBottom: 4, letterSpacing: 1 }}>SALDO</div>
               <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 18 }}>💰 {balance.toLocaleString()}</div>
             </div>
 
-            {/* Apuesta */}
             <div style={{ background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 10, padding: "10px 12px" }}>
-              <div style={{ color: "#ffffff", fontSize: 20, marginBottom: 6, letterSpacing: 1 }}>
-                APUESTA TOTAL
-              </div>
+              <div style={{ color: "#ffffff", fontSize: 20, marginBottom: 6, letterSpacing: 1 }}>APUESTA TOTAL</div>
               <div style={{ color: "#e2e2e2", fontSize: 15, marginBottom: 8 }}>
-                {NUM_LINES} líneas · {Math.floor(bet / NUM_LINES)} por línea
+                {NUM_LINES} líneas · {Math.floor((freeSpinsLeft > 0 ? freeBet : bet) / NUM_LINES)} por línea
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
                 {[500, 1000, 5000, 10000, 20000, 50000, 100000].map(v => (
-                  <button key={v} onClick={() => setBet(v)} disabled={phase === "spinning"} style={{
-                    ...ST.betBtn,
-                    background: bet === v ? "#FFD700" : "#1a1a2a",
-                    color: bet === v ? "#000" : "#aaa",
-                    border: bet === v ? "none" : "1px solid #333",
-                    fontSize: 15,
-                    padding: "6px 4px",
-                  }}>
+                  <button key={v} onClick={() => setBet(v)}
+                    disabled={phase === "spinning" || freeSpinsLeft > 0}
+                    style={{
+                      ...ST.betBtn,
+                      background: (freeSpinsLeft > 0 ? freeBet : bet) === v ? "#FFD700" : "#1a1a2a",
+                      color: (freeSpinsLeft > 0 ? freeBet : bet) === v ? "#000" : "#aaa",
+                      border: (freeSpinsLeft > 0 ? freeBet : bet) === v ? "none" : "1px solid #333",
+                      fontSize: 15, padding: "6px 4px",
+                      opacity: freeSpinsLeft > 0 ? 0.5 : 1,
+                    }}>
                     {v >= 1000 ? `${v/1000}k` : v}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Botón girar */}
             <button
               onClick={() => doSpin(false)}
-              disabled={spinning || balance < bet || phase === "result" || phase === "jackpotEvent"}
+              disabled={spinning || balance < bet || phase === "result" || phase === "jackpotEvent" || freeSpinsLeft > 0}
               style={{
                 ...ST.spinBtn,
-                background: (!spinning && balance >= bet && phase === "idle") ? "linear-gradient(135deg, #8B6914, #FFD700)" : "#333",
-                color: (!spinning && balance >= bet && phase === "idle") ? "#000" : "#666",
-                fontSize: 15,
-                padding: "14px 10px",
+                background: (!spinning && balance >= bet && phase === "idle" && freeSpinsLeft === 0) ? "linear-gradient(135deg, #8B6914, #FFD700)" : "#333",
+                color: (!spinning && balance >= bet && phase === "idle" && freeSpinsLeft === 0) ? "#000" : "#666",
+                fontSize: 15, padding: "14px 10px",
               }}
             >
-              {spinning ? "🎰 Girando..." : `🎰 GIRAR`}
+              {spinning ? "🎰 Girando..." : "🎰 GIRAR"}
             </button>
 
-            {/* Resultado normal */}
-              {phase === "result" && lastResult && lastResult.type === "normal" && (
+            {phase === "result" && lastResult && lastResult.type === "normal" && (
               <div style={{ margin: "10px 0", padding: 12, borderRadius: 10, textAlign: "center", background: lastResult.payout > 0 ? "#0a2a0a" : "#1a0a0a", border: `2px solid ${lastResult.payout > 0 ? "#00d4aa" : "#333"}` }}>
                 {lastResult.payout > 0 ? (
                   <>
@@ -481,14 +435,12 @@ useEffect(() => {
               </div>
             )}
 
-            {/* Apuesta actual */}
-            {!spinning && phase === "idle" && (
+            {!spinning && phase === "idle" && freeSpinsLeft === 0 && (
               <div style={{ textAlign: "center", color: "#444", fontSize: 11 }}>
                 {bet.toLocaleString()} fichas
               </div>
             )}
 
-            {/* Tiro gratis */}
             {freeSpinsLeft > 0 && phase === "idle" && (
               <button
                 onClick={() => { setFreeSpinsLeft(n => n - 1); doSpin(true); }}
@@ -498,14 +450,12 @@ useEffect(() => {
               </button>
             )}
 
-            {/* Mensaje de error */}
             {msg && (
               <div style={{ color: "#ff6b35", fontSize: 20, textAlign: "center", padding: "6px", background: "#1a0a0a", borderRadius: 6 }}>
                 {msg}
               </div>
             )}
 
-            {/* Historial */}
             {history.length > 0 && (
               <div style={{ marginTop: 4 }}>
                 <div style={{ color: "#ffffff", fontSize: 15, letterSpacing: 2, marginBottom: 6 }}>ÚLTIMOS GIROS</div>
@@ -521,11 +471,7 @@ useEffect(() => {
               </div>
             )}
           </div>
-          {/* fin columna derecha */}
-
         </div>
-        {/* fin flex row */}
-
       </div>
     </div>
   );
