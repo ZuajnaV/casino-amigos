@@ -193,7 +193,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     }
   }
 
-  function resolveResult(finalGrid, isFree) {
+  async function resolveResult(finalGrid, isFree) {
     const betPerLine = Math.floor(bet / NUM_LINES);
     const { totalPayout, winningLines: lines, freeSpinsWon, jackpotCount, wildBonus } = evaluateGrid(finalGrid, betPerLine);
     setWinningLines(lines);
@@ -215,6 +215,7 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       for (let c = 0; c < 5; c++) if (checkJackpotAcum(finalGrid.map(row => row[c]))) return true;
       return false;
     })();
+    /*
     if (jackpotAcumTriggered && jackpotPool > 0) {
       playSfx("Jackpot.wav"); setPhase("jackpotEvent");
       setLastResult({ type: "jackpotAcumulado", jackpotWon: true, jackpotAmt: jackpotPool, payout: totalPayout, freeSpinsWon, wildBonus, lines });
@@ -223,6 +224,24 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
       addHistory(lines, totalPayout + jackpotPool, freeSpinsWon);
       return;
     }
+    */
+
+
+    if (jackpotAcumTriggered && jackpotPool > 0) {
+  playSfx("Jackpot.wav"); setPhase("jackpotEvent");
+  const jackpotWon = jackpotPool;
+  setLastResult({ type: "jackpotAcumulado", jackpotWon: true, jackpotAmt: jackpotWon, payout: totalPayout, freeSpinsWon, wildBonus, lines });
+  setBalance(balance + jackpotWon + totalPayout);
+  setJackpotPool(0);
+  await supabase.from("slots_jackpot").update({ pool: 0 }).eq("id", 1);
+  addHistory(lines, totalPayout + jackpotWon, freeSpinsWon);
+  return;
+}
+
+
+
+
+
 
     if (freeSpinsWon > 0) setFreeSpinsLeft(n => n + freeSpinsWon);
     if (totalPayout > 0) {
