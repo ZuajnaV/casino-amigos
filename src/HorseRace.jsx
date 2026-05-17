@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 
 // ── Datos de caballos (igual que Excel) ─────────────────────────────────────
@@ -688,6 +688,24 @@ supabase.auth.getSession().then(async ({ data: { session } }) => {
       </div>
     </div>
   );
+
+
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+  if (!session) { console.log("Sin sesión"); return; }
+  const { error } = await supabase.from("horserace_history").insert({
+    user_id: session.user.id,
+    bet_type_name: BET_TYPES.find(b => b.id === betType)?.name,
+    horse_order: order.slice(0, 3).map(String),
+    horse_names: horseList.reduce((acc, h) => { acc[h.id] = h.name; return acc; }, {}),
+    won,
+    multiplier: mult,
+  });
+  console.log("Horse insert error:", error);
+});
+
+
+
+
 }
 
 const S = {
