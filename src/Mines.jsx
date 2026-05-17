@@ -1,5 +1,6 @@
 // Mines.jsx
 import { useState, useCallback } from "react";
+import { supabase } from "./supabase";
 
 const TOTAL_CELLS = 25;
 const HOUSE_EDGE  = 0.03;
@@ -48,6 +49,29 @@ export default function MinesGame({ balance, setBalance, onBack, onGameEnd }) {
   const [msg, setMsg]                   = useState("");
   const [history, setHistory]           = useState([]);
 
+
+
+
+
+
+  useEffect(() => {
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    const { data } = await supabase.from("mines_history")
+      .select("*").eq("user_id", session.user.id)
+      .order("created_at", { ascending: false }).limit(9);
+    if (data) setHistory(data.map(h => ({ mines: h.mines, gems: h.gems, delta: h.delta })));
+  });
+}, []);
+
+
+
+
+
+
+
+
+
   const safeCells = TOTAL_CELLS - numMines;
 
   function newGame() {
@@ -84,6 +108,25 @@ export default function MinesGame({ balance, setBalance, onBack, onGameEnd }) {
       setPotentialWin(0);
       setMsg(`💥 ¡BOOM! Perdiste $${betAmount}`);
       setHistory((h) => [{ delta: -betAmount, mines: numMines, gems: safeRevealed }, ...h.slice(0, 8)]);
+
+
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+  if (!session) return;
+  await supabase.from("mines_history").insert({
+    user_id: session.user.id,
+    mines: numMines,
+    gems: safeRevealed,
+    delta: -betAmount,
+  });
+});
+
+
+
+
+
+
+
+
       onGameEnd(balance); // balance ya tiene descontada la apuesta
     } else {
       const newSafe = safeRevealed + 1;
@@ -113,8 +156,6 @@ export default function MinesGame({ balance, setBalance, onBack, onGameEnd }) {
   }
 
   function finishCashOut(win, mult, gems, isFullWin) {
-    //setBalance((b) => b + win);
-    //setBalance(balance + win);
     const finalBalance = balance + win;
     setBalance(finalBalance);
     onGameEnd(finalBalance);
@@ -123,6 +164,28 @@ export default function MinesGame({ balance, setBalance, onBack, onGameEnd }) {
     setMultiplier(mult);
     setPotentialWin(win);
     setHistory((h) => [{ delta: win - betAmount, mines: numMines, gems }, ...h.slice(0, 8)]);
+
+
+
+
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+  if (!session) return;
+  await supabase.from("mines_history").insert({
+    user_id: session.user.id,
+    mines: numMines,
+    gems,
+    delta: win - betAmount,
+  });
+});
+
+
+
+
+
+
+
+
     setCells((prev) =>
       prev.map((cell, i) => {
         if (cell.state !== "hidden") return cell;
