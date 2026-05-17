@@ -50,14 +50,7 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
   const [history, setHistory]   = useState([]);       // [{mult, win}]
   const [chartData, setChartData] = useState([1]);
 
-
-
-
-
   const [netoTotal, setNetoTotal] = useState(0);
-
-
-
 
   // Refs para acceso en el intervalo sin closures viejas
   const gameRef = useRef({
@@ -75,11 +68,6 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
   // ── LIMPIAR intervalo al desmontar ──────────────────────────────────────────
   useEffect(() => () => clearInterval(intervalRef.current), []);
 
-
-
-
-
-
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
@@ -94,22 +82,6 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
       }
     });
   }, []);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // ── NUEVA RONDA (SpNewRound) ────────────────────────────────────────────────
   function newRound() {
@@ -218,6 +190,45 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
     clearInterval(intervalRef.current);
     g.phase = "cashout";
 
+
+
+
+
+
+
+
+    // Continuar animación acelerada hasta el crash
+const crashPoint = g.crashAt;
+const FAST_STEP = 0.1; // velocidad acelerada — editable
+let fastMult = currentMult;
+
+const fastInterval = setInterval(() => {
+  fastMult = parseFloat((fastMult + FAST_STEP).toFixed(3));
+  setMult(fastMult);
+  setChartData(d => [...d.slice(-79), fastMult]);
+  
+  if (fastMult >= crashPoint) {
+    clearInterval(fastInterval);
+    setMult(crashPoint);
+    setPhase("crashed");
+    setMsg(
+      isAuto
+        ? `🤖 AUTO CO en x${currentMult.toFixed(2)} · Habría llegado a x${crashPoint.toFixed(2)}`
+        : `💰 COBRADO en x${currentMult.toFixed(2)} · Habría llegado a x${crashPoint.toFixed(2)}`
+    );
+  }
+}, 80); // velocidad del tick acelerado — editable
+
+
+
+
+
+
+
+
+
+
+
     const winAmt  = parseFloat((g.activeBet * currentMult).toFixed(2));
     const origBet = g.halfDone ? g.activeBet * 2 : g.activeBet;
     const net     = (winAmt + g.halfAmt) - origBet;
@@ -241,14 +252,6 @@ export default function SpacemanGame({ balance, setBalance, onBack }) {
         net: net,
       });
     });
-
-
-
-
-
-
-
-
 
 
     setMsg(
