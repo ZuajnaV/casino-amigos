@@ -362,6 +362,18 @@ useEffect(() => {
   }
 }, [phase, autoSpinsLeft]);
 
+
+useEffect(() => {
+  if (phase === "jackpotEvent" && autoSpinRef.current && autoSpinsLeft > 0) {
+    const t = setTimeout(() => continueAfterResult(), 2000);
+    return () => clearTimeout(t);
+  }
+}, [phase, autoSpinsLeft]);
+
+
+
+
+
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", fontFamily: "'Georgia', serif" }}>
       <button onClick={onBack} style={ST.backBtn}>← Lobby</button>
@@ -417,8 +429,39 @@ useEffect(() => {
                 )}
                 {lastResult.payout > 0 && <div style={{ color: "#00d4aa", fontSize: 20, marginTop: 4 }}>+{lastResult.payout.toLocaleString()} de líneas normales</div>}
                 <button onClick={continueAfterResult} style={{ ...ST.spinBtn, marginTop: 10, background: "#FFD700", color: "#000", fontSize: 20, padding: "10px" }}>Continuar →</button>
+              
+              
+              
+              
+              
+              
+              
+              
               </div>
+
+
+
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
             )}
+
+
+            
+
+
+
 
             <details style={{ marginTop: 14 }}>
               <summary style={{ color: "#ffffff", fontSize: 18, cursor: "pointer", userSelect: "none" }}>Ver tabla de pagos</summary>
