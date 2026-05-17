@@ -75,20 +75,6 @@ function evaluateLine(line, betPerLine, wildBonus) {
   return { symId, count, mult, payout: betPerLine * mult, freeSpins: 0 };
 }
 
-
-/*
-function checkJackpotAcum(line) {
-  const CHERRY = ["cereza", "corazon"];
-  for (let i = 0; i <= line.length - 3; i++) {
-    const window = line.slice(i, i + 3);
-    if (window.some(id => CHERRY.includes(id)) && window.includes("diamante") && window.includes("dulce")) return true;
-  }
-  return false;
-}
-*/
-
-
-
 function checkJackpotAcum(line) {
   const CHERRY = ["cereza", "corazon"];
   for (let i = 0; i <= line.length - 4; i++) {
@@ -100,19 +86,6 @@ function checkJackpotAcum(line) {
   }
   return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function useAudio() {
   const audioRef = useRef(null);
@@ -169,7 +142,6 @@ function SlotGrid({ grid, spinning, stoppedCols, winningLines }) {
     </div>
   );
 }
-
 const NUM_LINES = 10;
 
 export default function SlotsGame({ balance, setBalance, onBack }) {
@@ -195,6 +167,19 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
 
 
 
+
+  const [autoSpins, setAutoSpins] = useState(0);
+const [autoSpinsLeft, setAutoSpinsLeft] = useState(0);
+const autoSpinRef = useRef(false);
+
+
+
+
+
+
+
+
+
   const JACKPOT_FIJO_MAP = {
   500:    60000,
   1000:   120000,
@@ -204,15 +189,6 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
   50000:  10000000,
   100000: 25000000,
 };
-
-
-
-
-
-
-
-
-
   async function doSpin(isFree = false) {
     const activeBet = isFree ? freeBet : bet;
     if (spinning) return;
@@ -255,28 +231,9 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     if (jackpotCount >= 3) {
       const roll = Math.floor(Math.random() * 5000) + 1;
       const jackpotWon = roll < 750;
-      //const FIXED_JACKPOT = 60000;
-
-
-
 
       console.log("activeBet:", activeBet, "FIXED_JACKPOT:", JACKPOT_FIJO_MAP[activeBet]);
-
-
-
-
-
-
-
-
       const FIXED_JACKPOT = JACKPOT_FIJO_MAP[Number(activeBet)] ?? 60000;
-
-
-      
-
-
-
-
 
       setPhase("jackpotEvent"); playSfx(jackpotWon ? "Jackpot.wav" : "NoJackpot.wav");
       setLastResult({ type: "jackpotFijo", jackpotWon, roll, jackpotAmt: FIXED_JACKPOT, payout: totalPayout, freeSpinsWon, wildBonus, lines });
@@ -333,10 +290,45 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     });
   }
 
+  /*
   function continueAfterResult() {
     setPhase("idle"); setLastResult(null); setWinningLines([]);
     if (freeSpinsLeft > 0) { setFreeSpinsLeft(n => n - 1); setTimeout(() => doSpin(true), 400); }
   }
+*/
+
+
+
+
+
+
+function continueAfterResult() {
+  setPhase("idle"); setLastResult(null); setWinningLines([]);
+  if (freeSpinsLeft > 0) {
+    setFreeSpinsLeft(n => n - 1);
+    setTimeout(() => doSpin(true), 400);
+  } else if (autoSpinRef.current && autoSpinsLeft > 0) {
+    setAutoSpinsLeft(n => {
+      const next = n - 1;
+      if (next <= 0) autoSpinRef.current = false;
+      return next;
+    });
+    setTimeout(() => doSpin(false), 400);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   useEffect(() => () => { spinTimersRef.current.forEach(t => { clearTimeout(t); clearInterval(t); }); stopBg(); }, []);
 
@@ -486,6 +478,47 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
             >
               {spinning ? "🎰 Girando..." : "🎰 GIRAR"}
             </button>
+
+
+
+
+                {phase === "idle" && freeSpinsLeft === 0 && (
+  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+    <div style={{ color: "#aaa", fontSize: 11, textAlign: "center" }}>AUTO-SPIN</div>
+    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+      {[5, 10, 20, 50].map(n => (
+        <button key={n} onClick={() => { setAutoSpins(n); setAutoSpinsLeft(n); autoSpinRef.current = true; doSpin(false); }}
+          disabled={spinning || balance < bet}
+          style={{ ...ST.betBtn, background: "#1a1a2a", color: "#aaa", border: "1px solid #333", fontSize: 13, padding: "5px 8px" }}>
+          {n}x
+        </button>
+      ))}
+      {autoSpinsLeft > 0 && (
+        <button onClick={() => { autoSpinRef.current = false; setAutoSpinsLeft(0); }}
+          style={{ ...ST.betBtn, background: "#2a0a0a", color: "#ff4444", border: "1px solid #ff4444", fontSize: 13, padding: "5px 8px" }}>
+          ✕ Stop
+        </button>
+      )}
+    </div>
+    {autoSpinsLeft > 0 && <div style={{ color: "#c084fc", fontSize: 11, textAlign: "center" }}>Quedan: {autoSpinsLeft}</div>}
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {phase === "result" && lastResult && lastResult.type === "normal" && (
               <div style={{ margin: "10px 0", padding: 12, borderRadius: 10, textAlign: "center", background: lastResult.payout > 0 ? "#0a2a0a" : "#1a0a0a", border: `2px solid ${lastResult.payout > 0 ? "#00d4aa" : "#333"}` }}>
