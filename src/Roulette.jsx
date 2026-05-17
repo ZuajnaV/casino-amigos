@@ -295,7 +295,7 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
     animRef.current = requestAnimationFrame(frame);
   }
 
-  function finishSpin(num) {
+  async function finishSpin(num) {
     const net = calcPayout(num, bets);
     setResult({ num, colorLabel: getColorLabel(num) });
     setBalance(b => b + totalBet + net);
@@ -336,6 +336,21 @@ supabase.from("roulette_stats").update({
     else setMsg(`😔 Perdiste ${Math.abs(net)} fichas`);
     setBets({});
     setSpinning(false);
+
+
+  const { error: errHistory } = await supabase.from("roulette_history").insert({ num, net });
+const { error: errStats } = await supabase.from("roulette_stats").update({
+  red_count: redCount + (isRed ? 1 : 0),
+  black_count: blackCount + (!isRed && !isGreen ? 1 : 0),
+  green_count: greenCount + (isGreen ? 1 : 0),
+  even_count: evenCount + (isEven ? 1 : 0),
+  odd_count: oddCount + (!isGreen && !isEven ? 1 : 0),
+}).eq("id", 1);
+console.log("history error:", errHistory, "stats error:", errStats);
+
+
+
+
   }
 
   // ─── Celda de apuesta ───────────────────────────────────────────────────
