@@ -1,5 +1,6 @@
 // Roulette.jsx
 import { useState, useRef, useEffect, useCallback } from "react";
+import { supabase } from "./supabase";
 
 // ─── Datos de la rueda ───────────────────────────────────────────────────────
 const NUMBERS = [
@@ -168,6 +169,22 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
   }, []);
   useEffect(() => () => cancelAnimationFrame(animRef.current), []);
 
+
+
+
+  useEffect(() => {
+  supabase.from("roulette_history")
+    .select("*").order("created_at", { ascending: false }).limit(114)
+    .then(({ data }) => {
+      if (data) setFullHistory(data.map(h => ({ num: String(h.num), net: h.net })));
+    });
+}, []);
+
+
+
+
+
+
   const placeBet = useCallback((id) => {
     if (spinning) return;
     if (balance < totalBet + chipValue) { setMsg("Saldo insuficiente"); return; }
@@ -283,6 +300,37 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
     setResult({ num, colorLabel: getColorLabel(num) });
     setBalance(b => b + totalBet + net);
     setFullHistory(h => [{ num, net }, ...h.slice(0, 113)]);
+
+
+    const isRed = RED_NUMS.has(num);
+const isGreen = num === "0" || num === "00";
+const isEven = !isGreen && parseInt(num) % 2 === 0;
+
+supabase.from("roulette_history").insert({ num, net });
+supabase.from("roulette_stats").update({
+  red_count: redCount + (isRed ? 1 : 0),
+  black_count: blackCount + (!isRed && !isGreen ? 1 : 0),
+  green_count: greenCount + (isGreen ? 1 : 0),
+  even_count: evenCount + (isEven ? 1 : 0),
+  odd_count: oddCount + (!isGreen && !isEven ? 1 : 0),
+}).eq("id", 1);
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (net > 0) setMsg(`🎉 ¡Ganaste ${net} fichas!`);
     else if (net === 0) setMsg("🤝 Recuperas tu apuesta");
     else setMsg(`😔 Perdiste ${Math.abs(net)} fichas`);
