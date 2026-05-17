@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useEffect } from "react";
 import { supabase } from "./supabase";
 
 // ── Datos de caballos (igual que Excel) ─────────────────────────────────────
