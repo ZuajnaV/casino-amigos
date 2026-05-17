@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "./supabase";
 
 // ── Datos de caballos (igual que Excel) ─────────────────────────────────────
 const HOUSE_EDGE = 1.15;
@@ -230,6 +231,37 @@ export default function HorseRace({ balance, setBalance, onBack }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+
+
+
+
+
+
+  useEffect(() => {
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    const { data } = await supabase.from("horserace_history")
+      .select("*").eq("user_id", session.user.id)
+      .order("created_at", { ascending: false }).limit(8);
+    if (data) setHistory(data.map(h => ({
+      won: h.won,
+      order: h.horse_order.map(Number),
+      names: h.horse_names,
+      betTypeName: h.bet_type_name,
+      mult: h.multiplier,
+    })));
+  });
+}, []);
+
+
+
+
+
+
+
+
+
+
   // Reset selección al cambiar tipo
   function handleBetType(id) {
     setBetType(id);
@@ -418,6 +450,29 @@ function runAnimation(order, horseList, mult) {
         betTypeName: BET_TYPES.find(b => b.id === betType)?.name,
         mult,
       }, ...h.slice(0, 7)]);
+
+
+supabase.auth.getSession().then(async ({ data: { session } }) => {
+  if (!session) return;
+  await supabase.from("horserace_history").insert({
+    user_id: session.user.id,
+    bet_type_name: BET_TYPES.find(b => b.id === betType)?.name,
+    horse_order: order.slice(0, 3).map(String),
+    horse_names: horseList.reduce((acc, h) => { acc[h.id] = h.name; return acc; }, {}),
+    won,
+    multiplier: mult,
+  });
+});
+
+
+
+
+
+
+
+
+
+
       setPhase("result");
     }
   }
