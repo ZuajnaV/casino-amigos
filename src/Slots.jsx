@@ -75,6 +75,8 @@ function evaluateLine(line, betPerLine, wildBonus) {
   return { symId, count, mult, payout: betPerLine * mult, freeSpins: 0 };
 }
 
+
+/*
 function checkJackpotAcum(line) {
   const CHERRY = ["cereza", "corazon"];
   for (let i = 0; i <= line.length - 3; i++) {
@@ -83,6 +85,34 @@ function checkJackpotAcum(line) {
   }
   return false;
 }
+*/
+
+
+
+function checkJackpotAcum(line) {
+  const CHERRY = ["cereza", "corazon"];
+  for (let i = 0; i <= line.length - 4; i++) {
+    const window = line.slice(i, i + 4);
+    if (window.some(id => CHERRY.includes(id)) &&
+        window.includes("diamante") &&
+        window.includes("dulce") &&
+        window.includes("hongo")) return true;
+  }
+  return false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function useAudio() {
   const audioRef = useRef(null);
@@ -159,6 +189,30 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
   const [stoppedCols, setStoppedCols] = useState(new Set());
   const spinTimersRef = useRef([]);
 
+
+
+
+
+
+
+  const JACKPOT_FIJO_MAP = {
+  500:    60000,
+  1000:   120000,
+  5000:   600000,
+  10000:  1500000,
+  20000:  3000000,
+  50000:  10000000,
+  100000: 25000000,
+};
+
+
+
+
+
+
+
+
+
   async function doSpin(isFree = false) {
     const activeBet = isFree ? freeBet : bet;
     if (spinning) return;
@@ -201,7 +255,8 @@ export default function SlotsGame({ balance, setBalance, onBack }) {
     if (jackpotCount >= 3) {
       const roll = Math.floor(Math.random() * 5000) + 1;
       const jackpotWon = roll < 750;
-      const FIXED_JACKPOT = 60000;
+      //const FIXED_JACKPOT = 60000;
+      const FIXED_JACKPOT = JACKPOT_FIJO_MAP[activeBet] ?? 60000;
       setPhase("jackpotEvent"); playSfx(jackpotWon ? "Jackpot.wav" : "NoJackpot.wav");
       setLastResult({ type: "jackpotFijo", jackpotWon, roll, jackpotAmt: FIXED_JACKPOT, payout: totalPayout, freeSpinsWon, wildBonus, lines });
       if (jackpotWon) setBalance(b => b + FIXED_JACKPOT + totalPayout);
