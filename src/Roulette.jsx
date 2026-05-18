@@ -486,17 +486,12 @@ console.log("history error:", errHistory, "stats error:", errStats);
                   {v}
                 </button>
               ))}
-              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-                {totalBet > 0 && <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700 }}>Total: {totalBet}</span>}
-                <button onClick={clearBets} disabled={spinning} style={S.clearBtn}>✕ Limpiar</button>
 
 
 
 
-
+<div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
   {totalBet > 0 && <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700 }}>Total: {totalBet}</span>}
-  
-  {/* ── Botón Borrar apuesta ── */}
   <button
     onClick={() => setEraseMode(e => !e)}
     disabled={spinning}
@@ -510,8 +505,8 @@ console.log("history error:", errHistory, "stats error:", errStats);
   >
     🗑️ {eraseMode ? "Cancelar" : "Borrar"}
   </button>
-
   <button onClick={clearBets} disabled={spinning} style={S.clearBtn}>✕ Limpiar</button>
+</div>
 
 
 
@@ -519,11 +514,6 @@ console.log("history error:", errHistory, "stats error:", errStats);
 
 
 
-
-
-
-
-              </div>
             </div>
 
 
