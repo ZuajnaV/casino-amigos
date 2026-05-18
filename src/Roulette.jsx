@@ -167,7 +167,7 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
 
   const [lastBets, setLastBets] = useState({});
 
-
+  const [eraseMode, setEraseMode] = useState(false);
 
 
 
@@ -205,10 +205,20 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
 
   const placeBet = useCallback((id) => {
     if (spinning) return;
+
+
+    if (eraseMode) {
+    setBets(prev => { const next = { ...prev }; delete next[id]; return next; });
+    return;
+  }
+
+
+
+
     if (balance < totalBet + chipValue) { setMsg("Saldo insuficiente"); return; }
     setMsg("");
     setBets(prev => ({ ...prev, [id]: (prev[id] || 0) + chipValue }));
-  }, [spinning, balance, totalBet, chipValue]);
+  }, [spinning, balance, totalBet, chipValue, eraseMode]);
 
   function clearBets() { if (!spinning) setBets({}); }
 
@@ -247,6 +257,12 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
     if (spinning) return;
 
     setSpinning(true);
+
+
+    setEraseMode(false);
+
+
+
     setMsg("");
     setResult(null);
     setBalance(b => b - totalBet);
@@ -473,6 +489,40 @@ console.log("history error:", errHistory, "stats error:", errStats);
               <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
                 {totalBet > 0 && <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700 }}>Total: {totalBet}</span>}
                 <button onClick={clearBets} disabled={spinning} style={S.clearBtn}>✕ Limpiar</button>
+
+
+
+
+                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+  {totalBet > 0 && <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700 }}>Total: {totalBet}</span>}
+  
+  {/* ── Botón Borrar apuesta ── */}
+  <button
+    onClick={() => setEraseMode(e => !e)}
+    disabled={spinning}
+    style={{
+      ...S.clearBtn,
+      borderColor: eraseMode ? "#ff6b35" : "#888",
+      color: eraseMode ? "#ff6b35" : "#888",
+      background: eraseMode ? "#2a1000" : "transparent",
+      fontWeight: eraseMode ? 700 : 400,
+    }}
+  >
+    🗑️ {eraseMode ? "Cancelar" : "Borrar"}
+  </button>
+
+  <button onClick={clearBets} disabled={spinning} style={S.clearBtn}>✕ Limpiar</button>
+</div>
+
+
+
+
+
+
+
+
+
+
               </div>
             </div>
 
