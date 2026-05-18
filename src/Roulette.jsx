@@ -493,7 +493,7 @@ console.log("history error:", errHistory, "stats error:", errStats);
 
 
 
-                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+
   {totalBet > 0 && <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700 }}>Total: {totalBet}</span>}
   
   {/* ── Botón Borrar apuesta ── */}
@@ -512,7 +512,7 @@ console.log("history error:", errHistory, "stats error:", errStats);
   </button>
 
   <button onClick={clearBets} disabled={spinning} style={S.clearBtn}>✕ Limpiar</button>
-</div>
+
 
 
 
