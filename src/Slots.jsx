@@ -255,7 +255,7 @@ const autoSpinRef = useRef(false);
       setLastResult({ type: "jackpotAcumulado", jackpotWon: true, jackpotAmt: jackpotGanado, payout: totalPayout, freeSpinsWon, wildBonus, lines });
       setBalance(balance + jackpotGanado + totalPayout);
       setJackpotPool(0);
-      supabase.from("slots_jackpot").update({ pool: 0 }).eq("id", 1);
+      await supabase.from("slots_jackpot").update({ pool: 0 }).eq("id", 1);
       addHistory(lines, totalPayout + jackpotGanado, freeSpinsWon, activeBet);
       return;
     }
@@ -290,14 +290,6 @@ const autoSpinRef = useRef(false);
     });
   }
 
-  /*
-  function continueAfterResult() {
-    setPhase("idle"); setLastResult(null); setWinningLines([]);
-    if (freeSpinsLeft > 0) { setFreeSpinsLeft(n => n - 1); setTimeout(() => doSpin(true), 400); }
-  }
-*/
-
-
 
 
 
@@ -316,18 +308,6 @@ function continueAfterResult() {
     setTimeout(() => doSpin(false), 400);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   useEffect(() => () => { spinTimersRef.current.forEach(t => { clearTimeout(t); clearInterval(t); }); stopBg(); }, []);
@@ -358,14 +338,6 @@ function continueAfterResult() {
 useEffect(() => {
   if (phase === "result" && autoSpinRef.current && autoSpinsLeft > 0) {
     const t = setTimeout(() => continueAfterResult(), 800);
-    return () => clearTimeout(t);
-  }
-}, [phase, autoSpinsLeft]);
-
-
-useEffect(() => {
-  if (phase === "jackpotEvent" && autoSpinRef.current && autoSpinsLeft > 0) {
-    const t = setTimeout(() => continueAfterResult(), 2000);
     return () => clearTimeout(t);
   }
 }, [phase, autoSpinsLeft]);
@@ -429,39 +401,8 @@ useEffect(() => {
                 )}
                 {lastResult.payout > 0 && <div style={{ color: "#00d4aa", fontSize: 20, marginTop: 4 }}>+{lastResult.payout.toLocaleString()} de líneas normales</div>}
                 <button onClick={continueAfterResult} style={{ ...ST.spinBtn, marginTop: 10, background: "#FFD700", color: "#000", fontSize: 20, padding: "10px" }}>Continuar →</button>
-              
-              
-              
-              
-              
-              
-              
-              
               </div>
-
-
-
-
-                
-
-
-
-
-
-
-
-
-
-
-
-
             )}
-
-
-            
-
-
-
 
             <details style={{ marginTop: 14 }}>
               <summary style={{ color: "#ffffff", fontSize: 18, cursor: "pointer", userSelect: "none" }}>Ver tabla de pagos</summary>
@@ -553,22 +494,6 @@ useEffect(() => {
     {autoSpinsLeft > 0 && <div style={{ color: "#c084fc", fontSize: 11, textAlign: "center" }}>Quedan: {autoSpinsLeft}</div>}
   </div>
 )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             {phase === "result" && lastResult && lastResult.type === "normal" && (
               <div style={{ margin: "10px 0", padding: 12, borderRadius: 10, textAlign: "center", background: lastResult.payout > 0 ? "#0a2a0a" : "#1a0a0a", border: `2px solid ${lastResult.payout > 0 ? "#00d4aa" : "#333"}` }}>
