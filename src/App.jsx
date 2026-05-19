@@ -140,23 +140,23 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
   const [showStats, setShowStats] = useState(false);   // ← nuevo
 
   useEffect(() => {
-    supabase.from("profiles").select("username, avatar, balance, total_deposited")
-      .then(({ data }) => {
-        if (data) {
-          const MIN_DEPOSIT = 50000;
-          const sorted = data
-            .map(u => {
-              const dep = u.total_deposited || 0;
-              const neto = u.balance - dep;
-              const roi = dep >= MIN_DEPOSIT ? (neto / dep) * 100 : null;
-              return { ...u, neto, roi, dep };
-            })
-            .filter(u => u.roi !== null)          // solo quienes cumplen mínimo
-            .sort((a, b) => b.roi - a.roi);
-          setProfiles(sorted);
-        }
-      });
-  }, [balance]);
+  supabase.from("profiles").select("username, avatar, balance, total_deposited")
+    .then(({ data }) => {
+      if (data) {
+        const BONUS = 100000;
+        const sorted = data
+          .map(u => {
+            const dep = u.total_deposited || 0;
+            const capitalBase = dep + BONUS;
+            const neto = u.balance - capitalBase;
+            const roi = (neto / capitalBase) * 100;
+            return { ...u, neto, roi, dep };
+          })
+          .sort((a, b) => b.roi - a.roi); // sin .filter() — todos aparecen
+        setProfiles(sorted);
+      }
+    });
+}, [balance]);
 
   async function handleDeposit() {
     const amount = parseInt(depositAmount);
@@ -168,9 +168,11 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
     setDepositLoading(false);
   }
 
-  const dep = profile.total_deposited || 0;
-  const neto = balance - dep;
-  const roi = dep >= 50000 ? ((neto / dep) * 100).toFixed(1) : null;
+const BONUS = 100000;
+const dep = profile.total_deposited || 0;
+const capitalBase = dep + BONUS;
+const neto = balance - capitalBase;
+const roi = ((neto / capitalBase) * 100).toFixed(1);
 
   return (
     <div>
@@ -236,29 +238,29 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
         {GAMES.map(g => (
           <button key={g.id} onClick={() => setGame(g.id)} style={{ ...styles.gameBtn, borderColor: g.color }}>
             <div style={{ fontSize: 36, marginBottom: 6 }}>{g.icon}</div>
-            <div style={{ fontWeight: 700, color: g.color, fontSize: 15 }}>{g.name}</div>
-            <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>{g.desc}</div>
+            <div style={{ fontWeight: 700, color: g.color, fontSize: 20 }}>{g.name}</div>
+            <div style={{ fontSize: 15, color: "#666", marginTop: 4 }}>{g.desc}</div>
           </button>
         ))}
       </div>
 
       <div style={styles.rankingBox}>
-        <div style={{ color: "#555", fontSize: 12, marginBottom: 8, letterSpacing: 2 }}>
-          RANKING — ROI% <span style={{ color: "#333", fontWeight: 400 }}>(mín. 50k depositado)</span>
+        <div style={{ color: "#ffffff", fontSize: 20, marginBottom: 8, letterSpacing: 2 }}>
+          RANKING — ROI% <span style={{ color: "#959595", fontWeight: 400 }}>(sobre bono + depósitos)</span>
         </div>
         {profiles.length === 0 && (
           <div style={{ color: "#333", fontSize: 12 }}>Nadie califica aún</div>
         )}
         {profiles.map((u, i) => (
-          <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, fontSize: 20 }}>
             <span style={{ color: i===0?"#fbbf24":i===1?"#aaa":i===2?"#cd7f32":"#666" }}>
               {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} {u.avatar} {u.username}
             </span>
             <div style={{ textAlign: "right" }}>
-              <div style={{ color: u.roi >= 0 ? "#00d4aa" : "#ff4444", fontSize: 13, fontWeight: 700 }}>
+              <div style={{ color: u.roi >= 0 ? "#00d4aa" : "#ff4444", fontSize: 20, fontWeight: 700 }}>
                 {u.roi >= 0 ? "+" : ""}{u.roi.toFixed(1)}% ROI
               </div>
-              <div style={{ color: "#444", fontSize: 10 }}>
+              <div style={{ color: "#e1e1e1", fontSize: 15 }}>
                 {u.neto >= 0 ? "+" : ""}{u.neto.toLocaleString()} neto
               </div>
             </div>
