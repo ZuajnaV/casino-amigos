@@ -20,19 +20,139 @@ const GAMES = [
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈","🗿","🚨","🗽","🛸","🛰️"];
 
+function PlayerStats({ userId }) {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const [bj, slots, mines, spaceman, horses, chicken] = await Promise.all([
+        supabase.from("blackjack_stats").select("*").eq("user_id", userId).single(),
+        supabase.from("slots_history").select("time, payout, free_spins").eq("user_id", userId),
+        supabase.from("mines_history").select("delta").eq("user_id", userId),
+        supabase.from("spaceman_history").select("crash, multiplier, net").eq("user_id", userId),
+        supabase.from("horserace_history").select("won, multiplier").eq("user_id", userId),
+        supabase.from("chickenroad_stats").select("hist_net").eq("user_id", userId).single(),
+      ]);
+
+      const slotsRows = slots.data || [];
+      const minesRows = mines.data || [];
+      const spaceRows = spaceman.data || [];
+      const horseRows = horses.data || [];
+
+      setStats({
+        bj: bj.data || { wins:0, losses:0, ties:0, blackjacks:0 },
+        slots: {
+          giros: slotsRows.length,
+          pagoTotal: slotsRows.reduce((a, h) => a + (h.payout || 0), 0),
+          tirosGratis: slotsRows.reduce((a, h) => a + (h.free_spins || 0), 0),
+        },
+        mines: {
+          partidas: minesRows.length,
+          victorias: minesRows.filter(h => h.delta > 0).length,
+          netTotal: minesRows.reduce((a, h) => a + (h.delta || 0), 0),
+        },
+        spaceman: {
+          vuelos: spaceRows.length,
+          crashes: spaceRows.filter(h => h.crash).length,
+          multPromedio: spaceRows.length
+            ? (spaceRows.reduce((a, h) => a + (h.multiplier || 0), 0) / spaceRows.length).toFixed(2)
+            : 0,
+          netTotal: spaceRows.reduce((a, h) => a + (h.net || 0), 0),
+        },
+        horses: {
+          apuestas: horseRows.length,
+          victorias: horseRows.filter(h => h.won).length,
+        },
+        chicken: {
+          netTotal: chicken.data?.hist_net || 0,
+        },
+      });
+      setLoading(false);
+    }
+    load();
+  }, [userId]);
+
+  if (loading) return <div style={{ color: "#555", fontSize: 13, padding: 12 }}>Cargando stats...</div>;
+  if (!stats) return null;
+
+  const bjTotal = stats.bj.wins + stats.bj.losses + stats.bj.ties;
+  const bjWinRate = bjTotal > 0 ? ((stats.bj.wins / bjTotal) * 100).toFixed(1) : 0;
+
+  const statBlock = (icon, title, rows, color) => (
+    <div style={{ background: "#0d0d14", border: `1px solid ${color}33`, borderRadius: 10, padding: "10px 14px", minWidth: 160 }}>
+      <div style={{ color, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>{icon} {title}</div>
+      {rows.map(([label, val], i) => (
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+          <span style={{ color: "#666" }}>{label}</span>
+          <span style={{ color: "#ccc", fontWeight: 600 }}>{val}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12 }}>
+      {statBlock("🃏", "Blackjack", [
+        ["Partidas", bjTotal],
+        ["Victorias", `${stats.bj.wins} (${bjWinRate}%)`],
+        ["Derrotas", stats.bj.losses],
+        ["Empates", stats.bj.ties],
+        ["Blackjacks", stats.bj.blackjacks],
+      ], "#00d4aa")}
+
+      {statBlock("🎰", "Tragamonedas", [
+        ["Giros", stats.slots.giros],
+        ["Pago total", stats.slots.pagoTotal.toLocaleString()],
+        ["Tiros gratis", stats.slots.tirosGratis],
+      ], "#ff6b35")}
+
+      {statBlock("💣", "Mines", [
+        ["Partidas", stats.mines.partidas],
+        ["Victorias", `${stats.mines.victorias} (${stats.mines.partidas > 0 ? ((stats.mines.victorias/stats.mines.partidas)*100).toFixed(1) : 0}%)`],
+        ["Neto total", stats.mines.netTotal.toLocaleString()],
+      ], "#491cff")}
+
+      {statBlock("🚀", "Spaceman", [
+        ["Vuelos", stats.spaceman.vuelos],
+        ["Crashes", stats.spaceman.crashes],
+        ["×̄ promedio", `×${stats.spaceman.multPromedio}`],
+        ["Neto total", Math.round(stats.spaceman.netTotal).toLocaleString()],
+      ], "#8b5cf6")}
+
+      {statBlock("🐎", "Horse Race", [
+        ["Apuestas", stats.horses.apuestas],
+        ["Victorias", `${stats.horses.victorias} (${stats.horses.apuestas > 0 ? ((stats.horses.victorias/stats.horses.apuestas)*100).toFixed(1) : 0}%)`],
+      ], "#ef4444")}
+
+      {statBlock("🐔", "Chicken Road", [
+        ["Neto total", Math.round(stats.chicken.netTotal).toLocaleString()],
+      ], "#f59e0b")}
+    </div>
+  );
+}
+
 function Lobby({ profile, balance, setGame, onDeposit }) {
   const [profiles, setProfiles] = useState([]);
   const [showDeposit, setShowDeposit] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [depositLoading, setDepositLoading] = useState(false);
+  const [showStats, setShowStats] = useState(false);   // ← nuevo
 
   useEffect(() => {
     supabase.from("profiles").select("username, avatar, balance, total_deposited")
       .then(({ data }) => {
         if (data) {
+          const MIN_DEPOSIT = 50000;
           const sorted = data
-            .map(u => ({ ...u, neto: u.balance - (u.total_deposited || 0) }))
-            .sort((a, b) => b.neto - a.neto);
+            .map(u => {
+              const dep = u.total_deposited || 0;
+              const neto = u.balance - dep;
+              const roi = dep >= MIN_DEPOSIT ? (neto / dep) * 100 : null;
+              return { ...u, neto, roi, dep };
+            })
+            .filter(u => u.roi !== null)          // solo quienes cumplen mínimo
+            .sort((a, b) => b.roi - a.roi);
           setProfiles(sorted);
         }
       });
@@ -48,7 +168,9 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
     setDepositLoading(false);
   }
 
-  const neto = balance - (profile.total_deposited || 0);
+  const dep = profile.total_deposited || 0;
+  const neto = balance - dep;
+  const roi = dep >= 50000 ? ((neto / dep) * 100).toFixed(1) : null;
 
   return (
     <div>
@@ -58,19 +180,34 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
           <div style={{ fontSize: 22, fontWeight: 700 }}>{profile.avatar} {profile.username}</div>
           <div style={{ fontSize: 12, color: neto >= 0 ? "#00d4aa" : "#ff4444", marginTop: 2 }}>
             {neto >= 0 ? "📈" : "📉"} Neto: {neto >= 0 ? "+" : ""}{neto.toLocaleString()}
+            {roi !== null && (
+              <span style={{ marginLeft: 8, color: parseFloat(roi) >= 0 ? "#00d4aa" : "#ff4444" }}>
+                ({roi >= 0 ? "+" : ""}{roi}% ROI)
+              </span>
+            )}
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
           <div style={styles.balancePill}>💰 {balance.toLocaleString()} fichas</div>
-          <button onClick={() => setShowDeposit(!showDeposit)} style={styles.depositBtn}>💵 Bolsillo</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowStats(s => !s)} style={styles.depositBtn}>
+              📊 {showStats ? "Ocultar" : "Mis stats"}
+            </button>
+            <button onClick={() => setShowDeposit(!showDeposit)} style={styles.depositBtn}>
+              💵 Bolsillo
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Panel de stats del jugador */}
+      {showStats && <PlayerStats userId={profile.id} />}
 
       {showDeposit && (
         <div style={styles.depositBox}>
           <div style={{ fontWeight: 700, marginBottom: 8, color: "#fbbf24" }}>💵 Recargar Bolsillo</div>
           <div style={{ fontSize: 12, color: "#888", marginBottom: 12 }}>
-            Total ingresado: {(profile.total_deposited || 0).toLocaleString()} fichas
+            Total ingresado: {dep.toLocaleString()} fichas
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <input
@@ -80,7 +217,8 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
               onChange={e => setDepositAmount(e.target.value)}
               style={{ ...styles.input, marginBottom: 0, flex: 1 }}
             />
-            <button onClick={handleDeposit} disabled={depositLoading} style={{ ...styles.loginBtn, width: "auto", padding: "12px 16px" }}>
+            <button onClick={handleDeposit} disabled={depositLoading}
+              style={{ ...styles.loginBtn, width: "auto", padding: "12px 16px" }}>
               {depositLoading ? "..." : "Añadir"}
             </button>
           </div>
@@ -105,15 +243,25 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
       </div>
 
       <div style={styles.rankingBox}>
-        <div style={{ color: "#555", fontSize: 12, marginBottom: 8, letterSpacing: 2 }}>RANKING</div>
+        <div style={{ color: "#555", fontSize: 12, marginBottom: 8, letterSpacing: 2 }}>
+          RANKING — ROI% <span style={{ color: "#333", fontWeight: 400 }}>(mín. 50k depositado)</span>
+        </div>
+        {profiles.length === 0 && (
+          <div style={{ color: "#333", fontSize: 12 }}>Nadie califica aún</div>
+        )}
         {profiles.map((u, i) => (
           <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
             <span style={{ color: i===0?"#fbbf24":i===1?"#aaa":i===2?"#cd7f32":"#666" }}>
               {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} {u.avatar} {u.username}
             </span>
-            <span style={{ color: u.neto >= 0 ? "#00d4aa" : "#ff4444", fontSize: 13, fontWeight: 700 }}>
-              {u.neto >= 0 ? "+" : ""}{u.neto.toLocaleString()}
-            </span>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ color: u.roi >= 0 ? "#00d4aa" : "#ff4444", fontSize: 13, fontWeight: 700 }}>
+                {u.roi >= 0 ? "+" : ""}{u.roi.toFixed(1)}% ROI
+              </div>
+              <div style={{ color: "#444", fontSize: 10 }}>
+                {u.neto >= 0 ? "+" : ""}{u.neto.toLocaleString()} neto
+              </div>
+            </div>
           </div>
         ))}
       </div>
