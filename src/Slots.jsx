@@ -181,13 +181,13 @@ const autoSpinRef = useRef(false);
 
 
   const JACKPOT_FIJO_MAP = {
-  500:    60000,
-  1000:   120000,
-  5000:   600000,
-  10000:  1500000,
-  20000:  3000000,
-  50000:  10000000,
-  100000: 25000000,
+  500:    220000,
+  1000:   425000,
+  5000:   2125000,
+  10000:  4250000,
+  20000:  8500000,
+  50000:  21250000,
+  100000: 42500000,
 };
   async function doSpin(isFree = false) {
     const activeBet = isFree ? freeBet : bet;
@@ -475,23 +475,23 @@ useEffect(() => {
 
                 {phase === "idle" && freeSpinsLeft === 0 && (
   <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-    <div style={{ color: "#aaa", fontSize: 11, textAlign: "center" }}>AUTO-SPIN</div>
+    <div style={{ color: "#aaa", fontSize: 15, textAlign: "center" }}>AUTO-SPIN</div>
     <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
-      {[5, 10, 20, 50].map(n => (
+      {[5, 10, 20, 50, 100].map(n => (
         <button key={n} onClick={() => { setAutoSpins(n); setAutoSpinsLeft(n); autoSpinRef.current = true; doSpin(false); }}
           disabled={spinning || balance < bet}
-          style={{ ...ST.betBtn, background: "#1a1a2a", color: "#aaa", border: "1px solid #333", fontSize: 13, padding: "5px 8px" }}>
+          style={{ ...ST.betBtn, background: "#1a1a2a", color: "#aaa", border: "1px solid #333", fontSize: 15, padding: "5px 8px" }}>
           {n}x
         </button>
       ))}
       {autoSpinsLeft > 0 && (
         <button onClick={() => { autoSpinRef.current = false; setAutoSpinsLeft(0); }}
-          style={{ ...ST.betBtn, background: "#2a0a0a", color: "#ff4444", border: "1px solid #ff4444", fontSize: 13, padding: "5px 8px" }}>
+          style={{ ...ST.betBtn, background: "#2a0a0a", color: "#ff4444", border: "1px solid #ff4444", fontSize: 15, padding: "5px 8px" }}>
           ✕ Stop
         </button>
       )}
     </div>
-    {autoSpinsLeft > 0 && <div style={{ color: "#c084fc", fontSize: 11, textAlign: "center" }}>Quedan: {autoSpinsLeft}</div>}
+    {autoSpinsLeft > 0 && <div style={{ color: "#c084fc", fontSize: 15, textAlign: "center" }}>Quedan: {autoSpinsLeft}</div>}
   </div>
 )}
 
