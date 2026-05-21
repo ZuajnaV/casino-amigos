@@ -220,42 +220,56 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
 
   const placeBet = useCallback((id) => {
   if (spinning) return;
+
   if (eraseMode) {
     setBets(prev => { const next = { ...prev }; delete next[id]; return next; });
     groupOrderRef.current = groupOrderRef.current.filter(x => x !== id);
     return;
   }
+
   if (balance < totalBet + chipValue) { setMsg("Saldo insuficiente"); return; }
   setMsg("");
 
   const GROUPS = [
     { ids: ["col1", "col2", "col3"], max: 2 },
     { ids: ["doz1", "doz2", "doz3"], max: 2 },
-    { ids: ["red", "black"],          max: 1 },
-    { ids: ["even", "odd"],           max: 1 },
-    { ids: ["low", "high"],           max: 1 },
+    { ids: ["red", "black"],         max: 1 },
+    { ids: ["even", "odd"],          max: 1 },
+    { ids: ["low", "high"],          max: 1 },
   ];
 
   const group = GROUPS.find(g => g.ids.includes(id));
 
-  setBets(prev => {
-    const next = { ...prev };
-    if (group) {
-      // Quitar este id del orden si ya estaba (lo vamos a reinsertar al final)
-      groupOrderRef.current = groupOrderRef.current.filter(x => x !== id);
-      // Ver cuántos del mismo grupo están activos, en orden de llegada
-      const activeInGroup = groupOrderRef.current.filter(x => group.ids.includes(x));
-      // Si ya llegamos al límite, eliminar el más antiguo
-      if (activeInGroup.length >= group.max) {
-        const toRemove = activeInGroup[0];
-        delete next[toRemove];
-        groupOrderRef.current = groupOrderRef.current.filter(x => x !== toRemove);
-      }
-      groupOrderRef.current.push(id);
+  if (group) {
+    // Quitar este id del orden (lo reinsertamos como el más nuevo)
+    groupOrderRef.current = groupOrderRef.current.filter(x => x !== id);
+
+    // Miembros activos del grupo en orden FIFO
+    const activeInGroup = groupOrderRef.current.filter(x => group.ids.includes(x));
+
+    // Si ya llegamos al límite, capturar el más antiguo para borrarlo
+    let toRemove = null;
+    if (activeInGroup.length >= group.max) {
+      toRemove = activeInGroup[0];
+      groupOrderRef.current = groupOrderRef.current.filter(x => x !== toRemove);
     }
-    next[id] = (next[id] || 0) + chipValue;
-    return next;
-  });
+
+    // Insertar el nuevo como más reciente
+    groupOrderRef.current.push(id);
+
+    // Actualizar bets una sola vez, con toRemove ya calculado
+    setBets(prev => {
+      const next = { ...prev };
+      if (toRemove) delete next[toRemove];
+      next[id] = (next[id] || 0) + chipValue;
+      return next;
+    });
+
+  } else {
+    // Número directo u otra apuesta sin grupo — simplemente acumular
+    setBets(prev => ({ ...prev, [id]: (prev[id] || 0) + chipValue }));
+  }
+
 }, [spinning, balance, totalBet, chipValue, eraseMode]);
 
 
