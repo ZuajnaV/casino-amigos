@@ -173,6 +173,11 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
 
 
 
+  const groupOrderRef = useRef([]); // rastrea orden FIFO de apuestas en grupos
+
+
+
+
 
 
 
@@ -203,24 +208,76 @@ export default function RouletteGame({ balance, setBalance, onBack }) {
 
 
 
+
+
+
+
+
+
+
+  
+
+
   const placeBet = useCallback((id) => {
-    if (spinning) return;
-
-
-    if (eraseMode) {
+  if (spinning) return;
+  if (eraseMode) {
     setBets(prev => { const next = { ...prev }; delete next[id]; return next; });
+    groupOrderRef.current = groupOrderRef.current.filter(x => x !== id);
     return;
   }
+  if (balance < totalBet + chipValue) { setMsg("Saldo insuficiente"); return; }
+  setMsg("");
+
+  const GROUPS = [
+    { ids: ["col1", "col2", "col3"], max: 2 },
+    { ids: ["doz1", "doz2", "doz3"], max: 2 },
+    { ids: ["red", "black"],          max: 1 },
+    { ids: ["even", "odd"],           max: 1 },
+    { ids: ["low", "high"],           max: 1 },
+  ];
+
+  const group = GROUPS.find(g => g.ids.includes(id));
+
+  setBets(prev => {
+    const next = { ...prev };
+    if (group) {
+      // Quitar este id del orden si ya estaba (lo vamos a reinsertar al final)
+      groupOrderRef.current = groupOrderRef.current.filter(x => x !== id);
+      // Ver cuántos del mismo grupo están activos, en orden de llegada
+      const activeInGroup = groupOrderRef.current.filter(x => group.ids.includes(x));
+      // Si ya llegamos al límite, eliminar el más antiguo
+      if (activeInGroup.length >= group.max) {
+        const toRemove = activeInGroup[0];
+        delete next[toRemove];
+        groupOrderRef.current = groupOrderRef.current.filter(x => x !== toRemove);
+      }
+      groupOrderRef.current.push(id);
+    }
+    next[id] = (next[id] || 0) + chipValue;
+    return next;
+  });
+}, [spinning, balance, totalBet, chipValue, eraseMode]);
 
 
 
 
-    if (balance < totalBet + chipValue) { setMsg("Saldo insuficiente"); return; }
-    setMsg("");
-    setBets(prev => ({ ...prev, [id]: (prev[id] || 0) + chipValue }));
-  }, [spinning, balance, totalBet, chipValue, eraseMode]);
 
-  function clearBets() { if (!spinning) setBets({}); }
+
+
+
+
+
+
+
+  function clearBets() {
+  if (!spinning) {
+    setBets({});
+    groupOrderRef.current = [];
+  }
+}
+
+
+
 
   // ─── Estadísticas derivadas ─────────────────────────────────────────────
   const last38 = fullHistory.slice(0, 38);
@@ -360,6 +417,10 @@ supabase.from("roulette_stats").update({
 
   setLastBets(bets);
 setBets({});
+
+
+
+groupOrderRef.current = [];
 
 
 
