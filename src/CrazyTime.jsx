@@ -3,60 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 // ─── WHEEL CONFIGURATION ────────────────────────────────────────────────────
 // 54 segments in order matching the real Crazy Time wheel
 const WHEEL_SEGMENTS = [
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "cash_hunt", label: "CASH\nHUNT", color: "#f5a623", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
   { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "crazy_time", label: "CRAZY\nTIME", color: "#ff6b00", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "cash_hunt", label: "CASH\nHUNT", color: "#f5a623", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
 ];
 
 const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 15, 20, 25, 40, 50];
@@ -81,8 +28,6 @@ function CoinFlipBonus({ bet, onComplete }) {
   const [chosen, setChosen] = useState(null);
   const [result, setResult] = useState(null);
   const [flipping, setFlipping] = useState(false);
-  const WHEEL_OFFSET = 0;
-  const rotRef = useRef(0);
 
   function selectColor(color) {
     if (chosen) return;
@@ -296,22 +241,26 @@ function PachinkoBonus({ bet, onComplete }) {
     })
   );
   const [mults, setMults] = useState(baseMults);
-  const [ballPos, setBallPos] = useState(50); // percent
-  const [dropping, setDropping] = useState(false);
+  const [ballPos, setBallPos] = useState(50);
+  const [phase, setPhase] = useState("ready"); // "ready" | "dropping" | "landed"
   const [landed, setLanded] = useState(null);
   const [doublesCount, setDoublesCount] = useState(0);
-  const [ballY, setBallY] = useState(0);
+  const [ballY, setBallY] = useState(-10); // empieza fuera de la pantalla
 
-  function drop() {
-    if (dropping) return;
-    setDropping(true);
+  const multsRef = useRef(baseMults);
+  const intervalRef = useRef(null);
+
+  function dropBall(currentMults) {
+    setPhase("dropping");
+    setLanded(null);
     setBallY(0);
     setBallPos(50);
-    let pos = 50;
 
+    let pos = 50;
     const steps = 20;
     let step = 0;
-    const interval = setInterval(() => {
+
+    intervalRef.current = setInterval(() => {
       step++;
       pos += (Math.random() - 0.5) * 15;
       pos = Math.max(5, Math.min(95, pos));
@@ -319,20 +268,24 @@ function PachinkoBonus({ bet, onComplete }) {
       setBallY(step * (100 / steps));
 
       if (step >= steps) {
-        clearInterval(interval);
+        clearInterval(intervalRef.current);
+
         const slot = Math.min(SLOTS - 1, Math.floor(pos / (100 / SLOTS)));
         setLanded(slot);
-        setDropping(false);
+        setPhase("landed");
 
-        const value = mults[slot];
+        const value = currentMults[slot];
         if (value === "DOUBLE") {
-          setDoublesCount(d => d + 1);
-          const newMults = mults.map(m => (m === "DOUBLE" ? "DOUBLE" : m * 2));
+          const newMults = currentMults.map(m => (m === "DOUBLE" ? "DOUBLE" : m * 2));
+          multsRef.current = newMults;
           setMults(newMults);
+          setDoublesCount(d => d + 1);
+          // Tras el DOUBLE, mostrar resultado y volver a "ready" para otro drop
           setTimeout(() => {
+            setPhase("ready");
             setLanded(null);
-            setBallY(0);
-            drop();
+            setBallY(-10);
+            setBallPos(50);
           }, 1500);
         } else {
           setTimeout(() => onComplete(bet * value, value), 2000);
@@ -341,27 +294,24 @@ function PachinkoBonus({ bet, onComplete }) {
     }, 120);
   }
 
-  useEffect(() => { drop(); }, []);
-
-
-
-
-
-useEffect(() => () => cancelAnimationFrame(animRef.current), []);
+  useEffect(() => {
+    return () => clearInterval(intervalRef.current);
+  }, []);
 
   return (
     <div style={bonusStyles.wrap}>
       <div style={bonusStyles.title}>🎳 PACHINKO</div>
+
       {doublesCount > 0 && (
         <div style={{ color: "#fbbf24", textAlign: "center", marginBottom: 8, fontWeight: 700 }}>
-          🔥 ×2 aplicado {doublesCount} {doublesCount === 1 ? "vez" : "veces"}
+          🔥 ×2 aplicado {doublesCount} {doublesCount === 1 ? "vez" : "veces"} — ¡todos los valores se duplicaron!
         </div>
       )}
 
-      {/* Ball */}
+      {/* Campo de juego */}
       <div style={{ position: "relative", height: 200, background: "#0d0d14", borderRadius: 12, marginBottom: 12, overflow: "hidden", border: "1px solid #2a2a3a" }}>
         {/* Pins */}
-        {Array.from({ length: 5 }, (_, row) => (
+        {Array.from({ length: 5 }, (_, row) =>
           Array.from({ length: 8 - (row % 2) }, (_, col) => (
             <div key={`${row}-${col}`} style={{
               position: "absolute",
@@ -372,24 +322,37 @@ useEffect(() => () => cancelAnimationFrame(animRef.current), []);
               top: `${15 + row * 16}%`,
             }} />
           ))
-        ))}
+        )}
 
-        {/* Ball */}
-        <div style={{
-          position: "absolute",
-          width: 20, height: 20,
-          background: "radial-gradient(circle at 35% 35%, #fff, #fbbf24)",
-          borderRadius: "50%",
-          left: `${ballPos - 2}%`,
-          top: `${ballY}%`,
-          transition: "top 0.12s, left 0.12s",
-          zIndex: 10,
-          boxShadow: "0 0 8px #fbbf24",
-        }} />
+        {/* Bola — solo visible cuando está en juego */}
+        {phase !== "ready" && (
+          <div style={{
+            position: "absolute",
+            width: 20, height: 20,
+            background: "radial-gradient(circle at 35% 35%, #fff, #fbbf24)",
+            borderRadius: "50%",
+            left: `${ballPos - 2}%`,
+            top: `${ballY}%`,
+            transition: "top 0.12s, left 0.12s",
+            zIndex: 10,
+            boxShadow: "0 0 8px #fbbf24",
+          }} />
+        )}
+
+        {/* Mensaje encima del campo cuando está listo */}
+        {phase === "ready" && (
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#555", fontSize: 13,
+          }}>
+            Presiona el botón para soltar la bola
+          </div>
+        )}
       </div>
 
       {/* Slots */}
-      <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: 4, justifyContent: "center", marginBottom: 16 }}>
         {mults.map((m, i) => (
           <div key={i} style={{
             flex: 1,
@@ -408,14 +371,29 @@ useEffect(() => () => cancelAnimationFrame(animRef.current), []);
         ))}
       </div>
 
-      {landed !== null && mults[landed] !== "DOUBLE" && (
-        <div style={{ textAlign: "center", fontSize: 22, fontWeight: 700, color: "#7ed321", marginTop: 12 }}>
+      {/* Botón soltar */}
+      {phase === "ready" && (
+        <button onClick={() => dropBall(multsRef.current)} style={bonusStyles.actionBtn}>
+          🎳 ¡Soltar bola!
+        </button>
+      )}
+
+      {/* Resultado */}
+      {phase === "landed" && landed !== null && mults[landed] !== "DOUBLE" && (
+        <div style={{ textAlign: "center", fontSize: 22, fontWeight: 700, color: "#7ed321", marginTop: 4 }}>
           ✅ ¡{mults[landed]}x! (+{(bet * mults[landed]).toLocaleString()})
         </div>
       )}
-      {dropping && (
-        <div style={{ textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 8 }}>
-          🔮 El disco está cayendo...
+
+      {phase === "dropping" && (
+        <div style={{ textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 4 }}>
+          🔮 La bola está cayendo...
+        </div>
+      )}
+
+      {phase === "landed" && landed !== null && mults[landed] === "DOUBLE" && (
+        <div style={{ textAlign: "center", fontSize: 18, fontWeight: 700, color: "#e84747", marginTop: 4 }}>
+          ×2 — ¡Todos los valores se duplicaron! Preparando nueva tirada...
         </div>
       )}
     </div>
@@ -706,6 +684,8 @@ function TopSlot({ result }) {
   );
 }
 
+
+
 // ─── MAIN GAME ────────────────────────────────────────────────────────────────
 export default function CrazyTimeGame({ balance, setBalance, onBack }) {
   const [bets, setBets] = useState({});
@@ -719,7 +699,6 @@ export default function CrazyTimeGame({ balance, setBalance, onBack }) {
   const [history, setHistory] = useState([]);
   const [phase, setPhase] = useState("betting"); // betting → spinning → bonus → result
   const rotRef = useRef(0);           // ← agregar
-  const WHEEL_OFFSET = 0; // 0
   const wheelRef = useRef(null);   // ← agregar
 const animRef  = useRef(null);   // ← agregar
 
@@ -753,32 +732,35 @@ const animRef  = useRef(null);   // ← agregar
   const tsRes     = { segment: tsSegment, multiplier: tsMult };
   setTimeout(() => setTopSlotResult(tsRes), 500);
 
-  // ── Calcular destino ──────────────────────────────────────────────────
-  const SEG   = 360 / WHEEL_SEGMENTS.length;          // 6.666...°
+  const SEG = 360 / WHEEL_SEGMENTS.length;
   const targetIdx = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
 
-  // Queremos que el CENTRO del segmento quede bajo el puntero (arriba = 0°)
-  const targetAngle = targetIdx * SEG + SEG / 2;
-  const currentMod  = rotRef.current % 360;
-  let delta = ((targetAngle - currentMod) % 360 + 360) % 360;
-  if (delta < SEG) delta += 360;                      // al menos 1 vuelta extra de margen
+  // Centro del segmento destino en coordenadas de la rueda (sin rotar)
+  const segCenter = targetIdx * SEG + SEG / 2;
+
+  // Rotación actual normalizada a [0, 360)
+  const currentMod = ((rotRef.current % 360) + 360) % 360;
+
+  // Rotación necesaria para que segCenter quede en 0° (arriba)
+  const targetMod = (360 - (segCenter % 360)) % 360;
+
+  // Delta mínimo para llegar al destino desde la posición actual
+  let delta = ((targetMod - currentMod) + 360) % 360;
+  if (delta < SEG) delta += 360; // evitar ángulo casi-cero
 
   const extraSpins = 5 + Math.floor(Math.random() * 4);
   const totalDeg   = extraSpins * 360 + delta;
   const startAngle = rotRef.current;
-  const endAngle   = rotRef.current + totalDeg;
-  rotRef.current   = endAngle;
+  rotRef.current   = rotRef.current + totalDeg;
 
-  // ── Animación con requestAnimationFrame (igual que Ruleta) ───────────
   const DURATION = 5000;
   const t0 = performance.now();
-
   cancelAnimationFrame(animRef.current);
 
   function frame(now) {
-    const t      = Math.min(1, (now - t0) / DURATION);
-    const eased  = 1 - Math.pow(1 - t, 4);            // quartic ease-out
-    const angle  = startAngle + totalDeg * eased;
+    const t     = Math.min(1, (now - t0) / DURATION);
+    const eased = 1 - Math.pow(1 - t, 4);
+    const angle = startAngle + totalDeg * eased;
 
     if (wheelRef.current)
       wheelRef.current.style.transform = `rotate(${angle}deg)`;
@@ -788,7 +770,6 @@ const animRef  = useRef(null);   // ← agregar
       return;
     }
 
-    // ── Fin de animación ──────────────────────────────────────────────
     setSpinning(false);
     const landed = WHEEL_SEGMENTS[targetIdx];
     setLandedSegment({ ...landed, index: targetIdx });
@@ -822,6 +803,24 @@ const animRef  = useRef(null);   // ← agregar
 
   animRef.current = requestAnimationFrame(frame);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   function handleBonusComplete(payout, mult, ...args) {
     setBalance(prev => prev + payout + (bets[bonus.type] || 0));
