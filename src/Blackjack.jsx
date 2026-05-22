@@ -63,7 +63,7 @@ function Card({ card, hidden = false, highlight = false }) {
 
 
 // ─── Panel de apuesta ─────────────────────────────────────────────────────────
-const BET_OPTIONS = [1000, 5000, 10000, 50000, 100000];
+const BET_OPTIONS = [1000, 5000, 10000, 50000, 100000, 1000000, 5000000];
 const MIN_BET = 1000;
 
 function BetPanel({ balance, onStart, lastBet }) {

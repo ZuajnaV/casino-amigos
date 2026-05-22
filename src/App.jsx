@@ -7,6 +7,8 @@ import SpacemanGame from "./Spaceman.jsx";
 import ChickenRoadGame from "./ChickenRoad.jsx";
 import HorseRace from "./HorseRace.jsx";
 import SlotsGame from "./Slots.jsx";
+import CrazyTimeGame from "./CrazyTime.jsx";
+
 
 const GAMES = [
   { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                       color: "#ff6b35" },
@@ -16,6 +18,7 @@ const GAMES = [
   { id: "spaceman",    name: "Spaceman",      icon: "🚀", desc: "Explora el espacio y evita estrellar",           color: "#8b5cf6" },
   { id: "chickenroad", name: "Chicken Road",  icon: "🐔", desc: "Corre por la carretera y evita los obstáculos",  color: "#f59e0b" },
   { id: "horses",      name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",              color: "#ef4444" },
+  { id: "crazytime",   name: "Crazy Time",    icon: "💥🎆🎡🎆💥", desc: "¡El juego más loco del casino!",                color: "#f97316" },
 ];
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈","🗿","🚨","🗽","🛸","🛰️"];
@@ -460,6 +463,7 @@ export default function App() {
         {game === "spaceman"    && <SpacemanGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={handleBack} />}
         {game === "horses"      && <HorseRace       balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {game === "crazytime"   && <CrazyTimeGame   balance={balance} setBalance={setBalance} onBack={handleBack} />}
       </div>
     </div>
   );
