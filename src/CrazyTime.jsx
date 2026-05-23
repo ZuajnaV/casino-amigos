@@ -1281,8 +1281,6 @@ const animRef  = useRef(null);   // ← agregar
     setTimeout(() => { setPhase("betting"); setMessage(null); }, 3500);
   }
 
-  const quickAmounts = [500, 1000, 5000, 10000, 25000];
-
   return (
     <div style={styles.wrap}>
       <style>{`
