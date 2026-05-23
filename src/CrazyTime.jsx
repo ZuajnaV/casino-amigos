@@ -1166,30 +1166,24 @@ export default function CrazyTimeGame({ balance, setBalance, onBack }) {
 const animRef  = useRef(null);   // ← agregar
 
 
-  const [pendingBets, setPendingBets] = useState({});
-  const totalPending = Object.values(pendingBets).reduce((a, b) => a + b, 0);
 
 
+  const totalBet = Object.values(bets).reduce((a, b) => a + b, 0);
 
   function placeBet(type) {
     const amount = parseInt(betInput) || 1000;
-  if (amount <= 0) return;
-    setPendingBets(prev => ({ ...prev, [type]: (prev[type] || 0) + amount }));
+    if (amount <= 0 || amount > balance) return;
+    setBets(prev => ({ ...prev, [type]: (prev[type] || 0) + amount }));
+    setBalance(balance - amount);
   }
 
   function clearBets() {
-    setPendingBets({});
+    setBalance(prev => prev + totalBet);
+    setBets({});
   }
 
   function spin() {
-  const totalBet = Object.values(pendingBets).reduce((a, b) => a + b, 0);
   if (totalBet === 0 || spinning) return;
-  if (totalBet > balance) return; // validación de saldo
-    setBalance(prev => prev - totalBet);
-  setBets(pendingBets);        // copia las apuestas al estado "activo"
-  setPendingBets({});          // limpia las pendientes
-
-
   setSpinning(true);
   setPhase("spinning");
   setLandedSegment(null);
@@ -1408,124 +1402,64 @@ const animRef  = useRef(null);   // ← agregar
           </div>
 
           {/* Segments to bet on */}
-<div style={styles.card}>
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-    <div style={styles.sectionTitle}>🎲 Apostar en segmento</div>
-    <div style={{ display: "flex", gap: 6 }}>
-      {/* Botones rápidos: multiplicadores */}
-      {["1","2","5","10"].map(type => {
-        const info = SEGMENT_INFO[type];
-        const myBet = pendingBets[type] || 0;
-        return (
-          <button
-            key={type}
-            onClick={() => phase === "betting" && placeBet(type)}
-            disabled={phase !== "betting"}
-            style={{
-              background: myBet > 0 ? info.color + "44" : "#0d0d14",
-              border: `2px solid ${myBet > 0 ? info.color : "#2a2a3a"}`,
-              borderRadius: 8,
-              padding: "4px 8px",
-              cursor: phase === "betting" ? "pointer" : "default",
-              color: info.color,
-              fontWeight: 700,
-              fontSize: 12,
-              minWidth: 36,
-              textAlign: "center",
-            }}
-          >
-            <div>{info.emoji}</div>
-            {myBet > 0 && <div style={{ fontSize: 9, color: "#fbbf24" }}>{(myBet/1000).toFixed(0)}k</div>}
-          </button>
-        );
-      })}
-      <div style={{ width: 1, background: "#2a2a3a", margin: "0 2px" }} />
-      {/* Botones rápidos: bonus */}
-      {["coin_flip","cash_hunt","pachinko","crazy_time"].map(type => {
-        const info = SEGMENT_INFO[type];
-        const myBet = pendingBets[type] || 0;
-        return (
-          <button
-            key={type}
-            onClick={() => phase === "betting" && placeBet(type)}
-            disabled={phase !== "betting"}
-            style={{
-              background: myBet > 0 ? info.color + "44" : "#0d0d14",
-              border: `2px solid ${myBet > 0 ? info.color : "#2a2a3a"}`,
-              borderRadius: 8,
-              padding: "4px 8px",
-              cursor: phase === "betting" ? "pointer" : "default",
-              color: info.color,
-              fontWeight: 700,
-              fontSize: 12,
-              minWidth: 36,
-              textAlign: "center",
-            }}
-          >
-            <div>{info.emoji}</div>
-            {myBet > 0 && <div style={{ fontSize: 9, color: "#fbbf24" }}>{(myBet/1000).toFixed(0)}k</div>}
-          </button>
-        );
-      })}
-    </div>
-  </div>
-
-  {/* Grid completo — solo muestra los que tienen apuesta activa, o todos */}
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-    {SEGMENT_TYPES.map(type => {
-      const info = SEGMENT_INFO[type];
-      const myBet = pendingBets[type] || 0;
-      return (
-        <button
-          key={type}
-          onClick={() => phase === "betting" && placeBet(type)}
-          disabled={phase !== "betting"}
-          style={{
-            background: myBet > 0 ? info.color + "33" : "#1e1e2e",
-            border: `2px solid ${myBet > 0 ? info.color : "#2a2a3a"}`,
-            borderRadius: 10,
-            padding: "10px 8px",
-            cursor: phase === "betting" ? "pointer" : "default",
-            textAlign: "center",
-            transition: "all 0.2s",
-          }}
-        >
-          <div style={{ fontSize: 20 }}>{info.emoji}</div>
-          <div style={{ color: info.color, fontWeight: 700, fontSize: 13 }}>{info.label}</div>
-          {myBet > 0 && (
-            <div style={{ color: "#fbbf24", fontSize: 11, marginTop: 2 }}>
-              {myBet.toLocaleString()}
+          <div style={styles.card}>
+            <div style={styles.sectionTitle}>🎲 Apostar en segmento</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {SEGMENT_TYPES.map(type => {
+                const info = SEGMENT_INFO[type];
+                const myBet = bets[type] || 0;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => phase === "betting" && placeBet(type)}
+                    disabled={phase !== "betting"}
+                    style={{
+                      background: myBet > 0 ? info.color + "33" : "#1e1e2e",
+                      border: `2px solid ${myBet > 0 ? info.color : "#2a2a3a"}`,
+                      borderRadius: 10,
+                      padding: "10px 8px",
+                      cursor: phase === "betting" ? "pointer" : "default",
+                      textAlign: "center",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <div style={{ fontSize: 20 }}>{info.emoji}</div>
+                    <div style={{ color: info.color, fontWeight: 700, fontSize: 13 }}>{info.label}</div>
+                    {myBet > 0 && (
+                      <div style={{ color: "#fbbf24", fontSize: 11, marginTop: 2 }}>
+                        {myBet.toLocaleString()}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </button>
-      );
-    })}
-  </div>
-</div>
+          </div>
 
-<div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-  <button
-    onClick={clearBets}
-    disabled={totalPending === 0 || phase !== "betting"}
-    style={{ ...styles.btn, background: "#2a2a3a", flex: 1 }}
-  >
-    🗑 Borrar
-  </button>
-  <button
-    onClick={spin}
-    disabled={totalPending === 0 || phase !== "betting"}
-    style={{
-      ...styles.btn,
-      flex: 2,
-      background: totalPending > 0 && phase === "betting"
-        ? "linear-gradient(135deg, #ff6b00, #ff9500)"
-        : "#2a2a3a",
-      animation: totalPending > 0 && phase === "betting" ? "glow 2s infinite" : "none",
-    }}
-  >
-    {spinning ? "🌀 Girando..." : `🎡 Girar (${totalPending.toLocaleString()})`}
-  </button>
-</div>
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button
+              onClick={clearBets}
+              disabled={totalBet === 0 || phase !== "betting"}
+              style={{ ...styles.btn, background: "#2a2a3a", flex: 1 }}
+            >
+              🗑 Borrar
+            </button>
+            <button
+              onClick={spin}
+              disabled={totalBet === 0 || phase !== "betting"}
+              style={{
+                ...styles.btn,
+                flex: 2,
+                background: totalBet > 0 && phase === "betting"
+                  ? "linear-gradient(135deg, #ff6b00, #ff9500)"
+                  : "#2a2a3a",
+                animation: totalBet > 0 && phase === "betting" ? "glow 2s infinite" : "none",
+              }}
+            >
+              {spinning ? "🌀 Girando..." : `🎡 Girar (${totalBet.toLocaleString()})`}
+            </button>
+          </div>
         </div>
       </div>
 
