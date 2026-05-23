@@ -1151,39 +1151,48 @@ function TopSlot({ result }) {
 
 // ─── MAIN GAME ────────────────────────────────────────────────────────────────
 export default function CrazyTimeGame({ balance, setBalance, onBack }) {
-  const [bets, setBets] = useState({});
-  const [betInput, setBetInput] = useState("1000");
-  const [spinning, setSpinning] = useState(false);
-  const [rotation, setRotation] = useState(0);
+  const [bets, setBets]               = useState({});
+  const [betInput, setBetInput]       = useState("1000");
+  const [spinning, setSpinning]       = useState(false);
   const [topSlotResult, setTopSlotResult] = useState(null);
   const [landedSegment, setLandedSegment] = useState(null);
-  const [bonus, setBonus] = useState(null); // { type, bet }
-  const [message, setMessage] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [phase, setPhase] = useState("betting"); // betting → spinning → bonus → result
-  const rotRef = useRef(0);           // ← agregar
-  const wheelRef = useRef(null);   // ← agregar
-const animRef  = useRef(null);   // ← agregar
+  const [bonus, setBonus]             = useState(null);
+  const [message, setMessage]         = useState(null);
+  const [history, setHistory]         = useState([]);
+  const [phase, setPhase]             = useState("betting");
+  const [pendingBets, setPendingBets] = useState({});
+const totalPending = Object.values(pendingBets).reduce((a, b) => a + b, 0); 
+  const rotRef   = useRef(0);
+const wheelRef = useRef(null);
+const animRef  = useRef(null);
 
 
+function placeBet(type) {
+  const amount = parseInt(betInput) || 1000;
+  if (amount <= 0) return;
+  setPendingBets(prev => ({ ...prev, [type]: (prev[type] || 0) + amount }));
+}
 
 
-  const totalBet = Object.values(bets).reduce((a, b) => a + b, 0);
+function clearBets() {
+  setPendingBets({});
+}
 
-  function placeBet(type) {
-    const amount = parseInt(betInput) || 1000;
-    if (amount <= 0 || amount > balance) return;
-    setBets(prev => ({ ...prev, [type]: (prev[type] || 0) + amount }));
-    setBalance(balance - amount);
-  }
 
-  function clearBets() {
-    setBalance(prev => prev + totalBet);
-    setBets({});
-  }
+  const activeBetsRef = useRef({});
 
-  function spin() {
-  if (totalBet === 0 || spinning) return;
+
+function spin() {
+  if (totalPending === 0 || spinning) return;
+  if (totalPending > balance) { setMessage("❌ Saldo insuficiente"); return; }
+  const activeBets = { ...pendingBets };
+  activeBetsRef.current = activeBets;
+
+  setBalance(prev => prev - totalPending);
+  
+  setBets(activeBets);
+  setPendingBets({});
+
   setSpinning(true);
   setPhase("spinning");
   setLandedSegment(null);
@@ -1237,7 +1246,7 @@ const animRef  = useRef(null);   // ← agregar
     const landed = WHEEL_SEGMENTS[targetIdx];
     setLandedSegment({ ...landed, index: targetIdx });
 
-    const userBetOnLanded = bets[landed.type] || 0;
+    const userBetOnLanded = activeBetsRef.current[landed.type] || 0;
     const isBonus = ["coin_flip","cash_hunt","pachinko","crazy_time"].includes(landed.type);
 
     if (isBonus && userBetOnLanded > 0) {
@@ -1294,7 +1303,7 @@ const animRef  = useRef(null);   // ← agregar
         <button onClick={onBack} style={styles.backBtn}>← Volver</button>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 26, fontWeight: 900, color: "#ff6b00", letterSpacing: -1 }}>💥 CRAZY TIME</div>
-          <div style={{ color: "#fbbf24", fontSize: 12 }}>¡El juego más loco del casino!</div>
+          <div style={{ color: "#fbbf24", fontSize: 15 }}>¡El juego más loco del casino!</div>
         </div>
         <div style={styles.balancePill}>💰 {balance.toLocaleString()}</div>
       </div>
@@ -1387,7 +1396,7 @@ const animRef  = useRef(null);   // ← agregar
           fontWeight: betInput === String(v) ? 700 : 400,
           padding: "8px 12px",
           borderRadius: 20,
-          fontSize: 13,
+          fontSize: 20,
         }}
       >
         {v >= 1000 ? `${v / 1000}k` : v}
@@ -1402,64 +1411,117 @@ const animRef  = useRef(null);   // ← agregar
           </div>
 
           {/* Segments to bet on */}
-          <div style={styles.card}>
-            <div style={styles.sectionTitle}>🎲 Apostar en segmento</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {SEGMENT_TYPES.map(type => {
-                const info = SEGMENT_INFO[type];
-                const myBet = bets[type] || 0;
-                return (
-                  <button
-                    key={type}
-                    onClick={() => phase === "betting" && placeBet(type)}
-                    disabled={phase !== "betting"}
-                    style={{
-                      background: myBet > 0 ? info.color + "33" : "#1e1e2e",
-                      border: `2px solid ${myBet > 0 ? info.color : "#2a2a3a"}`,
-                      borderRadius: 10,
-                      padding: "10px 8px",
-                      cursor: phase === "betting" ? "pointer" : "default",
-                      textAlign: "center",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <div style={{ fontSize: 20 }}>{info.emoji}</div>
-                    <div style={{ color: info.color, fontWeight: 700, fontSize: 13 }}>{info.label}</div>
-                    {myBet > 0 && (
-                      <div style={{ color: "#fbbf24", fontSize: 11, marginTop: 2 }}>
-                        {myBet.toLocaleString()}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+<div style={styles.card}>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+    <div style={styles.sectionTitle}>🎲 Apostar en segmento</div>
+
+    {/* Botones rápidos al lado del título */}
+    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+      {/* Botón: apostar en todos los multiplicadores */}
+      <button
+        onClick={() => {
+          if (phase !== "betting") return;
+          ["1","2","5","10"].forEach(t => placeBet(t));
+        }}
+        disabled={phase !== "betting"}
+        style={{
+          background: "#0d0d14",
+          border: "1px solid #3a7bd5",
+          borderRadius: 6,
+          padding: "4px 8px",
+          color: "#3a7bd5",
+          fontSize: 20,
+          fontWeight: 700,
+          cursor: phase === "betting" ? "pointer" : "default",
+          whiteSpace: "nowrap",
+        }}
+      >
+        1️⃣2️⃣5️⃣🔟
+      </button>
+
+      <div style={{ width: 1, height: 20, background: "#2a2a3a" }} />
+
+      {/* Botón: apostar en todos los bonus */}
+      <button
+        onClick={() => {
+          if (phase !== "betting") return;
+          ["coin_flip","cash_hunt","pachinko","crazy_time"].forEach(t => placeBet(t));
+        }}
+        disabled={phase !== "betting"}
+        style={{
+          background: "#0d0d14",
+          border: "1px solid #ff6b00",
+          borderRadius: 6,
+          padding: "4px 8px",
+          color: "#ff6b00",
+          fontSize: 20,
+          fontWeight: 700,
+          cursor: phase === "betting" ? "pointer" : "default",
+          whiteSpace: "nowrap",
+        }}
+      >
+        🪙🎯🎳🎡
+      </button>
+    </div>
+  </div>
+
+  {/* Grid de segmentos */}
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+    {SEGMENT_TYPES.map(type => {
+      const info = SEGMENT_INFO[type];
+      const myBet = pendingBets[type] || 0;
+      return (
+        <button
+          key={type}
+          onClick={() => phase === "betting" && placeBet(type)}
+          disabled={phase !== "betting"}
+          style={{
+            background: myBet > 0 ? info.color + "33" : "#1e1e2e",
+            border: `2px solid ${myBet > 0 ? info.color : "#2a2a3a"}`,
+            borderRadius: 10,
+            padding: "10px 8px",
+            cursor: phase === "betting" ? "pointer" : "default",
+            textAlign: "center",
+            transition: "all 0.2s",
+          }}
+        >
+          <div style={{ fontSize: 32 }}>{info.emoji}</div>
+          <div style={{ color: info.color, fontWeight: 700, fontSize: 13 }}>{info.label}</div>
+          {myBet > 0 && (
+            <div style={{ color: "#fbbf24", fontSize: 11, marginTop: 2 }}>
+              {myBet.toLocaleString()}
             </div>
-          </div>
+          )}
+        </button>
+      );
+    })}
+  </div>
+</div>
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button
-              onClick={clearBets}
-              disabled={totalBet === 0 || phase !== "betting"}
-              style={{ ...styles.btn, background: "#2a2a3a", flex: 1 }}
-            >
-              🗑 Borrar
-            </button>
-            <button
-              onClick={spin}
-              disabled={totalBet === 0 || phase !== "betting"}
-              style={{
-                ...styles.btn,
-                flex: 2,
-                background: totalBet > 0 && phase === "betting"
-                  ? "linear-gradient(135deg, #ff6b00, #ff9500)"
-                  : "#2a2a3a",
-                animation: totalBet > 0 && phase === "betting" ? "glow 2s infinite" : "none",
-              }}
-            >
-              {spinning ? "🌀 Girando..." : `🎡 Girar (${totalBet.toLocaleString()})`}
-            </button>
-          </div>
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+  <button
+    onClick={clearBets}
+    disabled={totalPending === 0 || phase !== "betting"}
+    style={{ ...styles.btn, background: "#2a2a3a", flex: 1 }}
+  >
+    🗑 Borrar
+  </button>
+  <button
+    onClick={spin}
+    disabled={totalPending === 0 || phase !== "betting"}
+    style={{
+      ...styles.btn,
+      flex: 2,
+      background: totalPending > 0 && phase === "betting"
+        ? "linear-gradient(135deg, #ff6b00, #ff9500)"
+        : "#2a2a3a",
+      animation: totalPending > 0 && phase === "betting" ? "glow 2s infinite" : "none",
+    }}
+  >
+    {spinning ? "🌀 Girando..." : `🎡 Girar (${totalPending.toLocaleString()})`}
+  </button>
+</div>
         </div>
       </div>
 
@@ -1518,7 +1580,7 @@ const styles = {
     background: "#16161f", border: "1px solid #1e1e2e", borderRadius: 12,
     padding: "12px 14px", marginBottom: 10,
   },
-  sectionTitle: { color: "#666", fontSize: 11, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" },
+  sectionTitle: { color: "#ffffff", fontSize: 15, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" },
   input: {
     width: "100%", background: "#0d0d14", border: "1px solid #2a2a3a",
     borderRadius: 8, padding: "10px 12px", color: "#fff", fontSize: 16,
@@ -1530,7 +1592,7 @@ const styles = {
   },
   btn: {
     border: "none", borderRadius: 10, padding: "14px 16px",
-    color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer",
+    color: "#fff", fontSize: 20, fontWeight: 700, cursor: "pointer",
     transition: "all 0.2s",
   },
   bonusOverlay: {
