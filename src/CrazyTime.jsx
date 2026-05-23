@@ -1398,13 +1398,7 @@ const animRef  = useRef(null);   // ← agregar
 
 
 
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-              {quickAmounts.map(a => (
-                <button key={a} onClick={() => setBetInput(String(a))} style={styles.quickBtn}>
-                  {a >= 1000 ? `${a / 1000}k` : a}
-                </button>
-              ))}
-            </div>
+            
           </div>
 
           {/* Segments to bet on */}
