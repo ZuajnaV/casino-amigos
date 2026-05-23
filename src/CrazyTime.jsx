@@ -3,8 +3,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 // ─── WHEEL CONFIGURATION ────────────────────────────────────────────────────
 // 54 segments in order matching the real Crazy Time wheel
 const WHEEL_SEGMENTS = [
-  { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
-];
+  { type: "crazy_time", label: "CRAZY\nTIME", color: "#ff6b00", textColor: "#fff" },
+  ];
 
 const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 15, 20, 25, 40, 50];
 const SEGMENT_TYPES = ["1", "2", "5", "10", "coin_flip", "cash_hunt", "pachinko", "crazy_time"];
@@ -22,86 +22,185 @@ const SEGMENT_INFO = {
 
 // ─── COIN FLIP BONUS ─────────────────────────────────────────────────────────
 function CoinFlipBonus({ bet, onComplete }) {
-  const [phase, setPhase] = useState("reveal"); // reveal → result
-  const [redMult] = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
+  const [redMult]  = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
   const [blueMult] = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
-  const [chosen, setChosen] = useState(null);
-  const [result, setResult] = useState(null);
+  const [chosen,   setChosen]   = useState(null);
+  const [result,   setResult]   = useState(null);
   const [flipping, setFlipping] = useState(false);
+  const [animState, setAnimState] = useState("idle"); // idle | flipping | done-red | done-blue
 
   function selectColor(color) {
-    if (chosen) return;
+    if (chosen || flipping) return;
     setChosen(color);
   }
 
   function flip() {
     if (!chosen || flipping) return;
     setFlipping(true);
+    setAnimState("flipping");
+
     setTimeout(() => {
       const landed = Math.random() < 0.5 ? "red" : "blue";
+      setAnimState("done-" + landed);
       setResult(landed);
       setFlipping(false);
-    }, 1800);
+    }, 1900);
   }
 
   useEffect(() => {
     if (result !== null) {
       const mult = result === "red" ? redMult : blueMult;
-      const won = result === chosen;
-      setTimeout(() => onComplete(won ? bet * mult : 0, mult, result, chosen), 2000);
+      const won  = result === chosen;
+      setTimeout(() => onComplete(won ? bet * mult : 0, mult, result, chosen), 3200);
     }
   }, [result]);
 
+  // Animación:
+  // - coinJump: sube y baja (en el wrapper externo)
+  // - coinRotateToRed: termina en 0°/360° = cara roja visible
+  // - coinRotateToBlue: termina en 180° = cara azul visible
+  const SPIN_DURATION = "1.9s";
+
   return (
     <div style={bonusStyles.wrap}>
+      <style>{`
+        @keyframes coinJump {
+          0%   { transform: translateY(0px);    }
+          25%  { transform: translateY(-100px); }
+          55%  { transform: translateY(-110px); }
+          82%  { transform: translateY(-8px);   }
+          91%  { transform: translateY(5px);    }
+          100% { transform: translateY(0px);    }
+        }
+        @keyframes coinRotateRed {
+          0%   { transform: rotateY(0deg);    }
+          100% { transform: rotateY(1440deg); }
+        }
+        @keyframes coinRotateBlue {
+          0%   { transform: rotateY(0deg);    }
+          100% { transform: rotateY(1620deg); }
+        }
+        @keyframes glowRed  { 0%,100%{box-shadow:0 0 18px #e8474788} 50%{box-shadow:0 0 36px #e84747cc} }
+        @keyframes glowBlue { 0%,100%{box-shadow:0 0 18px #4785e888} 50%{box-shadow:0 0 36px #4785e8cc} }
+      `}</style>
+
       <div style={bonusStyles.title}>🪙 COIN FLIP</div>
-      <div style={{ color: "#aaa", marginBottom: 20, fontSize: 14 }}>
+      <div style={{ color: "#aaa", marginBottom: 20, fontSize: 14, textAlign: "center" }}>
         Elige un color y lanza la moneda
       </div>
 
-      <div style={{ display: "flex", gap: 20, justifyContent: "center", marginBottom: 30 }}>
-        <div
-          onClick={() => selectColor("red")}
-          style={{
-            ...bonusStyles.coinSide,
-            background: "linear-gradient(135deg, #e84747, #a00)",
-            border: chosen === "red" ? "4px solid #fff" : "4px solid transparent",
-            transform: chosen === "red" ? "scale(1.1)" : "scale(1)",
-          }}
-        >
-          <div style={{ fontSize: 32 }}>🔴</div>
-          <div style={{ fontSize: 28, fontWeight: 900 }}>{redMult}x</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>ROJO</div>
-        </div>
-        <div
-          onClick={() => selectColor("blue")}
-          style={{
-            ...bonusStyles.coinSide,
-            background: "linear-gradient(135deg, #4785e8, #005faa)",
-            border: chosen === "blue" ? "4px solid #fff" : "4px solid transparent",
-            transform: chosen === "blue" ? "scale(1.1)" : "scale(1)",
-          }}
-        >
-          <div style={{ fontSize: 32 }}>🔵</div>
-          <div style={{ fontSize: 28, fontWeight: 900 }}>{blueMult}x</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>AZUL</div>
+      {/* ── Moneda con dos caras ── */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 28, perspective: "600px" }}>
+
+        {/* Wrapper vertical (sube/baja) */}
+        <div style={{
+          animation: animState === "flipping"
+            ? `coinJump ${SPIN_DURATION} ease-in-out forwards`
+            : "none",
+        }}>
+          {/* Inner: rotación Y (muestra cara roja o azul) */}
+          <div style={{
+            width: 130, height: 130,
+            position: "relative",
+            transformStyle: "preserve-3d",
+            animation: animState === "flipping"
+              ? `coinRotateRed ${SPIN_DURATION} ease-in-out forwards`  // placeholder, se sobreescribe
+              : animState === "done-red"
+                ? `coinRotateRed ${SPIN_DURATION} ease-in-out forwards`
+                : animState === "done-blue"
+                  ? `coinRotateBlue ${SPIN_DURATION} ease-in-out forwards`
+                  : "none",
+            // Cuando ya terminó, fijar la rotación final
+            transform: animState === "done-blue" ? "rotateY(1620deg)" : undefined,
+          }}>
+
+            {/* CARA FRONTAL — Rojo */}
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #e84747, #a00)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              animation: animState === "done-red" ? "glowRed 1s 1.9s infinite" : "none",
+              boxShadow: "0 4px 20px #0008",
+            }}>
+              <div style={{ fontSize: 34 }}>🔴</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{redMult}x</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)" }}>ROJO</div>
+            </div>
+
+            {/* CARA TRASERA — Azul (rotada 180° en Y) */}
+            <div style={{
+              position: "absolute", inset: 0,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #4785e8, #005faa)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              animation: animState === "done-blue" ? "glowBlue 1s 1.9s infinite" : "none",
+              boxShadow: "0 4px 20px #0008",
+            }}>
+              <div style={{ fontSize: 34 }}>🔵</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#fff" }}>{blueMult}x</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)" }}>AZUL</div>
+            </div>
+
+          </div>
         </div>
       </div>
 
+      {/* ── Selector de color ── */}
+      {!result && (
+        <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 24 }}>
+          {[
+            { color: "red",  bg: "linear-gradient(135deg,#e84747,#a00)",    emoji: "🔴", mult: redMult,  label: "ROJO" },
+            { color: "blue", bg: "linear-gradient(135deg,#4785e8,#005faa)", emoji: "🔵", mult: blueMult, label: "AZUL" },
+          ].map(({ color, bg, emoji, mult, label }) => (
+            <div
+              key={color}
+              onClick={() => selectColor(color)}
+              style={{
+                ...bonusStyles.coinSide,
+                background: bg,
+                border: chosen === color ? "4px solid #fff" : "4px solid transparent",
+                transform: chosen === color ? "scale(1.08)" : "scale(1)",
+                opacity: flipping ? 0.55 : 1,
+                cursor: flipping ? "default" : "pointer",
+                transition: "transform 0.2s, border 0.2s",
+              }}
+            >
+              <div style={{ fontSize: 32 }}>{emoji}</div>
+              <div style={{ fontSize: 26, fontWeight: 900 }}>{mult}x</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)" }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Botón lanzar ── */}
       {chosen && !result && (
-        <button onClick={flip} disabled={flipping} style={bonusStyles.actionBtn}>
+        <button onClick={flip} disabled={flipping} style={{
+          ...bonusStyles.actionBtn, opacity: flipping ? 0.5 : 1,
+        }}>
           {flipping ? "🪙 Lanzando..." : "🚀 Lanzar Moneda"}
         </button>
       )}
 
+      {/* ── Resultado ── */}
       {result && (
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 48 }}>{result === "red" ? "🔴" : "🔵"}</div>
-          <div style={{ fontSize: 22, fontWeight: 700, marginTop: 8 }}>
+        <div style={{ textAlign: "center", marginTop: 8 }}>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>
             {result === chosen
               ? <span style={{ color: "#7ed321" }}>✅ ¡Ganaste {result === "red" ? redMult : blueMult}x!</span>
-              : <span style={{ color: "#e84747" }}>❌ Perdiste</span>
+              : <span style={{ color: "#e84747" }}>❌ No era ese color</span>
             }
+          </div>
+          <div style={{ color: "#aaa", fontSize: 13, marginTop: 6 }}>
+            Cayó: {result === "red" ? "🔴 Rojo" : "🔵 Azul"}
           </div>
         </div>
       )}
@@ -110,121 +209,208 @@ function CoinFlipBonus({ bet, onComplete }) {
 }
 
 // ─── CASH HUNT BONUS ─────────────────────────────────────────────────────────
+  // ─── CASH HUNT BONUS ─────────────────────────────────────────────────────────
 const CASH_HUNT_SYMBOLS = ["🐰", "🎩", "⭐", "🎪", "🎭", "🍀", "🎲", "🎯", "🌟", "🦋", "🎨", "🔮", "🎸", "🌈", "🦄"];
+const GRID_COLS = 12;
+const GRID_ROWS = 9;
+const GRID_SIZE = GRID_COLS * GRID_ROWS; // 108
 
-function CashHuntBonus({ bet, onComplete }) {
-  const GRID_SIZE = 108;
-  const COLS = 12;
+function generateCashHuntBoard(topSlotMult = 1) {
+  const board = [];
 
-  const [multipliers] = useState(() => {
-    const mults = [];
-    for (let i = 0; i < GRID_SIZE; i++) {
-      mults.push(Math.floor(Math.random() * 200) + 5);
-    }
-    return mults;
-  });
+  // En lugar de rangos puros, usa pesos para una distribución más natural
+  // Esto simula mejor la "tensión" entre premios pequeños y premios grandes
+  
+  // Tier Bajo (75%): valores más frecuentes cercanos a 5x-10x
+  for (let i = 0; i < 75; i++) {
+    board.push(Math.floor(Math.random() * 10) + 5); 
+  }
+  
+  // Tier Medio (23%): valores entre 25x-100x
+  for (let i = 0; i < 25; i++) {
+    board.push(Math.floor(Math.random() * 75) + 25);
+  }
+  
+  // Tier Alto (2%): premios "jackpot"
+  for (let i = 0; i < 8; i++) {
+    board.push(Math.floor(Math.random() * 400) + 100);
+  }
 
-  const [symbols] = useState(() => {
-    return Array.from({ length: GRID_SIZE }, () =>
+  // Fisher-Yates shuffle (Tu implementación es correcta)
+  for (let i = board.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [board[i], board[j]] = [board[j], board[i]];
+  }
+
+  return board.map(m => Math.min(25000, m * topSlotMult));
+}
+
+function CashHuntBonus({ bet, topSlotMult = 1, onComplete }) {
+  const [multipliers] = useState(() => generateCashHuntBoard(topSlotMult));
+  const [symbols] = useState(() =>
+    Array.from({ length: GRID_SIZE }, () =>
       CASH_HUNT_SYMBOLS[Math.floor(Math.random() * CASH_HUNT_SYMBOLS.length)]
-    );
-  });
+    )
+  );
 
   const [chosen, setChosen] = useState(null);
   const [revealed, setRevealed] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(20);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [fired, setFired] = useState(false);
 
+  // Countdown
   useEffect(() => {
-    if (revealed) return;
-    const t = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(t);
-          if (chosen === null) onComplete(0, 0);
-          else setRevealed(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, [revealed, chosen]);
-
-  useEffect(() => {
-    if (revealed && chosen !== null) {
-      const mult = multipliers[chosen];
-      setTimeout(() => onComplete(bet * mult, mult), 2500);
+    if (revealed || fired) return;
+    if (timeLeft <= 0) {
+      // Tiempo agotado: disparo automático en celda aleatoria
+      const auto = Math.floor(Math.random() * GRID_SIZE);
+      setChosen(auto);
+      setFired(true);
+      setRevealed(true);
+      return;
     }
+    const t = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timeLeft, revealed, fired]);
+
+  // Resolver resultado
+  useEffect(() => {
+    if (!revealed || chosen === null) return;
+    const mult = multipliers[chosen];
+    setTimeout(() => onComplete(bet * mult, mult), 2800);
   }, [revealed]);
 
   function shoot() {
-    if (chosen === null) { onComplete(0, 0); return; }
+    if (fired) return;
+    setFired(true);
+    if (chosen === null) {
+      // Disparó sin elegir → celda aleatoria
+      const auto = Math.floor(Math.random() * GRID_SIZE);
+      setChosen(auto);
+    }
     setRevealed(true);
   }
+
+  const timerColor = timeLeft <= 5 ? "#e84747" : timeLeft <= 10 ? "#f5a623" : "#fbbf24";
 
   return (
     <div style={bonusStyles.wrap}>
       <div style={bonusStyles.title}>🎯 CASH HUNT</div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ color: "#aaa", fontSize: 13 }}>Elige un objetivo para disparar</div>
-        <div style={{
-          background: timeLeft <= 5 ? "#e84747" : "#1e1e2e",
-          border: "1px solid #333",
-          borderRadius: 8,
-          padding: "4px 12px",
-          color: timeLeft <= 5 ? "#fff" : "#fbbf24",
-          fontWeight: 700,
-          fontSize: 18,
-        }}>⏱ {timeLeft}s</div>
+
+      {/* Header: instrucción + timer */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <div style={{ color: "#aaa", fontSize: 18 }}>
+          {revealed ? "¡Revelando multiplicadores!" : "Apunta y dispara a un objetivo"}
+        </div>
+        {!revealed && (
+          <div style={{
+            background: timeLeft <= 5 ? "#2a0a0a" : "#1e1e2e",
+            border: `1px solid ${timerColor}`,
+            borderRadius: 8, padding: "4px 14px",
+            color: timerColor, fontWeight: 900, fontSize: 20,
+            transition: "all 0.3s",
+          }}>
+            ⏱ {timeLeft}s
+          </div>
+        )}
+        {topSlotMult > 1 && (
+          <div style={{ color: "#f5a623", fontWeight: 700, fontSize: 20 }}>
+            ⭐ Top Slot ×{topSlotMult} aplicado
+          </div>
+        )}
       </div>
 
+      {/* Cuadrícula 12×9 */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${COLS}, 1fr)`,
+        gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
         gap: 3,
-        marginBottom: 16,
-        maxWidth: 500,
-        margin: "0 auto 16px",
+        marginBottom: 14,
+        userSelect: "none",
       }}>
-        {symbols.map((sym, i) => (
-          <div
-            key={i}
-            onClick={() => !revealed && setChosen(i)}
-            style={{
-              fontSize: 18,
-              width: 38,
-              height: 38,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 6,
-              cursor: revealed ? "default" : "crosshair",
-              background: revealed
-                ? (i === chosen ? "#7ed321" : "#1a1a2e")
-                : chosen === i ? "#fbbf2444" : "#1a1a2e",
-              border: chosen === i ? "2px solid #fbbf24" : "2px solid #2a2a3a",
-              transition: "all 0.2s",
-              position: "relative",
-            }}
-          >
-            {revealed ? (
-              <span style={{ fontSize: 12, fontWeight: 700, color: i === chosen ? "#000" : "#888" }}>
-                {multipliers[i]}x
-              </span>
-            ) : sym}
-          </div>
-        ))}
+        {Array.from({ length: GRID_SIZE }, (_, i) => {
+          const isChosen = chosen === i;
+          const mult = multipliers[i];
+          const tier = mult >= 100 ? "high" : mult >= 25 ? "mid" : "low";
+          const tierColor = tier === "high" ? "#fbbf24" : tier === "mid" ? "#7ed321" : "#aaa";
+
+          return (
+            <div
+              key={i}
+              onClick={() => {
+                if (revealed || fired) return;
+                setChosen(i);
+              }}
+              style={{
+                aspectRatio: "1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 5,
+                cursor: revealed || fired ? "default" : "crosshair",
+                fontSize: revealed ? 16 : 30,
+                fontWeight: 700,
+                transition: "all 0.25s",
+                background: revealed
+                  ? (isChosen ? tierColor : "#111122")
+                  : isChosen
+                    ? "#fbbf2422"
+                    : "#1a1a2e",
+                border: isChosen
+                  ? `2px solid ${revealed ? tierColor : "#fbbf24"}`
+                  : "2px solid #2a2a3a",
+                color: revealed
+                  ? (isChosen ? "#000" : tier === "high" ? "#fbbf2488" : tier === "mid" ? "#7ed32166" : "#ffffff22")
+                  : "#fff",
+                boxShadow: isChosen && !revealed ? "0 0 8px #fbbf2466" : "none",
+                transform: isChosen && !revealed ? "scale(1.12)" : "scale(1)",
+              }}
+            >
+              {revealed
+                ? (isChosen
+                    ? `${mult >= 1000 ? `${(mult/1000).toFixed(1)}k` : mult}x`
+                    : `${mult >= 1000 ? `${(mult/1000).toFixed(1)}k` : mult}x`
+                  )
+                : symbols[i]
+              }
+            </div>
+          );
+        })}
       </div>
 
+      {/* Botón disparar */}
       {!revealed && (
-        <button onClick={shoot} style={bonusStyles.actionBtn}>
-          🎯 ¡Disparar!
+        <button
+          onClick={shoot}
+          style={{
+            ...bonusStyles.actionBtn,
+            background: chosen !== null
+              ? "linear-gradient(135deg, #e84747, #a00)"
+              : "linear-gradient(135deg, #555, #333)",
+            cursor: chosen !== null ? "pointer" : "default",
+          }}
+        >
+          {chosen !== null ? "🎯 ¡DISPARAR!" : "👆 Selecciona un objetivo primero"}
         </button>
       )}
 
+      {/* Resultado */}
       {revealed && chosen !== null && (
-        <div style={{ textAlign: "center", fontSize: 22, fontWeight: 700, color: "#7ed321" }}>
-          ✅ ¡Ganaste {multipliers[chosen]}x! (+{(bet * multipliers[chosen]).toLocaleString()})
+        <div style={{ textAlign: "center", marginTop: 12 }}>
+          <div style={{ fontSize: 20, color: "#aaa", marginBottom: 4 }}>
+            Multiplicador obtenido
+          </div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: "#fbbf24" }}>
+            {multipliers[chosen]}x
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: "#7ed321", marginTop: 4 }}>
+            🎉 +{(bet * multipliers[chosen]).toLocaleString()} fichas
+          </div>
+          {topSlotMult > 1 && (
+            <div style={{ fontSize: 16, color: "#f5a623", marginTop: 4 }}>
+              (incluye ×{topSlotMult} del Top Slot)
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -232,385 +418,639 @@ function CashHuntBonus({ bet, onComplete }) {
 }
 
 // ─── PACHINKO BONUS ──────────────────────────────────────────────────────────
-function PachinkoBonus({ bet, onComplete }) {
-  const SLOTS = 10;
-  const [baseMults] = useState(() =>
-    Array.from({ length: SLOTS }, (_, i) => {
-      if (i === SLOTS - 1) return "DOUBLE";
-      return [2, 3, 5, 8, 10, 15, 20, 25, 50][Math.floor(Math.random() * 9)];
-    })
-  );
-  const [mults, setMults] = useState(baseMults);
-  const [ballPos, setBallPos] = useState(50);
-  const [phase, setPhase] = useState("ready"); // "ready" | "dropping" | "landed"
-  const [landed, setLanded] = useState(null);
-  const [doublesCount, setDoublesCount] = useState(0);
-  const [ballY, setBallY] = useState(-10); // empieza fuera de la pantalla
+const MAX_MULT = 10000;
+const SLOTS    = 16;
 
-  const multsRef = useRef(baseMults);
+function generateMults(topSlotMult = 1) {
+  const low    = [2, 3, 4, 5, 7];
+  const mid    = [10, 15, 20, 25, 30];
+  const high   = [50, 100, 200];
+  const pool   = [...low, ...low, ...low,...mid, ...mid, ...high]; // pesos
+
+  const mults  = Array.from({ length: SLOTS }, () =>
+    pool[Math.floor(Math.random() * pool.length)]
+  );
+
+  // Colocar entre 1 y 3 DOUBLE en posiciones aleatorias
+  const numDoubles = 1 + Math.floor(Math.random() * 3); // 1 a 3 DOUBLE
+  const positions  = new Set();
+  while (positions.size < numDoubles) {
+    positions.add(Math.floor(Math.random() * SLOTS));
+  }
+  positions.forEach(p => { mults[p] = "DOUBLE"; });
+
+  // Aplicar Top Slot multiplier a todos los valores numéricos
+  return mults.map(m =>
+    m === "DOUBLE" ? "DOUBLE" : Math.min(MAX_MULT, m * topSlotMult)
+  );
+}
+
+function PachinkoBonus({ bet, topSlotMult = 1, onComplete }) {
+  const [mults, setMults]         = useState(() => generateMults(topSlotMult));
+  const [ballPos, setBallPos]     = useState(50);
+  const [ballY, setBallY]         = useState(-10);
+  const [phase, setPhase]         = useState("ready");   // ready | dropping | landed
+  const [landed, setLanded]       = useState(null);
+  const [doublesCount, setDoublesCount] = useState(0);
+  const multsRef   = useRef(mults);
   const intervalRef = useRef(null);
+
+  useEffect(() => () => clearInterval(intervalRef.current), []);
 
   function dropBall(currentMults) {
     setPhase("dropping");
     setLanded(null);
-    setBallY(0);
-    setBallPos(50);
 
-    let pos = 50;
-    const steps = 20;
-    let step = 0;
+    // Punto de inicio aleatorio entre columnas 4 y 12 (de 16)
+    const startPct = ((3 + Math.random() * 9) / SLOTS) * 100;
+    setBallPos(startPct);
+    setBallY(0);
+
+    let pos   = startPct;
+    let steps = 0;
+    const TOTAL_STEPS = 28;
 
     intervalRef.current = setInterval(() => {
-      step++;
-      pos += (Math.random() - 0.5) * 15;
-      pos = Math.max(5, Math.min(95, pos));
-      setBallPos(pos);
-      setBallY(step * (100 / steps));
+      steps++;
 
-      if (step >= steps) {
+      // Física de rebote: pequeños desvíos aleatorios en cada peg
+      const deviation = (Math.random() - 0.48) * 12;   // leve sesgo centrador
+      pos += deviation;
+      pos  = Math.max(2, Math.min(98, pos));
+
+      setBallPos(pos);
+      setBallY((steps / TOTAL_STEPS) * 100);
+
+      if (steps >= TOTAL_STEPS) {
         clearInterval(intervalRef.current);
 
-        const slot = Math.min(SLOTS - 1, Math.floor(pos / (100 / SLOTS)));
+        // Mapear posición (0-100%) a slot (0-15)
+        const slot = Math.min(SLOTS - 1, Math.floor((pos / 100) * SLOTS));
         setLanded(slot);
         setPhase("landed");
 
         const value = currentMults[slot];
-        if (value === "DOUBLE") {
-          const newMults = currentMults.map(m => (m === "DOUBLE" ? "DOUBLE" : m * 2));
-          multsRef.current = newMults;
-          setMults(newMults);
-          setDoublesCount(d => d + 1);
-          // Tras el DOUBLE, mostrar resultado y volver a "ready" para otro drop
-          setTimeout(() => {
-            setPhase("ready");
-            setLanded(null);
-            setBallY(-10);
-            setBallPos(50);
-          }, 1500);
+
+          if (value === "DOUBLE") {
+  // Duplicar todos los valores numéricos
+  const newMults = currentMults.map(m =>
+    m === "DOUBLE" ? "DOUBLE" : Math.min(MAX_MULT, m * 2)
+  );
+  multsRef.current = newMults;
+  setMults(newMults);
+  setDoublesCount(d => d + 1);
+
+  // Auto-relanzar pasando newMults directamente (sin pasar por "ready" ni el botón)
+  setTimeout(() => {
+    setLanded(null);
+    setBallY(-10);
+    dropBall(newMults); // ← newMults directo, no multsRef ni state
+  }, 1800);
+
         } else {
           setTimeout(() => onComplete(bet * value, value), 2000);
         }
       }
-    }, 120);
+    }, 100);
   }
 
-  useEffect(() => {
-    return () => clearInterval(intervalRef.current);
-  }, []);
+  // ─── Render ───────────────────────────────────────────────────────────────
+  const ROWS = 8;   // filas de pegs
 
   return (
     <div style={bonusStyles.wrap}>
       <div style={bonusStyles.title}>🎳 PACHINKO</div>
 
+      {topSlotMult > 1 && (
+        <div style={{ color: "#f5a623", textAlign: "center", marginBottom: 6, fontWeight: 700, fontSize: 18 }}>
+          ⭐ Top Slot ×{topSlotMult} aplicado a todos los valores
+        </div>
+      )}
       {doublesCount > 0 && (
-        <div style={{ color: "#fbbf24", textAlign: "center", marginBottom: 8, fontWeight: 700 }}>
-          🔥 ×2 aplicado {doublesCount} {doublesCount === 1 ? "vez" : "veces"} — ¡todos los valores se duplicaron!
+        <div style={{ color: "#fbbf24", textAlign: "center", marginBottom: 8, fontWeight: 700, fontSize: 18 }}>
+          🔥 DOUBLE activado {doublesCount} {doublesCount === 1 ? "vez" : "veces"}
+          {" — "}todos los valores ×{Math.pow(2, doublesCount)}
         </div>
       )}
 
-      {/* Campo de juego */}
-      <div style={{ position: "relative", height: 200, background: "#0d0d14", borderRadius: 12, marginBottom: 12, overflow: "hidden", border: "1px solid #2a2a3a" }}>
-        {/* Pins */}
-        {Array.from({ length: 5 }, (_, row) =>
-          Array.from({ length: 8 - (row % 2) }, (_, col) => (
-            <div key={`${row}-${col}`} style={{
-              position: "absolute",
-              width: 8, height: 8,
-              background: "#4a4a6a",
-              borderRadius: "50%",
-              left: `${(row % 2 === 0 ? 6 : 12) + col * 12}%`,
-              top: `${15 + row * 16}%`,
-            }} />
-          ))
-        )}
+      {/* Tablero */}
+      <div style={{
+        position: "relative", height: 500,
+        background: "linear-gradient(180deg, #0a0a1e 0%, #0d0d20 100%)",
+        borderRadius: 12, marginBottom: 10,
+        overflow: "hidden", border: "1px solid #2a2a3a",
+      }}>
+        {/* Pegs */}
+        {Array.from({ length: ROWS }, (_, row) => {
+          const cols = row % 2 === 0 ? 9 : 8;
+          return Array.from({ length: cols }, (_, col) => {
+            const offsetX = row % 2 === 0 ? 5 : 10;
+            return (
+              <div key={`${row}-${col}`} style={{
+                position: "absolute",
+                width: 7, height: 7,
+                background: "#6a6a9a",
+                borderRadius: "50%",
+                boxShadow: "0 0 4px #8888cc44",
+                left: `${offsetX + col * (90 / (cols - 1))}%`,
+                top:  `${8 + row * 10}%`,
+              }} />
+            );
+          });
+        })}
 
-        {/* Bola — solo visible cuando está en juego */}
+        {/* Líneas guía de columnas (tenues) */}
+        {Array.from({ length: SLOTS + 1 }, (_, i) => (
+          <div key={i} style={{
+            position: "absolute",
+            width: 1, bottom: 0, top: "75%",
+            left: `${(i / SLOTS) * 100}%`,
+            background: "#ffffff0a",
+          }} />
+        ))}
+
+        {/* Bola */}
         {phase !== "ready" && (
           <div style={{
             position: "absolute",
-            width: 20, height: 20,
+            width: 18, height: 18,
             background: "radial-gradient(circle at 35% 35%, #fff, #fbbf24)",
             borderRadius: "50%",
-            left: `${ballPos - 2}%`,
-            top: `${ballY}%`,
-            transition: "top 0.12s, left 0.12s",
+            left: `calc(${ballPos}% - 9px)`,
+            top:  `${ballY}%`,
+            transition: "top 0.1s linear, left 0.1s ease",
             zIndex: 10,
-            boxShadow: "0 0 8px #fbbf24",
+            boxShadow: "0 0 10px #fbbf24cc",
           }} />
-        )}
-
-        {/* Mensaje encima del campo cuando está listo */}
-        {phase === "ready" && (
-          <div style={{
-            position: "absolute", inset: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#555", fontSize: 13,
-          }}>
-            Presiona el botón para soltar la bola
-          </div>
         )}
       </div>
 
-      {/* Slots */}
-      <div style={{ display: "flex", gap: 4, justifyContent: "center", marginBottom: 16 }}>
+      {/* Slots — 16 ranuras */}
+      <div style={{ display: "flex", gap: 3, marginBottom: 14 }}>
         {mults.map((m, i) => (
           <div key={i} style={{
             flex: 1,
-            padding: "8px 2px",
-            background: landed === i ? "#fbbf24" : m === "DOUBLE" ? "#e84747" : "#1e1e2e",
-            border: landed === i ? "2px solid #fff" : "2px solid #2a2a3a",
-            borderRadius: 6,
+            padding: "6px 1px",
+            background: landed === i
+              ? (m === "DOUBLE" ? "#ff4400" : "#fbbf24")
+              : m === "DOUBLE" ? "#e84747" : "#1e1e2e",
+            border: landed === i ? "2px solid #fff" : "1px solid #2a2a3a",
+            borderRadius: 5,
             textAlign: "center",
             color: landed === i ? "#000" : m === "DOUBLE" ? "#fff" : "#ccc",
-            fontSize: 10,
+            fontSize: m === "DOUBLE" ? 20 : 15,
             fontWeight: 700,
             transition: "all 0.3s",
+            minWidth: 0,
           }}>
-            {m === "DOUBLE" ? "×2" : `${m}x`}
+            {m === "DOUBLE" ? "×2" : m >= 1000 ? `${m/1000}k` : `${m}x`}
           </div>
         ))}
       </div>
 
-      {/* Botón soltar */}
-      {phase === "ready" && (
-        <button onClick={() => dropBall(multsRef.current)} style={bonusStyles.actionBtn}>
-          🎳 ¡Soltar bola!
-        </button>
-      )}
 
-      {/* Resultado */}
+{/* Botón lanzar — solo en la primera tirada */}
+{phase === "ready" && doublesCount === 0 && (
+  <button onClick={() => dropBall(multsRef.current)} style={bonusStyles.actionBtn}>
+    🎳 ¡Lanzar disco!
+  </button>
+)}
+
+{/* Mensaje mientras se relanza tras DOUBLE */}
+{phase === "dropping" && doublesCount > 0 && (
+  <div style={{ textAlign: "center", color: "#fbbf24", fontSize: 15, fontWeight: 700 }}>
+    🔄 Relanzando con valores ×{Math.pow(2, doublesCount)}...
+  </div>
+)}
+
+
+      {/* Mensajes */}
+      {phase === "dropping" && (
+        <div style={{ textAlign: "center", color: "#aaa", fontSize: 20 }}>
+          🔮 El disco está cayendo...
+        </div>
+      )}
+      {phase === "landed" && landed !== null && mults[landed] === "DOUBLE" && (
+        <div style={{ textAlign: "center", fontSize: 20, fontWeight: 700, color: "#e84747", marginTop: 4 }}>
+          ×2 — ¡Todos los valores se duplicaron! Preparando nueva tirada...
+        </div>
+      )}
       {phase === "landed" && landed !== null && mults[landed] !== "DOUBLE" && (
         <div style={{ textAlign: "center", fontSize: 22, fontWeight: 700, color: "#7ed321", marginTop: 4 }}>
           ✅ ¡{mults[landed]}x! (+{(bet * mults[landed]).toLocaleString()})
         </div>
       )}
-
-      {phase === "dropping" && (
-        <div style={{ textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 4 }}>
-          🔮 La bola está cayendo...
-        </div>
-      )}
-
-      {phase === "landed" && landed !== null && mults[landed] === "DOUBLE" && (
-        <div style={{ textAlign: "center", fontSize: 18, fontWeight: 700, color: "#e84747", marginTop: 4 }}>
-          ×2 — ¡Todos los valores se duplicaron! Preparando nueva tirada...
-        </div>
-      )}
     </div>
   );
 }
 
+
 // ─── CRAZY TIME BONUS ─────────────────────────────────────────────────────────
-const CT_WHEEL_SEGMENTS = [
-  { value: 10 }, { value: "DOUBLE" }, { value: 20 }, { value: 40 },
-  { value: "TRIPLE" }, { value: 10 }, { value: 5 }, { value: "DOUBLE" },
-  { value: 100 }, { value: 20 }, { value: "DOUBLE" }, { value: 50 },
-  { value: 10 }, { value: "TRIPLE" }, { value: 20 }, { value: 5 },
-  { value: "DOUBLE" }, { value: 10 }, { value: 1000 }, { value: "DOUBLE" },
-  { value: 20 }, { value: 5 }, { value: "TRIPLE" }, { value: 40 },
-  { value: 10 }, { value: "DOUBLE" }, { value: 20 }, { value: 5 },
-  { value: "DOUBLE" }, { value: 100 }, { value: 10 }, { value: 20 },
-  { value: 5 }, { value: "TRIPLE" }, { value: 50 }, { value: 10 },
-  { value: "DOUBLE" }, { value: 20 }, { value: 5 }, { value: 40 },
-  { value: "DOUBLE" }, { value: 10 }, { value: 20 }, { value: "TRIPLE" },
-  { value: 5 }, { value: 10 }, { value: "DOUBLE" }, { value: 20 },
-  { value: 500 }, { value: "DOUBLE" }, { value: 10 }, { value: 5 },
-  { value: 20 }, { value: "TRIPLE" }, { value: 40 }, { value: 10 },
-  { value: "DOUBLE" }, { value: 20 }, { value: 5 }, { value: 100 },
-  { value: "DOUBLE" }, { value: 10 }, { value: 20 }, { value: 5 },
-];
+// ─── CRAZY TIME BONUS WHEEL SEGMENTS ─────────────────────────────────────────
+// Distribución de probabilidades de los 64 segmentos (como el juego real)
+function generateCTWheel() {
+  // Pool ponderado: muchos bajos, pocos altos, DOUBLE/TRIPLE espaciados
+  const numericPool = [
+    ...Array(14).fill(10),
+    ...Array(10).fill(20),
+    ...Array(6).fill(40),
+    ...Array(4).fill(50),
+    ...Array(3).fill(100),
+    ...Array(2).fill(200),
+    ...Array(1).fill(500),
+    ...Array(1).fill(1000),
+  ]; // 41 valores numéricos
 
-function CrazyTimeBonus({ bet, onComplete }) {
-  const ARROWS = ["green", "blue", "yellow"];
-  const [chosen, setChosen] = useState(null);
-  const [spinning, setSpinning] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  const [landedIndex, setLandedIndex] = useState(null);
-  const [doublesCount, setDoublesCount] = useState(0);
-  const [currentMults, setCurrentMults] = useState(CT_WHEEL_SEGMENTS.map(s => s.value));
-  const [phase, setPhase] = useState("choose"); // choose → spin → result
+  // Shuffle numéricos
+  for (let i = numericPool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numericPool[i], numericPool[j]] = [numericPool[j], numericPool[i]];
+  }
 
-  const segCount = CT_WHEEL_SEGMENTS.length;
-  const segAngle = 360 / segCount;
-  const radius = 120;        // ← agregar
-  const cx = 150, cy = 150;  // ← agregar
+  // Construir los 64 segmentos: 41 numéricos + 15 DOUBLE + 8 TRIPLE = 64
+  const segments = [
+    ...numericPool,
+    ...Array(15).fill("DOUBLE"),
+    ...Array(8).fill("TRIPLE"),
+  ];
 
+  // Shuffle final
+  for (let i = segments.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [segments[i], segments[j]] = [segments[j], segments[i]];
+  }
 
-  function segPath(i) {       // ← agregar
-  const startAngle = (i * segAngle - 90) * (Math.PI / 180);
-  const endAngle = ((i + 1) * segAngle - 90) * (Math.PI / 180);
-  const x1 = cx + radius * Math.cos(startAngle);
-  const y1 = cy + radius * Math.sin(startAngle);
-  const x2 = cx + radius * Math.cos(endAngle);
-  const y2 = cy + radius * Math.sin(endAngle);
-  return `M${cx},${cy} L${x1},${y1} A${radius},${radius} 0 0,1 ${x2},${y2} Z`;
+  return segments.map(value => ({ value }));
 }
 
+function CrazyTimeBonus({ bet, onComplete }) {
+  // La rueda se genera una sola vez al montar el componente
+  const [wheelSegments] = useState(() => generateCTWheel());
 
+  const [chosen, setChosen]             = useState(null);   // "green" | "blue" | "yellow"
+  const [spinning, setSpinning]         = useState(false);
+  const [landedIndexes, setLandedIndexes] = useState(null); // { green, blue, yellow }
+  const [doublesCount, setDoublesCount] = useState(0);
+  const [currentMults, setCurrentMults] = useState(() => wheelSegments.map(s => s.value));
+  const [phase, setPhase]               = useState("choose");
+  const [finalResult, setFinalResult]   = useState(null);
 
+  const wheelSvgRef  = useRef(null);
+  const rotRef       = useRef(0);
+  const animFrameRef = useRef(null);
+  const multsRef     = useRef(null);
 
-  function spinWheel() {
-    if (spinning || chosen === null) return;
+  // Inicializar multsRef con los valores actuales
+  useEffect(() => {
+    multsRef.current = wheelSegments.map(s => s.value);
+  }, []);
+
+  useEffect(() => () => cancelAnimationFrame(animFrameRef.current), []);
+
+  const WHEEL_SIZE = 900;   //860
+  const RADIUS     = 420;   //390
+  const cx = WHEEL_SIZE / 2;
+  const cy = WHEEL_SIZE / 2;
+  const segCount = 64;
+  const segAngle = 360 / segCount; // 5.625°
+
+  // Más altura visible → se ve más arco superior (como en la imagen real)
+  const VISIBLE_H = 480;
+
+  const FLAPPERS = [
+    { id: "green",  color: "#7ed321", label: "Verde 🟢",    offsetDeg: -12 },
+    { id: "blue",   color: "#3a7bd5", label: "Azul 🔵",     offsetDeg: 0   },
+    { id: "yellow", color: "#fbbf24", label: "Amarilla 🟡", offsetDeg: 12  },
+  ];
+
+  const COLORS = [
+    "#1e4fa3", "#c49a00", "#2e7d00", "#a0005e",
+    "#5b1fa3", "#a05a00", "#8b0010", "#007a66",
+    "#3a7bd5", "#f7c948", "#7ed321", "#e84393",
+    "#9b59b6", "#f5a623", "#d0021b", "#00d4aa",
+  ];
+
+  function segPath(i) {
+    const s = (i * segAngle - 90) * (Math.PI / 180);
+    const e = ((i + 1) * segAngle - 90) * (Math.PI / 180);
+    const x1 = cx + RADIUS * Math.cos(s), y1 = cy + RADIUS * Math.sin(s);
+    const x2 = cx + RADIUS * Math.cos(e), y2 = cy + RADIUS * Math.sin(e);
+    return `M${cx},${cy} L${x1},${y1} A${RADIUS},${RADIUS} 0 0,1 ${x2},${y2} Z`;
+  }
+
+  // Dado el ángulo de rotación de la rueda, ¿qué segmento apunta cada aleta?
+  function getSegmentAtAngle(wheelRotation, flapperOffsetDeg) {
+    // La aleta está a (flapperOffsetDeg) grados del centro (0° = arriba)
+    // El segmento apuntado = qué segmento quedó en esa posición
+    const normalizedRot = ((wheelRotation % 360) + 360) % 360;
+    const pointerAngle  = (flapperOffsetDeg + 360) % 360;
+    // Ángulo en el sistema de la rueda que está ahora arriba
+    const angleInWheel  = (pointerAngle - normalizedRot + 360) % 360;
+    return Math.floor(angleInWheel / segAngle) % segCount;
+  }
+
+  function doSpin(multsToUse) {
+    const mults = multsToUse || multsRef.current;
     setSpinning(true);
-    setPhase("spin");
+    setPhase("spinning");
+    setLandedIndexes(null);
 
+    // El segmento destino de la aleta del jugador (offset 0 = azul central)
+    // La aleta elegida determinará el resultado
+    const chosenFlapper = FLAPPERS.find(f => f.id === chosen) || FLAPPERS[1];
     const targetSeg = Math.floor(Math.random() * segCount);
-    const extraSpins = 5 + Math.floor(Math.random() * 5);
-    const totalDeg = extraSpins * 360 + (segCount - targetSeg) * segAngle - segAngle / 2;
 
-    //setRotation(prev => prev + totalDeg);
+    // Calcular cuánto rotar para que targetSeg quede en la posición de la aleta elegida
+    const flapperPos = ((chosenFlapper.offsetDeg % 360) + 360) % 360;
+    const segCenter  = targetSeg * segAngle + segAngle / 2;
+    // Para que segCenter esté en flapperPos: rotation = segCenter - flapperPos
+    const currentMod = ((rotRef.current % 360) + 360) % 360;
+    const targetMod  = ((segCenter - flapperPos) % 360 + 360) % 360;
+    let delta = (targetMod - currentMod + 360) % 360;
+    if (delta < segAngle * 3) delta += 360;
 
+    const extraSpins = 6 + Math.floor(Math.random() * 5);
+    const totalDeg   = extraSpins * 360 + delta;
+    const startAngle = rotRef.current;
+    rotRef.current   = startAngle + totalDeg;
 
+    const DURATION = 5500;
+    const t0 = performance.now();
+    cancelAnimationFrame(animFrameRef.current);
 
+    function frame(now) {
+      const t     = Math.min(1, (now - t0) / DURATION);
+      const eased = 1 - Math.pow(1 - t, 4);
+      const angle = startAngle + totalDeg * eased;
+      if (wheelSvgRef.current)
+        wheelSvgRef.current.style.transform = `rotate(${angle}deg)`;
+      if (t < 1) { animFrameRef.current = requestAnimationFrame(frame); return; }
 
-setRotation(rotRef.current);
-
-
-
-
-    setTimeout(() => {
+      // ── Calcular dónde quedó cada aleta ──
+      const finalRot = rotRef.current;
+      const indexes  = {};
+      FLAPPERS.forEach(f => {
+        indexes[f.id] = getSegmentAtAngle(finalRot, f.offsetDeg);
+      });
+      setLandedIndexes(indexes);
       setSpinning(false);
-      setLandedIndex(targetSeg);
-      const value = currentMults[targetSeg];
 
-      if (value === "DOUBLE" || value === "TRIPLE") {
-        const factor = value === "DOUBLE" ? 2 : 3;
+      // El resultado lo determina la aleta del jugador
+      const myIdx   = indexes[chosen];
+      const myValue = mults[myIdx];
+
+      if (myValue === "DOUBLE" || myValue === "TRIPLE") {
+        const factor   = myValue === "DOUBLE" ? 2 : 3;
+        const newMults = mults.map(m =>
+          m === "DOUBLE" || m === "TRIPLE" ? m : Math.min(20000, m * factor)
+        );
+        multsRef.current = newMults;
+        setCurrentMults(newMults);
         setDoublesCount(d => d + 1);
-        setCurrentMults(prev => prev.map(m =>
-          m === "DOUBLE" || m === "TRIPLE" ? m : m * factor
-        ));
-        setTimeout(() => {
-          setLandedIndex(null);
-          setSpinning(false);
-          setPhase("spin");
-          spinWheel();
-        }, 2000);
+        setTimeout(() => { setLandedIndexes(null); doSpin(newMults); }, 6000);    //2800
       } else {
         setPhase("result");
-        setTimeout(() => onComplete(bet * value, value), 2500);
+        setFinalResult(myValue);
+        setTimeout(() => onComplete(bet * myValue, myValue), 6000);     //2500
       }
-    }, 4000);
+    }
+    animFrameRef.current = requestAnimationFrame(frame);
   }
-  const COLORS = ["#3a7bd5", "#f7c948", "#7ed321", "#e84393", "#9b59b6", "#f5a623", "#d0021b", "#00d4aa"];
 
   return (
-    <div style={bonusStyles.wrap}>
+    <div style={{ ...bonusStyles.wrap, maxWidth: 920 }}>
       <div style={bonusStyles.title}>🎡 CRAZY TIME</div>
+
       {doublesCount > 0 && (
-        <div style={{ color: "#fbbf24", textAlign: "center", marginBottom: 8, fontWeight: 700 }}>
-          🔥 Multiplicadores elevados {doublesCount} {doublesCount === 1 ? "vez" : "veces"}
+        <div style={{ color: "#fbbf24", textAlign: "center", marginBottom: 8, fontWeight: 700, fontSize: 15 }}>
+          🔥 {doublesCount} {doublesCount === 1 ? "multiplicador" : "multiplicadores"} encadenados
         </div>
       )}
 
+      {/* ── Selección de aleta ── */}
       {phase === "choose" && (
-        <>
-          <div style={{ color: "#aaa", textAlign: "center", marginBottom: 16, fontSize: 14 }}>
-            Elige tu indicador (flecha)
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ color: "#aaa", textAlign: "center", marginBottom: 12, fontSize: 20 }}>
+            Elige tu aleta antes de girar
           </div>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 20 }}>
-            {[
-              { id: "green", label: "Verde 🟢", color: "#7ed321" },
-              { id: "blue", label: "Azul 🔵", color: "#3a7bd5" },
-              { id: "yellow", label: "Amarilla 🟡", color: "#fbbf24" },
-            ].map(a => (
-              <div
-                key={a.id}
-                onClick={() => setChosen(a.id)}
-                style={{
-                  padding: "12px 18px",
-                  borderRadius: 10,
-                  background: chosen === a.id ? a.color + "33" : "#1e1e2e",
-                  border: `3px solid ${chosen === a.id ? a.color : "#2a2a3a"}`,
-                  color: a.color,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  fontSize: 14,
-                }}
-              >
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 16 }}>
+            {FLAPPERS.map(a => (
+              <div key={a.id} onClick={() => setChosen(a.id)} style={{
+                padding: "12px 22px", borderRadius: 10, cursor: "pointer",
+                background: chosen === a.id ? a.color + "33" : "#1e1e2e",
+                border: `3px solid ${chosen === a.id ? a.color : "#2a2a3a"}`,
+                color: a.color, fontWeight: 700, fontSize: 15, textAlign: "center",
+                transition: "all 0.2s",
+              }}>
                 {a.label}
               </div>
             ))}
           </div>
           {chosen && (
-            <button onClick={spinWheel} style={bonusStyles.actionBtn}>
+            <button onClick={() => doSpin()} style={bonusStyles.actionBtn}>
               🎡 ¡Girar Ruleta!
             </button>
           )}
-        </>
+        </div>
       )}
 
-      {/* Wheel SVG */}
-      <div style={{ display: "flex", justifyContent: "center", margin: "12px 0", position: "relative" }}>
-        {/* Arrow */}
-        <div style={{
-          position: "absolute",
-          top: -4,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          fontSize: 24,
-          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.8))",
-        }}>▼</div>
+      {/* ── Rueda ── */}
+      <div style={{
+        position: "relative",
+        height: VISIBLE_H,
+        overflow: "hidden",
+        display: "flex",
+        justifyContent: "center",
+        background: "radial-gradient(ellipse at 50% 130%, #1a1a3e 0%, #07070f 100%)",
+        borderRadius: 14,
+        border: "1px solid #2a2a4a",
+        marginBottom: 12,
+      }}>
+        {/* Las 3 aletas — posicionadas según su offset */}
+        {FLAPPERS.map(f => {
+          const myIdx = landedIndexes?.[f.id];
+          const myVal = myIdx !== undefined ? currentMults[myIdx] : null;
+          const isChosen = f.id === chosen;
+          return (
+            <div key={f.id} style={{
+              position: "absolute",
+              top: 2,
+              left: `calc(50% + ${f.offsetDeg * 5}px)`,  // separación visual
+              transform: "translateX(-50%)",
+              zIndex: 20,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              filter: isChosen
+                ? `drop-shadow(0 0 12px ${f.color})`
+                : "none",
+              opacity: isChosen ? 1 : 0.6,
+            }}>
+              {/* Triángulo aleta */}
+              <div style={{
+                width: 0, height: 0,
+                borderLeft: "16px solid transparent",
+                borderRight: "16px solid transparent",
+                borderTop: `32px solid ${f.color}`,
+                filter: isChosen ? `drop-shadow(0 4px 8px ${f.color})` : "none",
+              }} />
+              {/* Valor que marca (solo cuando aterrizó) */}
+              {myVal !== null && (
+                <div style={{
+                  marginTop: 4,
+                  background: f.color,
+                  color: "#000",
+                  fontWeight: 900,
+                  fontSize: 20,
+                  borderRadius: 4,
+                  padding: "2px 6px",
+                  whiteSpace: "nowrap",
+                }}>
+                  {myVal === "DOUBLE" ? "2X" : myVal === "TRIPLE" ? "3X" : `${myVal}X`}
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         <svg
-          width="300" height="300"
+          ref={wheelSvgRef}
+          width={WHEEL_SIZE}
+          height={WHEEL_SIZE}
           style={{
-            transform: `rotate(${rotation}deg)`,
-            transition: spinning ? "transform 4s cubic-bezier(0.17,0.67,0.12,1)" : "none",
+            transformOrigin: `${cx}px ${cy}px`,
+            flexShrink: 0,
+            position: "absolute",
+            // Más arriba → más segmentos visibles (ajustado para mostrar ~40% del arco)
+            top: VISIBLE_H - cy - 20, //+ 60
           }}
         >
-          {CT_WHEEL_SEGMENTS.map((seg, i) => {
-            const value = currentMults[i];
-            const color = value === "DOUBLE" ? "#e84747"
-              : value === "TRIPLE" ? "#ff6b00"
+          <circle cx={cx} cy={cy} r={RADIUS + 18} fill="none" stroke="#5a3a00" strokeWidth={14} />
+          <circle cx={cx} cy={cy} r={RADIUS + 10} fill="none" stroke="#fbbf24" strokeWidth={3} />
+          <circle cx={cx} cy={cy} r={RADIUS + 4}  fill="none" stroke="#8b6914" strokeWidth={4} />
+
+          {wheelSegments.map((_, i) => {
+            const value    = currentMults[i];
+            const isDouble = value === "DOUBLE";
+            const isTriple = value === "TRIPLE";
+            const myIdx    = landedIndexes?.[chosen];
+            const isMyLanded = myIdx === i;
+            const isAnyLanded = landedIndexes
+              ? Object.values(landedIndexes).includes(i)
+              : false;
+
+            const color = isMyLanded ? "#ffffff"
+              : isAnyLanded ? "#ffffffaa"
+              : isDouble    ? "#00fffb"
+              : isTriple    ? "#ff00d9"
               : COLORS[i % COLORS.length];
-            const midAngle = ((i + 0.5) * segAngle - 90) * (Math.PI / 180);
-            const textR = radius * 0.65;
-            const tx = cx + textR * Math.cos(midAngle);
-            const ty = cy + textR * Math.sin(midAngle);
+
+            const midDeg = (i + 0.5) * segAngle - 90;
+            const midRad = midDeg * (Math.PI / 180);
+            const textR  = RADIUS * 0.73;
+            const tx     = cx + textR * Math.cos(midRad);
+            const ty     = cy + textR * Math.sin(midRad);
+
+            const label = isDouble ? "2X"
+              : isTriple           ? "3X"
+              : value >= 10000     ? "MAX"
+              : value >= 1000      ? `${(value / 1000).toFixed(0)}k`
+              : `${value}x`;
 
             return (
               <g key={i}>
-                <path
-                  d={segPath(i)}
-                  fill={landedIndex === i ? "#fff" : color}
-                  stroke="#0d0d14"
-                  strokeWidth={1}
-                />
+                <path d={segPath(i)} fill={color} stroke="#07070f" strokeWidth={0.6} />
                 <text
                   x={tx} y={ty}
-                  fill={landedIndex === i ? "#000" : "#fff"}
-                  fontSize={value === "DOUBLE" || value === "TRIPLE" ? 6 : 8}
-                  fontWeight="bold"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  transform={`rotate(${(i + 0.5) * segAngle}, ${tx}, ${ty})`}
+                  fill={isMyLanded ? "#000" : "#fff"}
+                  //fontSize={15} fontWeight="900"
+                  fontSize={
+  isDouble || isTriple ? 20
+  : value >= 100       ? 12
+  : value >= 10        ? 15
+  : 13
+}
+                  textAnchor="middle" dominantBaseline="middle"
+                  transform={`rotate(${midDeg + 90}, ${tx}, ${ty})`}
+                  style={{ letterSpacing: "-0.5px", paintOrder: "stroke" }}
+                  stroke={isMyLanded ? "none" : "#0004"}
+                  strokeWidth="2"
                 >
-                  {value === "DOUBLE" ? "×2" : value === "TRIPLE" ? "×3" : `${value}x`}
+                  {label}
                 </text>
               </g>
             );
           })}
-          <circle cx={cx} cy={cy} r={20} fill="#1a1a2e" stroke="#fbbf24" strokeWidth={3} />
-          <text x={cx} y={cy} fill="#fbbf24" fontSize={8} fontWeight="bold" textAnchor="middle" dominantBaseline="middle">CT</text>
+
+          <circle cx={cx} cy={cy} r={46} fill="#0d0d1a" stroke="#fbbf24" strokeWidth={6} />
+          <circle cx={cx} cy={cy} r={38} fill="#16161f" />
+          <text x={cx} y={cy} fill="#fbbf24" fontSize={60} fontWeight="900"
+            textAnchor="middle" dominantBaseline="middle">🎡</text>
         </svg>
+
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, height: 80,
+          background: "linear-gradient(to top, #07070f, transparent)",
+          pointerEvents: "none",
+        }} />
       </div>
 
-      {phase === "result" && landedIndex !== null && (
-        <div style={{ textAlign: "center", fontSize: 22, fontWeight: 700, color: "#7ed321" }}>
-          ✅ ¡{currentMults[landedIndex]}x! (+{(bet * currentMults[landedIndex]).toLocaleString()})
+      {/* ── Resultado de cada aleta cuando aterrizó ── */}
+      {landedIndexes && phase !== "choose" && (
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 10 }}>
+          {FLAPPERS.map(f => {
+            const idx = landedIndexes[f.id];
+            const val = currentMults[idx];
+            const isChosen = f.id === chosen;
+            return (
+              <div key={f.id} style={{
+                background: isChosen ? f.color + "22" : "#1e1e2e",
+                border: `2px solid ${isChosen ? f.color : "#2a2a3a"}`,
+                borderRadius: 10,
+                padding: "8px 14px",
+                textAlign: "center",
+                minWidth: 80,
+                opacity: isChosen ? 1 : 0.5,
+              }}>
+                <div style={{ color: f.color, fontWeight: 700, fontSize: 20 }}>{f.label}</div>
+                <div style={{ color: "#fff", fontWeight: 900, fontSize: 20 }}>
+                  {val === "DOUBLE" ? "2X" : val === "TRIPLE" ? "3X" : `${val}X`}
+                </div>
+                {isChosen && <div style={{ color: "#fbbf24", fontSize: 20 }}>← tu aleta</div>}
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {spinning && (
-        <div style={{ textAlign: "center", color: "#aaa", fontSize: 13 }}>
-          🌀 La ruleta está girando...
-        </div>
-      )}
+      {/* ── Mensajes ── */}
+      <div style={{ minHeight: 60, textAlign: "center" }}>
+        {spinning && <div style={{ color: "#aaa", fontSize: 20 }}>🌀 La ruleta está girando...</div>}
+        {!spinning && landedIndexes && chosen && (() => {
+          const myVal = currentMults[landedIndexes[chosen]];
+          if (myVal === "DOUBLE" || myVal === "TRIPLE") {
+            return (
+              <div style={{ fontSize: 20, fontWeight: 900, color: myVal === "DOUBLE" ? "#e84747" : "#f5a623" }}>
+                {myVal === "DOUBLE" ? "×2 DOUBLE" : "×3 TRIPLE"} — ¡Volviendo a girar con valores multiplicados!
+              </div>
+            );
+          }
+          return null;
+        })()}
+        {phase === "result" && finalResult && (
+          <>
+            <div style={{ fontSize: 32, fontWeight: 900, color: "#fbbf24" }}>
+              {finalResult >= 1000 ? `${(finalResult / 1000).toFixed(0)}k` : finalResult}x
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "#7ed321", marginTop: 4 }}>
+              🎉 +{(bet * finalResult).toLocaleString()} fichas
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
-
 // ─── MAIN WHEEL COMPONENT ────────────────────────────────────────────────────
 
 
@@ -621,15 +1061,15 @@ setRotation(rotRef.current);
 function MainWheel({ wheelRef }) {
   return (
     <div style={{ position: "relative", display: "inline-block" }}>
-      <div style={{ position: "absolute", top: -8, left: "50%",
-        transform: "translateX(-50%)", zIndex: 20, fontSize: 28,
+      <div style={{ position: "absolute", top: -35, left: "50%",
+        transform: "translateX(-50%)", zIndex: 20, fontSize: 80,
         filter: "drop-shadow(0 2px 8px rgba(255,200,0,0.8))" }}>🔻</div>
       <img
         ref={wheelRef}                    // ← ref aquí
         src="/CrazyTime.png"
         alt="CrazyTime"
         style={{
-          width: 500, height: 500,
+          width: 600, height: 600,
           borderRadius: "50%",
           border: "3px solid #8b6914",
           boxShadow: "0 0 32px #ff6b0055",
@@ -640,14 +1080,6 @@ function MainWheel({ wheelRef }) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
 
 // ─── TOP SLOT ─────────────────────────────────────────────────────────────────
 function TopSlot({ result }) {
@@ -805,23 +1237,6 @@ const animRef  = useRef(null);   // ← agregar
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   function handleBonusComplete(payout, mult, ...args) {
     setBalance(prev => prev + payout + (bets[bonus.type] || 0));
     setHistory(h => [{ type: bonus.type, win: payout > 0, amount: payout }, ...h.slice(0, 9)]);
@@ -859,8 +1274,20 @@ const animRef  = useRef(null);   // ← agregar
       {bonus && (
         <div style={styles.bonusOverlay}>
           {bonus.type === "coin_flip" && <CoinFlipBonus bet={bonus.bet} onComplete={handleBonusComplete} />}
-          {bonus.type === "cash_hunt" && <CashHuntBonus bet={bonus.bet} onComplete={handleBonusComplete} />}
-          {bonus.type === "pachinko" && <PachinkoBonus bet={bonus.bet} onComplete={handleBonusComplete} />}
+          {bonus.type === "cash_hunt" && (
+  <CashHuntBonus
+    bet={bonus.bet}
+    topSlotMult={topSlotResult?.segment === "cash_hunt" ? topSlotResult.multiplier : 1}
+    onComplete={handleBonusComplete}
+  />
+)}
+          {bonus.type === "pachinko" && (
+      <PachinkoBonus
+        bet={bonus.bet}
+        topSlotMult={topSlotResult?.segment === "pachinko" ? topSlotResult.multiplier : 1}
+        onComplete={handleBonusComplete}
+      />
+    )}
           {bonus.type === "crazy_time" && <CrazyTimeBonus bet={bonus.bet} onComplete={handleBonusComplete} />}
         </div>
       )}
