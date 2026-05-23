@@ -4,6 +4,58 @@ import { useState, useEffect, useRef, useCallback } from "react";
 // 54 segments in order matching the real Crazy Time wheel
 const WHEEL_SEGMENTS = [
   { type: "crazy_time", label: "CRAZY\nTIME", color: "#ff6b00", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
+  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
+  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
+  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "cash_hunt", label: "CASH\nHUNT", color: "#f5a623", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
+  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
+  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
+  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
+  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
+  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "cash_hunt", label: "CASH\nHUNT", color: "#f5a623", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
+  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
   ];
 
 const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 15, 20, 25, 40, 50];
@@ -648,62 +700,37 @@ function PachinkoBonus({ bet, topSlotMult = 1, onComplete }) {
 // ─── CRAZY TIME BONUS ─────────────────────────────────────────────────────────
 // ─── CRAZY TIME BONUS WHEEL SEGMENTS ─────────────────────────────────────────
 // Distribución de probabilidades de los 64 segmentos (como el juego real)
-function generateCTWheel() {
-  // Pool ponderado: muchos bajos, pocos altos, DOUBLE/TRIPLE espaciados
-  const numericPool = [
-    ...Array(14).fill(10),
-    ...Array(10).fill(20),
-    ...Array(6).fill(40),
-    ...Array(4).fill(50),
-    ...Array(3).fill(100),
-    ...Array(2).fill(200),
-    ...Array(1).fill(500),
-    ...Array(1).fill(1000),
-  ]; // 41 valores numéricos
 
-  // Shuffle numéricos
-  for (let i = numericPool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [numericPool[i], numericPool[j]] = [numericPool[j], numericPool[i]];
-  }
 
-  // Construir los 64 segmentos: 41 numéricos + 15 DOUBLE + 8 TRIPLE = 64
-  const segments = [
-    ...numericPool,
-    ...Array(15).fill("DOUBLE"),
-    ...Array(8).fill("TRIPLE"),
-  ];
+const CT_WHEEL_LAYOUT = [
+  10, "DOUBLE", 20, 40, "TRIPLE", 10, 5, "DOUBLE",
+  100, 20, "DOUBLE", 50, 10, "TRIPLE", 20, 5,
+  "DOUBLE", 10, 1000, "DOUBLE", 20, 5, "TRIPLE", 40,
+  10, "DOUBLE", 20, 5, "DOUBLE", 100, 10, 20,
+  5, "TRIPLE", 50, 10, "DOUBLE", 20, 5, 40,
+  "DOUBLE", 10, 20, "TRIPLE", 5, 10, "DOUBLE", 20,
+  500, "DOUBLE", 10, 5, 20, "TRIPLE", 40, 10,
+  "DOUBLE", 20, 5, 100, "DOUBLE", 10, 20, 5,
+];
 
-  // Shuffle final
-  for (let i = segments.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [segments[i], segments[j]] = [segments[j], segments[i]];
-  }
 
-  return segments.map(value => ({ value }));
-}
 
 function CrazyTimeBonus({ bet, onComplete }) {
   // La rueda se genera una sola vez al montar el componente
-  const [wheelSegments] = useState(() => generateCTWheel());
 
+  const [currentMults, setCurrentMults] = useState([...CT_WHEEL_LAYOUT]);
   const [chosen, setChosen]             = useState(null);   // "green" | "blue" | "yellow"
   const [spinning, setSpinning]         = useState(false);
   const [landedIndexes, setLandedIndexes] = useState(null); // { green, blue, yellow }
   const [doublesCount, setDoublesCount] = useState(0);
-  const [currentMults, setCurrentMults] = useState(() => wheelSegments.map(s => s.value));
+  const multsRef = useRef([...CT_WHEEL_LAYOUT]);
   const [phase, setPhase]               = useState("choose");
   const [finalResult, setFinalResult]   = useState(null);
 
   const wheelSvgRef  = useRef(null);
   const rotRef       = useRef(0);
   const animFrameRef = useRef(null);
-  const multsRef     = useRef(null);
 
-  // Inicializar multsRef con los valores actuales
-  useEffect(() => {
-    multsRef.current = wheelSegments.map(s => s.value);
-  }, []);
 
   useEffect(() => () => cancelAnimationFrame(animFrameRef.current), []);
 
@@ -906,7 +933,7 @@ function CrazyTimeBonus({ bet, onComplete }) {
                   padding: "2px 6px",
                   whiteSpace: "nowrap",
                 }}>
-                  {myVal === "DOUBLE" ? "2X" : myVal === "TRIPLE" ? "3X" : `${myVal}X`}
+                  {myVal === "DOUBLE" ? "x2" : myVal === "TRIPLE" ? "x3" : `${myVal}X`}
                 </div>
               )}
             </div>
@@ -929,7 +956,7 @@ function CrazyTimeBonus({ bet, onComplete }) {
           <circle cx={cx} cy={cy} r={RADIUS + 10} fill="none" stroke="#fbbf24" strokeWidth={3} />
           <circle cx={cx} cy={cy} r={RADIUS + 4}  fill="none" stroke="#8b6914" strokeWidth={4} />
 
-          {wheelSegments.map((_, i) => {
+          {CT_WHEEL_LAYOUT.map((_, i) => {
             const value    = currentMults[i];
             const isDouble = value === "DOUBLE";
             const isTriple = value === "TRIPLE";
@@ -954,8 +981,8 @@ function CrazyTimeBonus({ bet, onComplete }) {
             const label = isDouble ? "2X"
               : isTriple           ? "3X"
               : value >= 10000     ? "MAX"
-              : value >= 1000      ? `${(value / 1000).toFixed(0)}k`
-              : `${value}x`;
+              : value >= 1000      ? `x${(value / 1000).toFixed(0)}k`
+              : `x${value}`;
 
             return (
               <g key={i}>
@@ -1014,7 +1041,7 @@ function CrazyTimeBonus({ bet, onComplete }) {
               }}>
                 <div style={{ color: f.color, fontWeight: 700, fontSize: 20 }}>{f.label}</div>
                 <div style={{ color: "#fff", fontWeight: 900, fontSize: 20 }}>
-                  {val === "DOUBLE" ? "2X" : val === "TRIPLE" ? "3X" : `${val}X`}
+                  {val === "DOUBLE" ? "x2" : val === "TRIPLE" ? "x3" : `${val}X`}
                 </div>
                 {isChosen && <div style={{ color: "#fbbf24", fontSize: 20 }}>← tu aleta</div>}
               </div>
@@ -1051,6 +1078,10 @@ function CrazyTimeBonus({ bet, onComplete }) {
     </div>
   );
 }
+
+
+
+
 // ─── MAIN WHEEL COMPONENT ────────────────────────────────────────────────────
 
 
