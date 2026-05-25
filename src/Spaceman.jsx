@@ -217,7 +217,7 @@ const fastInterval = setInterval(() => {
         : `💰 COBRADO en x${currentMult.toFixed(2)} · Habría llegado a x${crashPoint.toFixed(2)}`
     );
   }
-}, 80); // velocidad del tick acelerado — editable
+}, 50); 
 
 
 
