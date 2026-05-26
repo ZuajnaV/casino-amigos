@@ -8,7 +8,7 @@ import ChickenRoadGame from "./ChickenRoad.jsx";
 import HorseRace from "./HorseRace.jsx";
 import SlotsGame from "./Slots.jsx";
 import CrazyTimeGame from "./CrazyTime.jsx";
-
+import PlayerSpace from "./Playerspace.jsx";
 
 const GAMES = [
   { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                       color: "#ff6b35" },
@@ -203,6 +203,24 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
             </button>
           </div>
         </div>
+
+
+
+            <button onClick={() => setGame("space")} style={{
+  ...styles.depositBtn,
+  borderColor: "#fbbf2455",
+  color: "#fbbf24",
+  fontWeight: 700,
+}}>
+  🏠 Mi Espacio
+</button>
+
+
+
+
+
+
+
       </div>
 
       {/* Panel de stats del jugador */}
@@ -395,10 +413,15 @@ export default function App() {
     if (data) { setProfile(data); setBalanceState(data.balance); }
     setLoading(false);
   }
-
+/*
   function setBalance(newBalance) {
     setBalanceState(newBalance);
-  }
+  }*/
+
+  function setBalance(newBalance) {
+  setBalanceState(newBalance);
+  balanceRef.current = newBalance;
+}
 
   async function saveBalance(newBalance) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -464,6 +487,11 @@ export default function App() {
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={handleBack} />}
         {game === "horses"      && <HorseRace       balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "crazytime"   && <CrazyTimeGame   balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {game === "space" && (<PlayerSpace profile={profile} balance={balance} setBalance={setBalance}   // ← añadir esto
+    deaths={profile.deaths || 0}
+    onBack={handleBack}
+  />
+)}
       </div>
     </div>
   );
