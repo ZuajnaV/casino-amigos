@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import SnakeGame from "./SnakeGame.jsx";
+import DinoGame from "./DinoGame.jsx";
+import MinesweeperGame from "./MinesweeperGame.jsx";
 
 
 // ─── Sub-componente: Stats del jugador ───────────────────────────────────────
@@ -429,12 +431,71 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
       }}>▶ Jugar</div>
     </div>
 
+      {/* Dino — habilitado */}
+      <div
+  onClick={() => { setPanel(null); setActiveJob("dino"); }}
+  style={{
+    background: "rgba(251,191,36,0.08)",
+    border: "1px solid #fbbf2444",
+    borderRadius: 10,
+    padding: "12px 14px",
+    marginBottom: 10,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    cursor: "pointer",
+  }}
+>
+  <span style={{ fontSize: 28 }}>🦕</span>
+  <div style={{ flex: 1 }}>
+    <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 14 }}>Dinosaur Game</div>
+    <div style={{ color: "#555", fontSize: 12 }}>$2.000 por cada 100 puntos</div>
+  </div>
+  <div style={{
+    background: "#fbbf24", borderRadius: 6, padding: "4px 10px",
+    fontSize: 11, color: "#000", fontWeight: 700,
+  }}>▶ Jugar</div>
+</div>
+
+
+  {/* Buscaminas — habilitado */}
+<div
+  onClick={() => { setPanel(null); setActiveJob("minesweeper"); }}
+  style={{
+    background: "rgba(255,107,53,0.08)",
+    border: "1px solid #ff6b3544",
+    borderRadius: 10, padding: "12px 14px", marginBottom: 10,
+    display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+  }}
+>
+  <span style={{ fontSize: 28 }}>💥</span>
+  <div style={{ flex: 1 }}>
+    <div style={{ color: "#ff6b35", fontWeight: 700, fontSize: 14 }}>Buscaminas</div>
+    <div style={{ color: "#555", fontSize: 12 }}>$1.000 por casilla libre</div>
+  </div>
+  <div style={{
+    background: "#ff6b35", borderRadius: 6, padding: "4px 10px",
+    fontSize: 11, color: "#fff", fontWeight: 700,
+  }}>▶ Jugar</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
     {/* Los demás — pronto */}
     {[
-      { icon: "💥", name: "Buscaminas",    desc: "$1.000 por casilla libre", color: "#ff6b35" },
       { icon: "🧱", name: "Block Breaker", desc: "$100 por bloque roto",     color: "#8b5cf6" },
       { icon: "⭕", name: "Tres en Raya",  desc: "$5.000 por victoria",      color: "#c084fc" },
-      { icon: "🦕", name: "Dinosaur Game", desc: "$1.000 c/ 100 puntos",     color: "#fbbf24" },
+    
     ].map(job => (
       <div key={job.name} style={{
         background: "rgba(13,13,20,0.8)", border: `1px solid ${job.color}33`,
@@ -474,6 +535,38 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
     />
   </div>
 )}
+
+
+  {activeJob === "dino" && (
+  <div style={{
+    position: "fixed",
+    inset: 0,
+    zIndex: 100,
+    background: "#080810",
+    overflowY: "auto",
+  }}>
+    <DinoGame
+      balance={balance}
+      setBalance={setBalance}
+      onBack={() => setActiveJob(null)}
+    />
+  </div>
+)}
+
+
+  {activeJob === "minesweeper" && (
+  <div style={{
+    position: "fixed", inset: 0, zIndex: 100,
+    background: "#080810", overflowY: "auto",
+  }}>
+    <MinesweeperGame
+      balance={balance}
+      setBalance={setBalance}
+      onBack={() => setActiveJob(null)}
+    />
+  </div>
+)}
+
 
 
 
