@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "./supabase";
 
 // ─── WHEEL CONFIGURATION ────────────────────────────────────────────────────
 // 54 segments in order matching the real Crazy Time wheel
@@ -80,6 +81,29 @@ function CoinFlipBonus({ bet, onComplete }) {
   const [result,   setResult]   = useState(null);
   const [flipping, setFlipping] = useState(false);
   const [animState, setAnimState] = useState("idle"); // idle | flipping | done-red | done-blue
+
+
+
+  useEffect(() => {
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    const { data } = await supabase
+      .from("crazytime_history")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) {
+      setHistory(data.map(h => ({
+        type: h.segment,
+        win: h.won,
+        amount: h.payout,
+      })));
+    }
+  });
+}, []);
+
+
 
   function selectColor(color) {
     if (chosen || flipping) return;
@@ -1260,13 +1284,57 @@ function spin() {
         if (tsRes.segment === landed.type) mult *= tsRes.multiplier;
         winnings = userBetOnLanded * mult + userBetOnLanded;
       }
-      setBalance(prev => prev + winnings);
+      /*setBalance(prev => prev + winnings);
       const info = SEGMENT_INFO[landed.type];
       setMessage(winnings > 0
         ? `✅ ¡Cayó ${info?.label}! Ganaste ${winnings.toLocaleString()} fichas!`
         : `❌ Cayó ${info?.label}. Sin premio esta ronda.`
       );
       setHistory(h => [{ type: landed.type, win: winnings > 0, amount: winnings }, ...h.slice(0, 9)]);
+      */
+
+
+
+
+
+      // ── En frame() → bloque else (resultado sin bonus) ──
+setBalance(prev => prev + winnings);
+const info = SEGMENT_INFO[landed.type];
+setMessage(winnings > 0
+  ? `✅ ¡Cayó ${info?.label}! Ganaste ${winnings.toLocaleString()} fichas!`
+  : `❌ Cayó ${info?.label}. Sin premio esta ronda.`
+);
+const newEntry = { type: landed.type, win: winnings > 0, amount: winnings };
+setHistory(h => [newEntry, ...h.slice(0, 19)]);
+
+// ← NUEVO: guardar en Supabase
+supabase.auth.getSession().then(async ({ data: { session } }) => {
+  if (!session) return;
+  await supabase.rpc("insert_crazytime_and_trim", {
+    p_user_id: session.user.id,
+    p_segment: landed.type,
+    p_won: winnings > 0,
+    p_payout: winnings,
+  });
+});
+
+setBets({});
+setPhase("result");
+setTimeout(() => { setPhase("betting"); setMessage(null); }, 3000);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       setBets({});
       setPhase("result");
       setTimeout(() => { setPhase("betting"); setMessage(null); }, 3000);
@@ -1276,7 +1344,7 @@ function spin() {
   animRef.current = requestAnimationFrame(frame);
 }
 
-
+/*
   function handleBonusComplete(payout, mult, ...args) {
     setBalance(prev => prev + payout + (bets[bonus.type] || 0));
     setHistory(h => [{ type: bonus.type, win: payout > 0, amount: payout }, ...h.slice(0, 9)]);
@@ -1288,7 +1356,44 @@ function spin() {
       : "❌ Sin premio en el bonificador."
     );
     setTimeout(() => { setPhase("betting"); setMessage(null); }, 3500);
-  }
+  }*/
+
+
+
+  // ── En handleBonusComplete ──
+function handleBonusComplete(payout, mult, ...args) {
+  setBalance(prev => prev + payout + (bets[bonus.type] || 0));
+  const newEntry = { type: bonus.type, win: payout > 0, amount: payout };
+  setHistory(h => [newEntry, ...h.slice(0, 19)]);
+
+  // ← NUEVO: guardar en Supabase
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    await supabase.rpc("insert_crazytime_and_trim", {
+      p_user_id: session.user.id,
+      p_segment: bonus.type,
+      p_won: payout > 0,
+      p_payout: payout + (bets[bonus.type] || 0),
+    });
+  });
+
+  setBonus(null);
+  setBets({});
+  setPhase("result");
+  setMessage(payout > 0
+    ? `🎉 ¡Bonificación completada! +${payout.toLocaleString()} fichas (${mult}x)`
+    : "❌ Sin premio en el bonificador."
+  );
+  setTimeout(() => { setPhase("betting"); setMessage(null); }, 3500);
+}
+
+
+
+
+
+
+
+
 
   return (
     <div style={styles.wrap}>
@@ -1526,31 +1631,80 @@ function spin() {
       </div>
 
       {/* History */}
+
+
+
+
       {history.length > 0 && (
-        <div style={{ ...styles.card, marginTop: 16 }}>
-          <div style={styles.sectionTitle}>📜 Historial reciente</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {history.map((h, i) => {
-              const info = SEGMENT_INFO[h.type];
+  <div style={{ ...styles.card, marginTop: 16 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+      <div style={styles.sectionTitle}>📜 Historial reciente</div>
+
+      {/* Proporciones */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {(() => {
+          const counts = {};
+          history.forEach(h => { counts[h.type] = (counts[h.type] || 0) + 1; });
+          return Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([type, count]) => {
+              const info = SEGMENT_INFO[type];
+              const pct = Math.round((count / history.length) * 100);
               return (
-                <div key={i} style={{
-                  background: h.win ? info.color + "22" : "#1e1e2e",
-                  border: `1px solid ${h.win ? info.color : "#2a2a3a"}`,
-                  borderRadius: 8,
-                  padding: "6px 10px",
-                  fontSize: 12,
-                  textAlign: "center",
+                <div key={type} style={{
+                  background: info.color + "22",
+                  border: `1px solid ${info.color}66`,
+                  borderRadius: 6,
+                  padding: "2px 8px",
+                  fontSize: 11,
+                  color: info.color,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
                 }}>
-                  <div>{info.emoji}</div>
-                  <div style={{ color: h.win ? "#7ed321" : "#666", fontWeight: 700 }}>
-                    {h.win ? `+${h.amount.toLocaleString()}` : "❌"}
-                  </div>
+                  {info.emoji} {pct}%
                 </div>
               );
-            })}
+            });
+        })()}
+      </div>
+    </div>
+
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      {history.map((h, i) => {
+        const info = SEGMENT_INFO[h.type];
+        return (
+          <div key={i} style={{
+            background: h.win ? info.color + "22" : "#1e1e2e",
+            border: `1px solid ${h.win ? info.color : "#2a2a3a"}`,
+            borderRadius: 8,
+            padding: "6px 10px",
+            fontSize: 12,
+            textAlign: "center",
+          }}>
+            <div>{info.emoji}</div>
+            <div style={{ color: h.win ? "#7ed321" : "#666", fontWeight: 700 }}>
+              {h.win ? `+${h.amount.toLocaleString()}` : "❌"}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })}
+    </div>
+  </div>
+)}
+
+
+
+
+
+
+
+
+    {/*Aquí va el codigo que eliminé para agregar lo de arriba del supabase*/}
+      
+
+      
 
       {/* RTP info */}
       <div style={{ color: "#333", fontSize: 11, textAlign: "center", marginTop: 16 }}>
