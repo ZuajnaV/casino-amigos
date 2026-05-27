@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { saveMinigameRecord } from "./minigameRecords";
 
 // ── Constantes del juego ──────────────────────────────────────────────────────
 const CANVAS_W = 700;
@@ -254,6 +255,9 @@ export default function DinoGame({ balance, setBalance, onBack }) {
         setEarned(earnedAmount);
         if (earnedAmount > 0) setBalance(balance + earnedAmount);
         setPhase("dead");
+
+        saveMinigameRecord("dino", finalScore, earnedAmount);
+
         // dibujar última frame con X en ojos
         drawFrame(ctx, s, true);
         return;

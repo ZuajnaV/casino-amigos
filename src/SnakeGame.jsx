@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase } from "./supabase";
-
+//import { supabase } from "./supabase";
+import { saveMinigameRecord } from "./minigameRecords";
 
 
 
@@ -81,11 +81,12 @@ async function cobrarYGuardar(manzanas, ganancia) {
     if (session) {
       await supabase.from("profiles").update({ balance: newBal }).eq("id", session.user.id);
       // Registrar en historial de trabajo (tabla snake_history si existe, sino ignorar)
-      await supabase.from("snake_history").insert({
+      await saveMinigameRecord("snake", manzanas, ganancia);
+      /*await supabase.from("snake_history").insert({
         user_id: session.user.id,
         manzanas,
         payout: ganancia,
-      }).then(() => {}).catch(() => {}); // silenciar si no existe la tabla
+      }).then(() => {}).catch(() => {}); // silenciar si no existe la tabla    */
     }
     setSaving(false);
   }

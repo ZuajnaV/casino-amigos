@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { saveMinigameRecord } from "./minigameRecords";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const W = 400;
@@ -175,6 +176,9 @@ export default function ColorDash({ balance, setBalance, onBack }) {
       setLastE(amt);
       if (amt > 0) setBalance(balance + amt);
       setPhase("dead");
+
+      saveMinigameRecord("colordash", finalScore, amt);
+
       draw(ctx, s, true);
       return;
     }

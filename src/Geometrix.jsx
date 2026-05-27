@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { saveMinigameRecord } from "./minigameRecords";
 
 // ── DIMENSIONES ───────────────────────────────────────────────────────────────
 // Para cambiar el tamaño del canvas modifica PLAY_W y PLAY_H
@@ -428,6 +429,9 @@ export default function Geometrix({ balance, setBalance, onBack }) {
       setPhase("correct");
       setTotalEarned(e => e+levelDef.prize);
       setBalance(balance + levelDef.prize);
+
+      saveMinigameRecord("geometrix", currentLvl + 1, totalEarned + levelDef.prize);
+
       let cx=PLAY_W/2, cy=PLAY_H/2;
       if (shape.cx!==undefined) { cx=shape.cx; cy=shape.cy; }
       else if (shape.x!==undefined) { cx=shape.x+(shape.w||0)/2; cy=shape.y+(shape.h||0)/2; }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { saveMinigameRecord } from "./minigameRecords";
 
 // ═══════════════════════════════════════════════════════════════
 //  CONSTANTS
@@ -738,6 +739,9 @@ export default function BlockBreaker({ balance, setBalance, onBack }) {
         draw(ctx, s); // ensure final frame
         setBalance(balRef.current + s.earned);
         setRPhase("gameover");
+
+        saveMinigameRecord("blockbreaker", s.level - 1, s.earned);
+
         return;
       }
 

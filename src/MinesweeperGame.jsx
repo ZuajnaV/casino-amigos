@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { saveMinigameRecord } from "./minigameRecords";
 
 // ── Configuración de dificultades ─────────────────────────────────────────────
 const DIFFICULTIES = {
@@ -171,6 +172,9 @@ export default function MinesweeperGame({ balance, setBalance, onBack }) {
       setPhase("won");
       setLastEarned(newEarned);
       setBalance(balance + newEarned);
+
+      saveMinigameRecord("minesweeper", revealedCount, newEarned);
+      
       return;
     }
 
