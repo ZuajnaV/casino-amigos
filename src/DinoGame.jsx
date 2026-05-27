@@ -379,11 +379,11 @@ export default function DinoGame({ balance, setBalance, onBack }) {
       const s = { dino: { y: GROUND_Y - DINO_H, ducking: false }, frame: 0, dark: false };
       drawDino(ctx, DINO_X, s.dino.y, false, 0, false);
       ctx.fillStyle = "#757575";
-      ctx.font = "bold 14px 'Courier New', monospace";
+      ctx.font = "bold 25px 'Courier New', monospace";
       ctx.textAlign = "center";
       ctx.fillText("PRESIONA ESPACIO / TAP PARA INICIAR", CANVAS_W / 2, CANVAS_H / 2 - 20);
       ctx.fillStyle = "#aaa";
-      ctx.font = "12px 'Courier New', monospace";
+      ctx.font = "20px 'Courier New', monospace";
       ctx.fillText("↑ / ESPACIO = saltar   ↓ = agacharse", CANVAS_W / 2, CANVAS_H / 2 + 4);
       ctx.textAlign = "left";
     }
@@ -411,21 +411,21 @@ export default function DinoGame({ balance, setBalance, onBack }) {
       }}>
         <button onClick={onBack} style={{
           background: "rgba(10,10,18,0.8)", border: "1px solid #2a2a3a",
-          borderRadius: 8, color: "#aaa", fontSize: 13, padding: "6px 14px",
+          borderRadius: 8, color: "#aaa", fontSize: 15, padding: "6px 14px",
           cursor: "pointer",
         }}>← Volver</button>
 
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 22, fontWeight: 900, color: "#fbbf24", letterSpacing: 2 }}>🦕 DINO GAME</div>
-          <div style={{ fontSize: 11, color: "#555" }}>$2.000 por cada 100 puntos</div>
+          <div style={{ fontSize: 30, fontWeight: 900, color: "#fbbf24", letterSpacing: 2 }}>🦕 DINO GAME</div>
+          <div style={{ fontSize: 15, color: "#ffffff" }}>$2.000 por cada 100 puntos</div>
         </div>
 
         <div style={{
           background: "rgba(251,191,36,0.1)", border: "1px solid #fbbf2444",
           borderRadius: 10, padding: "6px 12px", textAlign: "right",
         }}>
-          <div style={{ fontSize: 10, color: "#666" }}>BALANCE</div>
-          <div style={{ fontSize: 14, color: "#fbbf24", fontWeight: 700 }}>
+          <div style={{ fontSize: 15, color: "#ffffff" }}>BALANCE</div>
+          <div style={{ fontSize: 16, color: "#fbbf24", fontWeight: 700 }}>
             ${balance.toLocaleString()}
           </div>
         </div>
@@ -440,15 +440,15 @@ export default function DinoGame({ balance, setBalance, onBack }) {
           flex: 1, background: "rgba(139,92,246,0.08)", border: "1px solid #8b5cf644",
           borderRadius: 10, padding: "8px 14px",
         }}>
-          <div style={{ fontSize: 10, color: "#666", marginBottom: 2 }}>PUNTUACIÓN</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "#8b5cf6" }}>{String(score).padStart(5, "0")}</div>
+          <div style={{ fontSize: 20, color: "#ffffff", marginBottom: 2 }}>PUNTUACIÓN</div>
+          <div style={{ fontSize: 25, fontWeight: 900, color: "#8b5cf6" }}>{String(score).padStart(5, "0")}</div>
         </div>
         <div style={{
           flex: 1, background: "rgba(0,212,170,0.08)", border: "1px solid #00d4aa44",
           borderRadius: 10, padding: "8px 14px",
         }}>
-          <div style={{ fontSize: 10, color: "#666", marginBottom: 2 }}>GANADO</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "#00d4aa" }}>
+          <div style={{ fontSize: 20, color: "#ffffff", marginBottom: 2 }}>GANADO</div>
+          <div style={{ fontSize: 25, fontWeight: 900, color: "#00d4aa" }}>
             ${(Math.floor(score / 100) * PAGO_POR_100).toLocaleString()}
           </div>
         </div>
@@ -456,8 +456,8 @@ export default function DinoGame({ balance, setBalance, onBack }) {
           flex: 1, background: "rgba(251,191,36,0.08)", border: "1px solid #fbbf2444",
           borderRadius: 10, padding: "8px 14px",
         }}>
-          <div style={{ fontSize: 10, color: "#666", marginBottom: 2 }}>MEJOR</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: "#fbbf24" }}>{String(bestScore).padStart(5, "0")}</div>
+          <div style={{ fontSize: 20, color: "#ffffff", marginBottom: 2 }}>MEJOR</div>
+          <div style={{ fontSize: 25, fontWeight: 900, color: "#fbbf24" }}>{String(bestScore).padStart(5, "0")}</div>
         </div>
       </div>
 
@@ -492,23 +492,23 @@ export default function DinoGame({ balance, setBalance, onBack }) {
             alignItems: "center", justifyContent: "center",
             gap: 10,
           }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: "#ff4444", letterSpacing: 2 }}>GAME OVER</div>
-            <div style={{ fontSize: 14, color: "#aaa" }}>Puntuación final: <strong style={{ color: "#fff" }}>{score}</strong></div>
+            <div style={{ fontSize: 30, fontWeight: 900, color: "#ff4444", letterSpacing: 2 }}>GAME OVER</div>
+            <div style={{ fontSize: 20, color: "#aaa" }}>Puntuación final: <strong style={{ color: "#fff" }}>{score}</strong></div>
             {earned > 0 ? (
               <div style={{
                 background: "rgba(0,212,170,0.15)", border: "1px solid #00d4aa66",
                 borderRadius: 10, padding: "8px 20px",
-                fontSize: 16, color: "#00d4aa", fontWeight: 700,
+                fontSize: 25, color: "#00d4aa", fontWeight: 700,
               }}>
                 💰 +${earned.toLocaleString()} fichas ganadas
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: "#555" }}>Necesitas 100+ puntos para ganar</div>
+              <div style={{ fontSize: 20, color: "#555" }}>Necesitas 100+ puntos para ganar</div>
             )}
             <button onClick={startGame} style={{
               marginTop: 8,
               background: "#fbbf24", border: "none", borderRadius: 8,
-              padding: "10px 28px", fontSize: 15, fontWeight: 800,
+              padding: "10px 28px", fontSize: 20, fontWeight: 800,
               color: "#000", cursor: "pointer",
               letterSpacing: 1,
             }}>▶ REINTENTAR</button>
@@ -526,7 +526,7 @@ export default function DinoGame({ balance, setBalance, onBack }) {
           style={{
             flex: 2,
             background: "rgba(139,92,246,0.12)", border: "2px solid #8b5cf644",
-            borderRadius: 12, padding: "18px", fontSize: 14, color: "#8b5cf6",
+            borderRadius: 12, padding: "18px", fontSize: 20, color: "#8b5cf6",
             fontWeight: 700, cursor: "pointer", letterSpacing: 1,
           }}
         >
@@ -541,7 +541,7 @@ export default function DinoGame({ balance, setBalance, onBack }) {
             style={{
               flex: 1,
               background: "rgba(251,191,36,0.08)", border: "2px solid #fbbf2444",
-              borderRadius: 12, padding: "18px", fontSize: 14, color: "#fbbf24",
+              borderRadius: 12, padding: "18px", fontSize: 20, color: "#fbbf24",
               fontWeight: 700, cursor: "pointer", letterSpacing: 1,
             }}
           >⬇ AGACHAR</button>
@@ -554,7 +554,7 @@ export default function DinoGame({ balance, setBalance, onBack }) {
         background: "rgba(13,13,20,0.8)", border: "1px solid #1e1e2e",
         borderRadius: 12, padding: "14px 16px",
       }}>
-        <div style={{ fontSize: 12, color: "#555", letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>
+        <div style={{ fontSize: 15, color: "#ffffff", letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>
           Tabla de pagos
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -563,14 +563,14 @@ export default function DinoGame({ balance, setBalance, onBack }) {
               background: "rgba(139,92,246,0.06)", border: "1px solid #8b5cf622",
               borderRadius: 8, padding: "8px 10px", textAlign: "center",
             }}>
-              <div style={{ color: "#8b5cf6", fontWeight: 700, fontSize: 13 }}>{pts} pts</div>
-              <div style={{ color: "#00d4aa", fontSize: 12 }}>
+              <div style={{ color: "#8b5cf6", fontWeight: 700, fontSize: 17 }}>{pts} pts</div>
+              <div style={{ color: "#00d4aa", fontSize: 15 }}>
                 +${((pts / 100) * PAGO_POR_100).toLocaleString()}
               </div>
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 11, color: "#444", marginTop: 10, textAlign: "center" }}>
+        <div style={{ fontSize: 15, color: "#dfdfdf", marginTop: 10, textAlign: "center" }}>
           El dinero se acredita al terminar la partida • Modo noche cada 700 puntos
         </div>
       </div>

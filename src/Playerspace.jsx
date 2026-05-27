@@ -3,6 +3,8 @@ import { supabase } from "./supabase";
 import SnakeGame from "./SnakeGame.jsx";
 import DinoGame from "./DinoGame.jsx";
 import MinesweeperGame from "./MinesweeperGame.jsx";
+import ColorDash from "./ColorDash.jsx";
+import BlockBreaker from "./BlockBreaker.jsx";
 
 
 // ─── Sub-componente: Stats del jugador ───────────────────────────────────────
@@ -60,7 +62,7 @@ function PlayerStats({ userId }) {
   }, [userId]);
 
   if (loading) return (
-    <div style={{ color: "#aaa", fontSize: 13, padding: 16, textAlign: "center" }}>
+    <div style={{ color: "#aaa", fontSize: 15, padding: 16, textAlign: "center" }}>
       Cargando estadísticas...
     </div>
   );
@@ -169,7 +171,7 @@ function SideBtn({ icon, label, onClick, active, color = "#fbbf24" }) {
         border: `1px solid ${active ? color : "#2a2a3a"}`,
         borderRadius: 12, padding: "12px 10px",
         cursor: "pointer", color: active ? color : "#888",
-        fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
+        fontSize: 15, fontWeight: 700, letterSpacing: 0.5,
         backdropFilter: "blur(8px)",
         transition: "all 0.15s",
         width: 64,
@@ -401,7 +403,7 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
 
           {panel === "work" && (
   <SidePanel title="Trabajar" icon="💼" onClose={() => setPanel(null)}>
-    <div style={{ color: "#666", fontSize: 12, marginBottom: 16 }}>
+    <div style={{ color: "#ffffff", fontSize: 14, marginBottom: 16 }}>
       Juega y gana fichas reales. Cuanto mejor lo hagas, más cobras.
     </div>
 
@@ -471,7 +473,7 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
   <span style={{ fontSize: 28 }}>💥</span>
   <div style={{ flex: 1 }}>
     <div style={{ color: "#ff6b35", fontWeight: 700, fontSize: 14 }}>Buscaminas</div>
-    <div style={{ color: "#555", fontSize: 12 }}>$1.000 por casilla libre</div>
+    <div style={{ color: "#555", fontSize: 12 }}>Diferentes premios</div>
   </div>
   <div style={{
     background: "#ff6b35", borderRadius: 6, padding: "4px 10px",
@@ -482,18 +484,52 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
 
 
 
+  {/* Color Dash — habilitado */}
+<div
+  onClick={() => { setPanel(null); setActiveJob("colordash"); }}
+  style={{
+    background: "rgba(192,132,252,0.08)",
+    border: "1px solid #c084fc44",
+    borderRadius: 10, padding: "12px 14px", marginBottom: 10,
+    display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+  }}
+>
+  <span style={{ fontSize: 28 }}>🔺</span>
+  <div style={{ flex: 1 }}>
+    <div style={{ color: "#c084fc", fontWeight: 700, fontSize: 14 }}>Color Dash</div>
+    <div style={{ color: "#555", fontSize: 12 }}>$5.000 por objeto superado</div>
+  </div>
+  <div style={{
+    background: "#c084fc", borderRadius: 6, padding: "4px 10px",
+    fontSize: 11, color: "#000", fontWeight: 700,
+  }}>▶ Jugar</div>
+</div>
 
-
-
-
-
-
+  {/* Block Breaker — habilitado */}
+<div
+  onClick={() => { setPanel(null); setActiveJob("blockbreaker"); }}
+  style={{
+    background: "rgba(139,92,246,0.08)",
+    border: "1px solid #8b5cf644",
+    borderRadius: 10, padding: "12px 14px", marginBottom: 10,
+    display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+  }}
+>
+  <span style={{ fontSize: 28 }}>🧱</span>
+  <div style={{ flex: 1 }}>
+    <div style={{ color: "#8b5cf6", fontWeight: 700, fontSize: 14 }}>Block Breaker</div>
+    <div style={{ color: "#555", fontSize: 12 }}>$30.000 por nivel superado</div>
+  </div>
+  <div style={{
+    background: "#8b5cf6", borderRadius: 6, padding: "4px 10px",
+    fontSize: 11, color: "#fff", fontWeight: 700,
+  }}>▶ Jugar</div>
+</div>
 
 
 
     {/* Los demás — pronto */}
     {[
-      { icon: "🧱", name: "Block Breaker", desc: "$100 por bloque roto",     color: "#8b5cf6" },
       { icon: "⭕", name: "Tres en Raya",  desc: "$5.000 por victoria",      color: "#c084fc" },
     
     ].map(job => (
@@ -566,9 +602,20 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
     />
   </div>
 )}
+  {activeJob === "colordash" && (
+  <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "#08080f", overflowY: "auto" }}>
+    <ColorDash balance={balance} setBalance={setBalance} onBack={() => setActiveJob(null)} />
+  </div>
+)}
 
 
 
+
+  {activeJob === "blockbreaker" && (
+  <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "#08080f", overflowY: "auto" }}>
+    <BlockBreaker balance={balance} setBalance={setBalance} onBack={() => setActiveJob(null)} />
+</div>
+  )}
 
 
     </div>
