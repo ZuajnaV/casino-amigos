@@ -5,6 +5,7 @@ import DinoGame from "./DinoGame.jsx";
 import MinesweeperGame from "./MinesweeperGame.jsx";
 import ColorDash from "./ColorDash.jsx";
 import BlockBreaker from "./BlockBreaker.jsx";
+import Geometrix from "./Geometrix.jsx";
 
 
 // ─── Sub-componente: Stats del jugador ───────────────────────────────────────
@@ -527,10 +528,32 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
 </div>
 
 
+  {/* Geometrix — habilitado */}
+<div
+  onClick={() => { setPanel(null); setActiveJob("geometrix"); }}
+  style={{
+    background: "rgba(251,191,36,0.08)",
+    border: "1px solid #fbbf2444",
+    borderRadius: 10, padding: "12px 14px", marginBottom: 10,
+    display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+  }}
+>
+  <span style={{ fontSize: 28 }}>📐</span>
+  <div style={{ flex: 1 }}>
+    <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 14 }}>Geometrix</div>
+    <div style={{ color: "#555", fontSize: 12 }}>Hasta $500.000 por nivel</div>
+  </div>
+  <div style={{
+    background: "#fbbf24", borderRadius: 6, padding: "4px 10px",
+    fontSize: 11, color: "#000", fontWeight: 700,
+  }}>▶ Jugar</div>
+</div>
+
+
 
     {/* Los demás — pronto */}
     {[
-      { icon: "⭕", name: "Tres en Raya",  desc: "$5.000 por victoria",      color: "#c084fc" },
+      { icon: "⭕", name: "Próximamente",  desc: "$$$",      color: "#c084fc" },
     
     ].map(job => (
       <div key={job.name} style={{
@@ -609,14 +632,17 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
 )}
 
 
-
-
   {activeJob === "blockbreaker" && (
   <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "#08080f", overflowY: "auto" }}>
     <BlockBreaker balance={balance} setBalance={setBalance} onBack={() => setActiveJob(null)} />
 </div>
   )}
 
+{activeJob === "geometrix" && (
+  <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "#07070e", overflowY: "auto" }}>
+    <Geometrix balance={balance} setBalance={setBalance} onBack={() => setActiveJob(null)} />
+  </div>
+)}
 
     </div>
   );
