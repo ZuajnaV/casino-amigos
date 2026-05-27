@@ -541,7 +541,7 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
   <span style={{ fontSize: 28 }}>📐</span>
   <div style={{ flex: 1 }}>
     <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 14 }}>Geometrix</div>
-    <div style={{ color: "#555", fontSize: 12 }}>Hasta $500.000 por nivel</div>
+    <div style={{ color: "#555", fontSize: 12 }}>$1'385.000 por completar los niveles</div>
   </div>
   <div style={{
     background: "#fbbf24", borderRadius: 6, padding: "4px 10px",
