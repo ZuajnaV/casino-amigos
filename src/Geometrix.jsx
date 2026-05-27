@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 // ── DIMENSIONES ───────────────────────────────────────────────────────────────
 // Para cambiar el tamaño del canvas modifica PLAY_W y PLAY_H
-const RULER_W  = 44;    // ancho regla vertical izq
-const RULER_H  = 44;    // alto regla horizontal abajo
+const RULER_W  = 48;    // ancho regla vertical izq
+const RULER_H  = 50;    // alto regla horizontal abajo
 const PLAY_W   = 660;   // ← ANCHO del área de juego (aumentar/bajar aquí)
 const PLAY_H   = 480;   // ← ALTO del área de juego  (aumentar/bajar aquí)
 const CANVAS_W = RULER_W + PLAY_W;
@@ -11,30 +11,30 @@ const CANVAS_H = PLAY_H + RULER_H;
 
 // ── TIEMPO POR NIVEL ──────────────────────────────────────────────────────────
 function getTimeLimit(lvl) {
-  if (lvl <= 1) return 30;      //30
-  if (lvl <= 2) return 45;      //45
-  if (lvl <= 3) return 60;      //60
-  if (lvl <= 4) return 30;      //30
-  if (lvl <= 5) return 45;      //45
-  if (lvl <= 6) return 30;      //30
+  if (lvl <= 1) return 25;      //30
+  if (lvl <= 2) return 30;      //45
+  if (lvl <= 3) return 30;      //60
+  if (lvl <= 4) return 25;      //30
+  if (lvl <= 5) return 35;      //45
+  if (lvl <= 6) return 25;      //30
   if (lvl <= 7) return 60;     //180
-  if (lvl <= 8) return 80;     //180
-  if (lvl <= 9) return 100;     //300
-  return 120;       //600
+  if (lvl <= 8) return 120;     //180
+  if (lvl <= 9) return 20;     //300
+  return 180;       //600
 }
 
 // ── NIVELES ───────────────────────────────────────────────────────────────────
 const LEVELS = [
-  { lvl:1,  shape:"line",     goal:"longitud",   prize:5000,   threshold:0.1, color:"#00d4aa", label:"Línea",            unit:"px"  },
-  { lvl:2,  shape:"rect",     goal:"área",        prize:15000,  threshold:0.1, color:"#3b82f6", label:"Rectángulo",       unit:"px²" },
-  { lvl:3,  shape:"triangle", goal:"área",        prize:30000,  threshold:0.1, color:"#f59e0b", label:"Triángulo",        unit:"px²" },
-  { lvl:4,  shape:"circle",   goal:"radio",       prize:60000,  threshold:0.08, color:"#ec4899", label:"Círculo",          unit:"px"  },
-  { lvl:5,  shape:"rect",     goal:"perímetro",   prize:100000,  threshold:0.08, color:"#8b5cf6", label:"Rectángulo",       unit:"px"  },
-  { lvl:6,  shape:"circle",   goal:"área",        prize:150000,  threshold:0.08, color:"#06b6d4", label:"Círculo",          unit:"px²" },
+  { lvl:1,  shape:"line",     goal:"longitud",   prize:5000,   threshold:0.08, color:"#00d4aa", label:"Línea",            unit:"px"  },
+  { lvl:2,  shape:"rect",     goal:"área",        prize:10000,  threshold:0.08, color:"#3b82f6", label:"Rectángulo",       unit:"px²" },
+  { lvl:3,  shape:"triangle", goal:"área",        prize:20000,  threshold:0.1, color:"#f59e0b", label:"Triángulo",        unit:"px²" },
+  { lvl:4,  shape:"circle",   goal:"radio",       prize:30000,  threshold:0.08, color:"#ec4899", label:"Círculo",          unit:"px"  },
+  { lvl:5,  shape:"rect",     goal:"perímetro",   prize:50000,  threshold:0.08, color:"#8b5cf6", label:"Rectángulo",       unit:"px"  },
+  { lvl:6,  shape:"circle",   goal:"área",        prize:150000,  threshold:0.05, color:"#06b6d4", label:"Círculo",          unit:"px²" },
   { lvl:7,  shape:"triangle", goal:"perímetro",   prize:210000, threshold:0.05, color:"#84cc16", label:"Triángulo",        unit:"px"  },
-  { lvl:8,  shape:"polygon",  goal:"área",        prize:280000, threshold:0.05, color:"#f97316", label:"Polígono",         unit:"px²" },
+  { lvl:8,  shape:"polygon",  goal:"área",        prize:280000, threshold:0.15, color:"#f97316", label:"Polígono",         unit:"px²" },
   { lvl:9,  shape:"ellipse",  goal:"radio mayor", prize:360000, threshold:0.05, color:"#e879f9", label:"Elipse",           unit:"px"  },
-  { lvl:10, shape:"compound", goal:"área total",  prize:1000000, threshold:0.03, color:"#fbbf24", label:"Figura Compuesta", unit:"px²" },
+  { lvl:10, shape:"compound", goal:"área total",  prize:1000000, threshold:0.1, color:"#fbbf24", label:"Figura Compuesta", unit:"px²" },
 ];
 
 // ── GENERADOR DE FIGURAS ──────────────────────────────────────────────────────
@@ -182,11 +182,11 @@ function drawRulers(ctx, mx, my) {
     ctx.lineWidth   = maj ? 1.5 : 1;
     ctx.beginPath(); ctx.moveTo(RULER_W+px, PLAY_H); ctx.lineTo(RULER_W+px, PLAY_H+th); ctx.stroke();
     if (maj && px > 0 && px < PLAY_W) {
-      ctx.fillStyle = "#6366f188"; ctx.font = "10px 'Courier New', monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = "#6366f188"; ctx.font = "20px 'Courier New', monospace"; ctx.textAlign = "center";
       ctx.fillText(px, RULER_W+px, PLAY_H+RULER_H-5);
     }
   }
-  ctx.fillStyle = "#ffffff22"; ctx.font = "10px 'Courier New', monospace"; ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff22"; ctx.font = "20px 'Courier New', monospace"; ctx.textAlign = "left";
   ctx.fillText("X", RULER_W+4, PLAY_H+RULER_H-5);
 
   // Regla vertical (eje Y) — franja izquierda
@@ -206,14 +206,14 @@ function drawRulers(ctx, mx, my) {
       ctx.save();
       ctx.translate(RULER_W-22, py);
       ctx.rotate(-Math.PI/2);
-      ctx.fillStyle = "#6366f188"; ctx.font = "10px 'Courier New', monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = "#6366f188"; ctx.font = "20px 'Courier New', monospace"; ctx.textAlign = "center";
       ctx.fillText(py, 0, 0);
       ctx.restore();
     }
   }
   ctx.save();
   ctx.translate(10, PLAY_H/2); ctx.rotate(-Math.PI/2);
-  ctx.fillStyle = "#ffffff22"; ctx.font = "10px 'Courier New', monospace"; ctx.textAlign = "center";
+  ctx.fillStyle = "#ffffff22"; ctx.font = "20px 'Courier New', monospace"; ctx.textAlign = "center";
   ctx.fillText("Y", 0, 0);
   ctx.restore();
 
@@ -222,7 +222,7 @@ function drawRulers(ctx, mx, my) {
   ctx.fillRect(0, PLAY_H, RULER_W, RULER_H);
   ctx.strokeStyle = "#2a2a3a"; ctx.lineWidth = 1;
   ctx.strokeRect(0, PLAY_H, RULER_W, RULER_H);
-  ctx.fillStyle = "#6366f166"; ctx.font = "bold 10px 'Courier New', monospace"; ctx.textAlign = "center";
+  ctx.fillStyle = "#6366f166"; ctx.font = "bold 30px 'Courier New', monospace"; ctx.textAlign = "center";
   ctx.fillText("0", RULER_W/2, PLAY_H+RULER_H/2+4);
 
   // Crosshair
@@ -242,20 +242,46 @@ function drawRulers(ctx, mx, my) {
 
     // etiquetas
     const ex = Math.min(mx+4, CANVAS_W-46);
-    ctx.fillStyle = "#fbbf24"; ctx.font = "bold 11px 'Courier New', monospace"; ctx.textAlign = "left";
+    ctx.fillStyle = "#fbbf24"; ctx.font = "bold 20px 'Courier New', monospace"; ctx.textAlign = "left";
     ctx.fillText(`${Math.round(px)}`, ex, PLAY_H+RULER_H-6);
 
     const ey = Math.max(py-4, 12);
-    ctx.fillStyle = "#fbbf24"; ctx.font = "bold 11px 'Courier New', monospace"; ctx.textAlign = "right";
+    ctx.fillStyle = "#fbbf24"; ctx.font = "bold 20px 'Courier New', monospace"; ctx.textAlign = "right";
     ctx.fillText(`${Math.round(py)}`, RULER_W-3, ey);
 
     // tooltip
+    /*
     const tx = mx+10 > CANVAS_W-88 ? mx-94 : mx+10;
     const ty = my-28 < 4 ? my+16 : my-26;
     ctx.fillStyle = "rgba(251,191,36,0.93)";
-    ctx.beginPath(); ctx.roundRect(tx, ty, 86, 20, 4); ctx.fill();
-    ctx.fillStyle = "#000"; ctx.font = "bold 10px 'Courier New', monospace"; ctx.textAlign = "left";
-    ctx.fillText(`x:${Math.round(px)}  y:${Math.round(py)}`, tx+5, ty+13);
+    ctx.beginPath(); ctx.roundRect(tx, ty, 155, 22, 4); ctx.fill();
+    ctx.fillStyle = "#000"; ctx.font = "bold 20px 'Courier New', monospace"; ctx.textAlign = "left";
+    ctx.fillText(`x:${Math.round(px)}  y:${Math.round(py)}`, tx+5, ty+13);*/
+    // 1. Define el texto primero
+const text = `x:${Math.round(px)} y:${Math.round(py)}`;
+
+// 2. Configura la fuente antes de medir
+ctx.font = "bold 20px 'Courier New', monospace"; 
+const textWidth = ctx.measureText(text).width; // Mide exactamente cuánto mide tu texto
+
+// 3. Define un padding (margen interno)
+const padding = 10;
+const boxWidth = textWidth + padding;
+const boxHeight = 26; // Un poco más alto que la fuente de 20px
+
+// 4. Dibuja el recuadro basado en el ancho calculado
+const tx = mx + 10 > CANVAS_W - (boxWidth + 5) ? mx - (boxWidth + 5) : mx + 10;
+const ty = my - 30 < 4 ? my + 16 : my - 30;
+
+ctx.fillStyle = "rgba(251,191,36,0.93)";
+ctx.beginPath(); 
+ctx.roundRect(tx, ty, boxWidth, boxHeight, 4); 
+ctx.fill();
+
+// 5. Dibuja el texto centrado verticalmente en el nuevo boxHeight
+ctx.fillStyle = "#000";
+ctx.textAlign = "left";
+ctx.fillText(text, tx + (padding / 2), ty + 18);
   }
 }
 
@@ -358,7 +384,7 @@ export default function Geometrix({ balance, setBalance, onBack }) {
       ctx.fillRect(RULER_W,0,PLAY_W,PLAY_H);
       ctx.fillStyle = "#00d4aa"; ctx.font = "bold 22px 'Courier New', monospace"; ctx.textAlign = "center";
       ctx.fillText("✓ CORRECTO", RULER_W+PLAY_W/2, PLAY_H/2-12);
-      ctx.font = "14px 'Courier New', monospace"; ctx.fillStyle = "#ffffff88";
+      ctx.font = "20px 'Courier New', monospace"; ctx.fillStyle = "#ffffff88";
       ctx.fillText(`Valor real: ${feedback.real} ${levelDef.unit}`, RULER_W+PLAY_W/2, PLAY_H/2+16);
       ctx.textAlign = "left";
     }
@@ -369,7 +395,7 @@ export default function Geometrix({ balance, setBalance, onBack }) {
       if (phase==="timeout") {
         ctx.fillStyle = "#ff4444"; ctx.font = "bold 22px 'Courier New', monospace"; ctx.textAlign = "center";
         ctx.fillText("⏱ TIEMPO AGOTADO", RULER_W+PLAY_W/2, PLAY_H/2-12);
-        ctx.font = "14px 'Courier New', monospace"; ctx.fillStyle = "#ffffff66";
+        ctx.font = "20px 'Courier New', monospace"; ctx.fillStyle = "#ffffff66";
         ctx.fillText(`La respuesta era: ${shape.realValue} ${levelDef.unit}`, RULER_W+PLAY_W/2, PLAY_H/2+16);
         ctx.textAlign = "left";
       }
@@ -444,11 +470,11 @@ export default function Geometrix({ balance, setBalance, onBack }) {
   if (phase === "complete") return (
     <div style={S.wrap}>
       <div style={{ maxWidth:440, margin:"0 auto", textAlign:"center", paddingTop:60 }}>
-        <div style={{ fontSize:52, marginBottom:14 }}>🏆</div>
-        <div style={{ fontSize:26, fontWeight:900, color:"#fbbf24", marginBottom:8 }}>¡COMPLETADO!</div>
-        <div style={{ fontSize:13, color:"#777", marginBottom:24 }}>Superaste los 10 niveles de Geometrix</div>
+        <div style={{ fontSize:60, marginBottom:14 }}>🏆</div>
+        <div style={{ fontSize:45, fontWeight:900, color:"#fbbf24", marginBottom:8 }}>¡COMPLETADO!</div>
+        <div style={{ fontSize:30, color:"#777", marginBottom:24 }}>Superaste los 10 niveles de Geometrix</div>
         <div style={{ background:"rgba(0,212,170,0.1)", border:"1px solid #00d4aa44", borderRadius:14, padding:20, marginBottom:24 }}>
-          <div style={{ fontSize:11, color:"#555", marginBottom:4 }}>TOTAL GANADO</div>
+          <div style={{ fontSize:20, color:"#555", marginBottom:4 }}>TOTAL GANADO</div>
           <div style={{ fontSize:36, fontWeight:900, color:"#00d4aa" }}>${totalEarned.toLocaleString()}</div>
         </div>
         <button onClick={onBack} style={S.btnPrimary}>← Volver al espacio</button>
@@ -467,12 +493,12 @@ export default function Geometrix({ balance, setBalance, onBack }) {
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
           <button onClick={onBack} style={S.backBtn}>← Volver</button>
           <div style={{ textAlign:"center" }}>
-            <div style={{ fontSize:18, fontWeight:900, color:"#fbbf24", letterSpacing:2 }}>📐 GEOMETRIX</div>
-            <div style={{ fontSize:10, color:"#555" }}>Mide y gana fichas reales</div>
+            <div style={{ fontSize:25, fontWeight:900, color:"#fbbf24", letterSpacing:2 }}>📐 GEOMETRIX</div>
+            <div style={{ fontSize:15, color:"#ffffff" }}>Mide y gana fichas reales</div>
           </div>
           <div style={{ textAlign:"right" }}>
-            <div style={{ fontSize:9, color:"#555" }}>BALANCE</div>
-            <div style={{ fontSize:14, color:"#fbbf24", fontWeight:700 }}>${balance.toLocaleString()}</div>
+            <div style={{ fontSize:15, color:"#ffffff" }}>BALANCE</div>
+            <div style={{ fontSize:15, color:"#fbbf24", fontWeight:700 }}>${balance.toLocaleString()}</div>
           </div>
         </div>
 
@@ -495,19 +521,19 @@ export default function Geometrix({ balance, setBalance, onBack }) {
         }}>
           {/* Info */}
           <div style={{ flex:1 }}>
-            <div style={{ fontSize:9, color:"#555", letterSpacing:1 }}>NIVEL {levelDef.lvl}/10</div>
-            <div style={{ fontSize:16, fontWeight:800, color:levelDef.color }}>{levelDef.label}</div>
-            <div style={{ fontSize:11, color:"#888" }}>
+            <div style={{ fontSize:15, color:"#ffffff", letterSpacing:1 }}>NIVEL {levelDef.lvl}/10</div>
+            <div style={{ fontSize:20, fontWeight:800, color:levelDef.color }}>{levelDef.label}</div>
+            <div style={{ fontSize:20, color:"#888" }}>
               Mide: <strong style={{color:"#fff"}}>{levelDef.goal}</strong>
-              <span style={{ marginLeft:10, color:"#555" }}>±{(levelDef.threshold*100).toFixed(0)}%</span>
+              <span style={{ marginLeft:14, color:"#ffffff" }}>±{(levelDef.threshold*100).toFixed(0)}%</span>
             </div>
           </div>
 
           {/* Temporizador */}
           <div style={{ flex:2 }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-              <span style={{ fontSize:10, color:"#555" }}>TIEMPO</span>
-              <span style={{ fontSize:14, fontWeight:900, color:timerColor,
+              <span style={{ fontSize:20, color:"#e3e3e3" }}>TIEMPO</span>
+              <span style={{ fontSize:20, fontWeight:900, color:timerColor,
                 fontFamily:"'Courier New',monospace",
                 animation: timeLeft<=5 && phase==="playing" ? "pulse 0.5s infinite" : "none",
               }}>
@@ -532,7 +558,7 @@ export default function Geometrix({ balance, setBalance, onBack }) {
 
           {/* Premio */}
           <div style={{ textAlign:"right", flexShrink:0 }}>
-            <div style={{ fontSize:9, color:"#555" }}>PREMIO</div>
+            <div style={{ fontSize:15, color:"#ffffff" }}>PREMIO</div>
             <div style={{ fontSize:20, fontWeight:900, color:"#00d4aa" }}>${levelDef.prize.toLocaleString()}</div>
           </div>
         </div>
@@ -556,7 +582,7 @@ export default function Geometrix({ balance, setBalance, onBack }) {
                 onMouseLeave={handleMouseLeave}
               />
             </div>
-            <div style={{ marginTop:6, fontSize:10, color:"#444", textAlign:"center" }}>
+            <div style={{ marginTop:6, fontSize:20, color:"#ffffff", textAlign:"center" }}>
               🖱️ Mueve el cursor sobre la figura · regla izq = Y · regla abajo = X
             </div>
           </div>
@@ -569,8 +595,8 @@ export default function Geometrix({ balance, setBalance, onBack }) {
               background:"rgba(13,13,20,0.9)", border:`1px solid ${levelDef.color}22`,
               borderRadius:10, padding:"10px 12px", marginBottom:10,
             }}>
-              <div style={{ fontSize:9, color:"#444", letterSpacing:1, marginBottom:6, textTransform:"uppercase" }}>Pista</div>
-              <div style={{ fontSize:11, color:"#888", lineHeight:1.6 }}>
+              <div style={{ fontSize:20, color:"#ffffff", letterSpacing:1, marginBottom:6, textTransform:"uppercase" }}>Pista</div>
+              <div style={{ fontSize:16, color:"#888", lineHeight:1.6 }}>
                 {levelDef.goal==="área"       && "Área = base × altura (rect)\n½|base×altura| (tri)\n\n PI*r² (cir)"}
                 {levelDef.goal==="perímetro"  && "Perímetro = suma de todos los lados"}
                 {levelDef.goal==="radio"       && "Radio = distancia del centro al borde"}
@@ -579,7 +605,7 @@ export default function Geometrix({ balance, setBalance, onBack }) {
                 {levelDef.goal==="área total"  && "Área total = área rectángulo + área semicírculo"}
               </div>
               {attempts>0 && (
-                <div style={{ marginTop:8, fontSize:10, color:"#ff5555", borderTop:"1px solid #1e1e2e", paddingTop:6 }}>
+                <div style={{ marginTop:8, fontSize:20, color:"#ff5555", borderTop:"1px solid #1e1e2e", paddingTop:6 }}>
                   {attempts} intento{attempts>1?"s":""} fallido{attempts>1?"s":""}
                 </div>
               )}
@@ -599,7 +625,7 @@ export default function Geometrix({ balance, setBalance, onBack }) {
                   }}>
                     {inputVal || <span style={{opacity:.25}}>0</span>}
                   </span>
-                  <span style={{ fontSize:11, color:"#444" }}>{levelDef.unit}</span>
+                  <span style={{ fontSize:20, color:"#ffffff" }}>{levelDef.unit}</span>
                 </div>
 
                 {/* Numpad */}
@@ -619,7 +645,7 @@ export default function Geometrix({ balance, setBalance, onBack }) {
                 {/* Confirmar */}
                 <button onClick={checkAnswer} disabled={!inputVal} style={{
                   width:"100%", border:"none", borderRadius:8,
-                  padding:"13px 0", fontSize:13, fontWeight:800,
+                  padding:"13px 0", fontSize:15, fontWeight:800,
                   background: inputVal ? levelDef.color : "#1a1a26",
                   color: inputVal ? "#000" : "#555",
                   cursor: inputVal ? "pointer" : "not-allowed",
@@ -631,19 +657,19 @@ export default function Geometrix({ balance, setBalance, onBack }) {
             {/* Feedback correcto */}
             {phase==="correct" && feedback && (
               <div style={{ background:"rgba(0,212,170,0.08)", border:"1px solid #00d4aa44", borderRadius:10, padding:"12px" }}>
-                <div style={{ fontSize:15, fontWeight:900, color:"#00d4aa", marginBottom:5 }}>✓ ¡Correcto!</div>
-                <div style={{ fontSize:11, color:"#777", marginBottom:10, lineHeight:1.6 }}>
+                <div style={{ fontSize:20, fontWeight:900, color:"#00d4aa", marginBottom:5 }}>✓ ¡Correcto!</div>
+                <div style={{ fontSize:18, color:"#777", marginBottom:10, lineHeight:1.6 }}>
                   Diste: <strong style={{color:"#fff"}}>{feedback.given}</strong><br/>
                   Real:  <strong style={{color:"#fff"}}>{feedback.real} {levelDef.unit}</strong><br/>
                   Error: <strong style={{color:"#fbbf24"}}>{feedback.error} {levelDef.unit}</strong>
                 </div>
                 <div style={{ background:"rgba(0,212,170,0.1)", border:"1px solid #00d4aa33", borderRadius:8, padding:"8px", textAlign:"center", marginBottom:10 }}>
-                  <div style={{ fontSize:9, color:"#555" }}>GANADO</div>
+                  <div style={{ fontSize:20, color:"#555" }}>GANADO</div>
                   <div style={{ fontSize:22, fontWeight:900, color:"#00d4aa" }}>+${feedback.prize.toLocaleString()}</div>
                 </div>
                 <button onClick={nextLevel} style={{
                   width:"100%", border:"none", borderRadius:8, padding:"11px",
-                  background:levelDef.color, color:"#000", fontSize:13, fontWeight:800, cursor:"pointer",
+                  background:levelDef.color, color:"#000", fontSize:20, fontWeight:800, cursor:"pointer",
                 }}>
                   {currentLvl>=LEVELS.length-1 ? "🏆 Final" : `Nivel ${currentLvl+2} →`}
                 </button>
@@ -653,19 +679,19 @@ export default function Geometrix({ balance, setBalance, onBack }) {
             {/* Feedback incorrecto */}
             {phase==="wrong" && feedback && (
               <div style={{ background:"rgba(255,68,68,0.08)", border:"1px solid #ff444433", borderRadius:10, padding:"12px" }}>
-                <div style={{ fontSize:15, fontWeight:900, color:"#ff4444", marginBottom:5 }}>✗ Incorrecto</div>
-                <div style={{ fontSize:11, color:"#777", marginBottom:6, lineHeight:1.6 }}>
+                <div style={{ fontSize:20, fontWeight:900, color:"#ff4444", marginBottom:5 }}>✗ Incorrecto</div>
+                <div style={{ fontSize:18, color:"#c6c6c6", marginBottom:6, lineHeight:1.6 }}>
                   Diste: <strong style={{color:"#ff6666"}}>{feedback.given} {levelDef.unit}</strong><br/>
                   Real: <strong style={{color:"#fff"}}>{feedback.real} {levelDef.unit}</strong><br/>
                   Te {feedback.given>feedback.real?"sobraron":"faltaron"}{" "}
                   <strong style={{color:"#fbbf24"}}>{feedback.error} {levelDef.unit}</strong>
                 </div>
-                <div style={{ fontSize:10, color:"#555", marginBottom:10 }}>
+                <div style={{ fontSize:20, color:"#f6f6f6", marginBottom:10 }}>
                   Vuelves al nivel 1
                 </div>
                 <button onClick={resetToStart} style={{
                   width:"100%", border:"none", borderRadius:8, padding:"11px",
-                  background:"#ff4444", color:"#fff", fontSize:13, fontWeight:800, cursor:"pointer",
+                  background:"#ff4444", color:"#fff", fontSize:20, fontWeight:800, cursor:"pointer",
                 }}>🔄 Reiniciar desde nivel 1</button>
               </div>
             )}
@@ -673,17 +699,17 @@ export default function Geometrix({ balance, setBalance, onBack }) {
             {/* Timeout */}
             {phase==="timeout" && (
               <div style={{ background:"rgba(255,68,68,0.08)", border:"1px solid #ff444433", borderRadius:10, padding:"12px" }}>
-                <div style={{ fontSize:15, fontWeight:900, color:"#ff4444", marginBottom:5 }}>⏱ Tiempo agotado</div>
-                <div style={{ fontSize:11, color:"#777", marginBottom:6, lineHeight:1.6 }}>
+                <div style={{ fontSize:20, fontWeight:900, color:"#ff4444", marginBottom:5 }}>⏱ Tiempo agotado</div>
+                <div style={{ fontSize:18, color:"#f2f2f2", marginBottom:6, lineHeight:1.6 }}>
                   La respuesta era:<br/>
-                  <strong style={{color:"#fff", fontSize:16}}>{shape?.realValue} {levelDef.unit}</strong>
+                  <strong style={{color:"#fff", fontSize:22}}>{shape?.realValue} {levelDef.unit}</strong>
                 </div>
-                <div style={{ fontSize:10, color:"#555", marginBottom:10 }}>
+                <div style={{ fontSize:20, color:"#ffffff", marginBottom:10 }}>
                   Vuelves al nivel 1
                 </div>
                 <button onClick={resetToStart} style={{
                   width:"100%", border:"none", borderRadius:8, padding:"11px",
-                  background:"#ff4444", color:"#fff", fontSize:13, fontWeight:800, cursor:"pointer",
+                  background:"#ff4444", color:"#fff", fontSize:20, fontWeight:800, cursor:"pointer",
                 }}>🔄 Reiniciar desde nivel 1</button>
               </div>
             )}
@@ -691,8 +717,8 @@ export default function Geometrix({ balance, setBalance, onBack }) {
             {/* Acumulado */}
             {totalEarned > 0 && (
               <div style={{ marginTop:10, background:"rgba(251,191,36,0.06)", border:"1px solid #fbbf2422", borderRadius:8, padding:"8px 10px" }}>
-                <div style={{ fontSize:9, color:"#555" }}>ACUMULADO</div>
-                <div style={{ fontSize:16, fontWeight:900, color:"#fbbf24" }}>${totalEarned.toLocaleString()}</div>
+                <div style={{ fontSize:15, color:"#ffffff" }}>ACUMULADO</div>
+                <div style={{ fontSize:22, fontWeight:900, color:"#fbbf24" }}>${totalEarned.toLocaleString()}</div>
               </div>
             )}
           </div>
@@ -714,10 +740,10 @@ const S = {
   },
   backBtn: {
     background:"rgba(10,10,18,0.8)", border:"1px solid #2a2a3a",
-    borderRadius:8, color:"#aaa", fontSize:12, padding:"6px 12px", cursor:"pointer",
+    borderRadius:8, color:"#aaa", fontSize:15, padding:"6px 12px", cursor:"pointer",
   },
   btnPrimary: {
     background:"#fbbf24", border:"none", borderRadius:8,
-    padding:"12px 24px", fontSize:14, fontWeight:800, color:"#000", cursor:"pointer",
+    padding:"12px 24px", fontSize:16, fontWeight:800, color:"#000", cursor:"pointer",
   },
 };
