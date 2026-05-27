@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 import SnakeGame from "./SnakeGame.jsx";
 import DinoGame from "./DinoGame.jsx";
 import MinesweeperGame from "./MinesweeperGame.jsx";
-import ColorDash from "./ColorDash.jsx";
+import ColorDash from "./Colordash.jsx";
 import BlockBreaker from "./BlockBreaker.jsx";
 import Geometrix from "./Geometrix.jsx";
 
