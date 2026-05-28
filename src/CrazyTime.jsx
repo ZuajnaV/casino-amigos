@@ -1185,6 +1185,38 @@ export default function CrazyTimeGame({ balance, setBalance, onBack }) {
   const [history, setHistory]         = useState([]);
   const [phase, setPhase]             = useState("betting");
   const [pendingBets, setPendingBets] = useState({});
+
+
+  // Cargar últimos 20 registros globales para el historial visual
+useEffect(() => {
+  supabase.from("crazytime_history")
+    .select("segment, won, payout")
+    .order("created_at", { ascending: false })
+    .limit(20)
+    .then(({ data }) => {
+      if (data) setHistory(data.map(h => ({
+        type: h.segment, win: h.won, amount: h.payout,
+      })));
+    });
+}, []);
+
+// Cargar conteo total de todos los registros para proporciones
+const [segmentCounts, setSegmentCounts] = useState({});
+const [totalCount, setTotalCount]       = useState(0);
+
+useEffect(() => {
+  supabase.from("crazytime_history")
+    .select("segment")
+    .then(({ data }) => {
+      if (!data) return;
+      const counts = {};
+      data.forEach(h => { counts[h.segment] = (counts[h.segment] || 0) + 1; });
+      setSegmentCounts(counts);
+      setTotalCount(data.length);
+    });
+}, [history]); // se recalcula cuando cambia el historial
+
+
 const totalPending = Object.values(pendingBets).reduce((a, b) => a + b, 0); 
   const rotRef   = useRef(0);
 const wheelRef = useRef(null);
@@ -1295,10 +1327,10 @@ function spin() {
 
 
 
+      
 
 
-      // ── En frame() → bloque else (resultado sin bonus) ──
-setBalance(prev => prev + winnings);
+      setBalance(prev => prev + winnings);
 const info = SEGMENT_INFO[landed.type];
 setMessage(winnings > 0
   ? `✅ ¡Cayó ${info?.label}! Ganaste ${winnings.toLocaleString()} fichas!`
@@ -1307,7 +1339,6 @@ setMessage(winnings > 0
 const newEntry = { type: landed.type, win: winnings > 0, amount: winnings };
 setHistory(h => [newEntry, ...h.slice(0, 19)]);
 
-// ← NUEVO: guardar en Supabase
 supabase.auth.getSession().then(async ({ data: { session } }) => {
   if (!session) return;
   await supabase.rpc("insert_crazytime_and_trim", {
@@ -1321,11 +1352,7 @@ supabase.auth.getSession().then(async ({ data: { session } }) => {
 setBets({});
 setPhase("result");
 setTimeout(() => { setPhase("betting"); setMessage(null); }, 3000);
-
-
-
-
-
+// ← FIN. Elimina el segundo bloque idéntico que viene después.
 
 
 
@@ -1635,53 +1662,60 @@ function handleBonusComplete(payout, mult, ...args) {
 
 
 
+
+
+
+
+
+
+
+
+
+
       {history.length > 0 && (
   <div style={{ ...styles.card, marginTop: 16 }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-      <div style={styles.sectionTitle}>📜 Historial reciente</div>
+      <div style={styles.sectionTitle}>
+        📜 Historial reciente
+        <span style={{ color: "#555", fontSize: 11, fontWeight: 400, marginLeft: 8 }}>
+          (proporciones sobre {totalCount} tiradas totales)
+        </span>
+      </div>
 
-      {/* Proporciones */}
+      {/* Proporciones globales */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {(() => {
-          const counts = {};
-          history.forEach(h => { counts[h.type] = (counts[h.type] || 0) + 1; });
-          return Object.entries(counts)
-            .sort((a, b) => b[1] - a[1])
-            .map(([type, count]) => {
-              const info = SEGMENT_INFO[type];
-              const pct = Math.round((count / history.length) * 100);
-              return (
-                <div key={type} style={{
-                  background: info.color + "22",
-                  border: `1px solid ${info.color}66`,
-                  borderRadius: 6,
-                  padding: "2px 8px",
-                  fontSize: 11,
-                  color: info.color,
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}>
-                  {info.emoji} {pct}%
-                </div>
-              );
-            });
-        })()}
+        {Object.entries(segmentCounts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([type, count]) => {
+            const info = SEGMENT_INFO[type];
+            if (!info) return null;
+            const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+            return (
+              <div key={type} style={{
+                background: info.color + "22",
+                border: `1px solid ${info.color}66`,
+                borderRadius: 6, padding: "2px 8px",
+                fontSize: 11, color: info.color, fontWeight: 700,
+                display: "flex", alignItems: "center", gap: 4,
+              }}>
+                {info.emoji} {pct}%
+              </div>
+            );
+          })}
       </div>
     </div>
 
+    {/* Últimos 20 registros globales */}
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       {history.map((h, i) => {
         const info = SEGMENT_INFO[h.type];
+        if (!info) return null;
         return (
           <div key={i} style={{
             background: h.win ? info.color + "22" : "#1e1e2e",
             border: `1px solid ${h.win ? info.color : "#2a2a3a"}`,
-            borderRadius: 8,
-            padding: "6px 10px",
-            fontSize: 12,
-            textAlign: "center",
+            borderRadius: 8, padding: "6px 10px",
+            fontSize: 12, textAlign: "center",
           }}>
             <div>{info.emoji}</div>
             <div style={{ color: h.win ? "#7ed321" : "#666", fontWeight: 700 }}>
@@ -1693,6 +1727,10 @@ function handleBonusComplete(payout, mult, ...args) {
     </div>
   </div>
 )}
+
+
+
+
 
 
 
