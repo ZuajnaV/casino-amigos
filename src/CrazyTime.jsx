@@ -1677,7 +1677,7 @@ function handleBonusComplete(payout, mult, ...args) {
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
       <div style={styles.sectionTitle}>
         📜 Historial reciente
-        <span style={{ color: "#555", fontSize: 11, fontWeight: 400, marginLeft: 8 }}>
+        <span style={{ color: "#c8c8c8", fontSize: 15, fontWeight: 400, marginLeft: 8 }}>
           (proporciones sobre {totalCount} tiradas totales)
         </span>
       </div>
@@ -1695,7 +1695,7 @@ function handleBonusComplete(payout, mult, ...args) {
                 background: info.color + "22",
                 border: `1px solid ${info.color}66`,
                 borderRadius: 6, padding: "2px 8px",
-                fontSize: 11, color: info.color, fontWeight: 700,
+                fontSize: 15, color: info.color, fontWeight: 700,
                 display: "flex", alignItems: "center", gap: 4,
               }}>
                 {info.emoji} {pct}%
@@ -1715,7 +1715,7 @@ function handleBonusComplete(payout, mult, ...args) {
             background: h.win ? info.color + "22" : "#1e1e2e",
             border: `1px solid ${h.win ? info.color : "#2a2a3a"}`,
             borderRadius: 8, padding: "6px 10px",
-            fontSize: 12, textAlign: "center",
+            fontSize: 20, textAlign: "center",
           }}>
             <div>{info.emoji}</div>
             <div style={{ color: h.win ? "#7ed321" : "#666", fontWeight: 700 }}>
