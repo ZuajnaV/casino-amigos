@@ -1,4 +1,4 @@
-cat > /mnt/user-data/outputs/ShopPanel.jsx << 'ENDOFFILE'
+//cat > /mnt/user-data/outputs/ShopPanel.jsx << 'ENDOFFILE'
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
@@ -175,7 +175,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
         border: "1px solid #fbbf2433",
         borderRadius: 12, padding: "10px 14px",
       }}>
-        <div style={{ fontSize: 10, color: "#666", letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>
+        <div style={{ fontSize: 15, color: "#00ffff", letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>
           Score Crediticio
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -191,7 +191,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
                 transition: "width 0.5s",
               }} />
             </div>
-            <div style={{ fontSize: 10, color: "#555", marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: "#ffffff", marginTop: 3 }}>
               {creditScore < 500 ? "Básico" : creditScore < 2000 ? "Bronce" : creditScore < 5000 ? "Plata" : creditScore < 10000 ? "Oro" : "Platino"}
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
           }}>
             -{discount.discount_pct}% en {CATEGORY_LABELS[discount.category]}
           </div>
-          <div style={{ fontSize: 10, color: "#555", marginTop: 3 }}>
+          <div style={{ fontSize: 11, color: "#ffffff", marginTop: 3 }}>
             Solo hoy · igual para todos los jugadores
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
         <div style={{
           background: "rgba(13,13,20,0.7)", border: "1px solid #1e1e2e",
           borderRadius: 10, padding: "8px 14px", textAlign: "center",
-          fontSize: 11, color: "#444",
+          fontSize: 11, color: "#ffffff",
         }}>
           Sin descuento hoy — vuelve mañana para nuevas ofertas
         </div>
@@ -253,7 +253,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
             background: activeTab === cat ? "rgba(251,191,36,0.12)" : "rgba(13,13,20,0.8)",
             border: `1px solid ${activeTab === cat ? "#fbbf2466" : "#2a2a3a"}`,
             borderRadius: 8, color: activeTab === cat ? "#fbbf24" : "#666",
-            fontSize: 12, fontWeight: 700, cursor: "pointer",
+            fontSize: 15, fontWeight: 700, cursor: "pointer",
           }}>
             {CATEGORY_LABELS[cat]}
             {discountActive && discount.category === cat && (
@@ -336,15 +336,15 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
 
                   {/* Texto */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: "#ddd", marginBottom: 2 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: "#ddd", marginBottom: 2 }}>
                       {asset.label}
                       {owned && (
-                        <span style={{ marginLeft: 6, color: "#fbbf24", fontSize: 10 }}>
+                        <span style={{ marginLeft: 6, color: "#fbbf24", fontSize: 12 }}>
                           ×{owned.quantity}
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 10, color: "#555", marginBottom: 4, lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 10, color: "#ffffff", marginBottom: 4, lineHeight: 1.4 }}>
                       {asset.desc}
                     </div>
                     {/* Bonos */}
@@ -352,14 +352,14 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
                       <span style={{
                         background: "#fbbf2415", border: "1px solid #fbbf2433",
                         borderRadius: 4, padding: "2px 6px",
-                        fontSize: 9, color: "#fbbf24",
+                        fontSize: 12, color: "#fbbf24",
                       }}>
                         +{asset.sc} SC
                       </span>
                       <span style={{
                         background: "#00d4aa15", border: "1px solid #00d4aa33",
                         borderRadius: 4, padding: "2px 6px",
-                        fontSize: 9, color: "#00d4aa",
+                        fontSize: 12, color: "#00d4aa",
                       }}>
                         +{asset.cdt}% CDT
                       </span>
@@ -369,12 +369,12 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
                   {/* Precio + botón */}
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     {hasDiscount && (
-                      <div style={{ fontSize: 10, color: "#555", textDecoration: "line-through" }}>
+                      <div style={{ fontSize: 14, color: "#a0a0a0", textDecoration: "line-through" }}>
                         ${asset.price.toLocaleString()}
                       </div>
                     )}
                     <div style={{
-                      fontSize: 13, fontWeight: 800,
+                      fontSize: 16, fontWeight: 800,
                       color: hasDiscount ? (isSuper ? "#ff4444" : "#00d4aa") : "#fff",
                       marginBottom: 6,
                     }}>
@@ -407,7 +407,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
                     background: "rgba(255,68,68,0.08)",
                     borderTop: "1px solid #ff444422",
                     padding: "6px 14px",
-                    fontSize: 10, color: "#ff6666",
+                    fontSize: 15, color: "#ff6666",
                     display: "flex", alignItems: "center", gap: 6,
                   }}>
                     ⛓️ Hipotecado — paga tu deuda para liberar este activo
@@ -424,7 +424,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
           background: "rgba(13,13,20,0.7)", border: "1px solid #1e1e2e",
           borderRadius: 10, padding: "10px 14px",
         }}>
-          <div style={{ fontSize: 10, color: "#444", letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>
+          <div style={{ fontSize: 15, color: "#e1ff00", letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>
             Mis activos
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -440,20 +440,20 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
                   opacity: info.mortgaged ? 0.7 : 1,
                 }}>
                   <span style={{ fontSize: 16 }}>{a.icon}</span>
-                  <span style={{ fontSize: 11, color: "#bbb" }}>{a.label}</span>
+                  <span style={{ fontSize: 15, color: "#bbb" }}>{a.label}</span>
                   <span style={{
                     background: "#fbbf24", color: "#000",
                     borderRadius: 10, padding: "1px 6px",
-                    fontSize: 10, fontWeight: 900,
+                    fontSize: 12, fontWeight: 900,
                   }}>×{info.quantity}</span>
-                  {info.mortgaged && <span style={{ fontSize: 10 }}>⛓️</span>}
+                  {info.mortgaged && <span style={{ fontSize: 14 }}>⛓️</span>}
                 </div>
               );
             })}
           </div>
 
           {/* CDT total */}
-          <div style={{ marginTop: 10, fontSize: 11, color: "#555" }}>
+          <div style={{ marginTop: 10, fontSize: 15, color: "#b2b2b2" }}>
             Bonificación CDT total:{" "}
             <span style={{ color: "#00d4aa", fontWeight: 700 }}>
               +{Object.entries(assets).reduce((acc, [key, info]) => {
@@ -468,4 +468,4 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
     </div>
   );
 }
-ENDOFFILE
+//ENDOFFILE
