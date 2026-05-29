@@ -196,17 +196,37 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel)
     cdt_last_processed: today,
   }).eq("id", userId);
 
+
+
+
+
+  // Al final de processCDT, antes del update:
+balance = Math.round(balance);
+totalInterest = Math.round(totalInterest);
+
+await supabase.from("profiles").update({
+  balance,
+  cdt_last_processed: today,
+}).eq("id", userId);
+
+
+
+
+
+
+
+
+
+
+
   return { newBalance: balance, interest: totalInterest, daysPending };
-}
 
 
 
 
 
-
-
-
-async function init() {
+    /*
+  async function init() {
   await load();
 
   // 1. Procesar cuotas de préstamo
@@ -233,7 +253,23 @@ async function init() {
     }
     await load();
   }
+  }*/
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -347,7 +383,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
   }, [profile.id]);
 
   // ── Procesar cuotas pendientes al montar ───────────────────────────────────
-  useEffect(() => {
+  /*useEffect(() => {
     async function init() {
       await load();
 
@@ -375,6 +411,64 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     }
     init();
   }, [profile.id]);
+  */
+
+
+
+  useEffect(() => {
+  async function init() {
+    await load();
+
+    // 1. Procesar cuotas de préstamo
+    const result = await processLoanPayments(profile.id, balance);
+    if (result.newBalance !== balance) setBalance(result.newBalance);
+
+    // 2. Procesar CDT si el jugador es nivel 1+
+    const sc = (await supabase.from("profiles").select("credit_score").eq("id", profile.id).single())?.data?.credit_score || 0;
+    const lvl = bankLevelFor(sc);
+    if (lvl.level >= 1) {
+      const cdtResult = await processCDT(profile.id, result.newBalance, sc, lvl.level);
+      if (cdtResult.interest > 0) {
+        setBalance(cdtResult.newBalance);
+        setCdtEvents({ interest: cdtResult.interest, days: cdtResult.daysPending });
+      }
+    }
+
+    // 3. Hipoteca automática si aplica
+    if (result.events.length > 0) {
+      setEvents(result.events);
+      const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
+      if (mortgageTrigger) {
+        const mResult = await executeMortgage(profile.id, mortgageTrigger.loanId, mortgageTrigger.remainingDebt);
+        setMortgageEvents(mResult.mortgaged);
+      }
+      await load();
+    }
+  }
+  init();
+}, [profile.id]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ── Solicitar préstamo ─────────────────────────────────────────────────────
   async function requestLoan() {
@@ -652,7 +746,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     {[
       ["Tasa base diaria", "0.5%"],
       ["Bonus por SC", `+${(creditScore / 10000).toFixed(4)}%`],
-      ["Tasa efectiva hoy", `${(0.5 + creditScore / 100).toFixed(3)}%`],
+      ["Tasa efectiva hoy", `${((0.005 + creditScore / 10000) * 100).toFixed(3)}%`],
       ["Techo de ahorro", "$5.000.000"],
       ["Base efectiva", `$${Math.min(balance, 5_000_000).toLocaleString()}`],
       ["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 10000)).toLocaleString()}`],
