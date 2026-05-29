@@ -114,7 +114,9 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
   }
 
   async function buyAsset(asset) {
-    
+    const existing   = assets[asset.key];
+
+
     if (existing && existing.quantity >= 1) {
     setMsg({ text: `❌ Ya tienes una ${asset.label}`, ok: false });
     return;
@@ -129,7 +131,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
 
     const newBalance = balance - finalPrice;
     const newScore   = creditScore + asset.sc;
-    const existing   = assets[asset.key];
+    //const existing   = assets[asset.key];
 
     // Actualizar balance y credit_score en profiles
     await supabase.from("profiles")
@@ -281,6 +283,10 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
             const hasDiscount = finalPrice < asset.price;
             const canAfford = balance >= finalPrice;
             const isBuying  = buying === asset.key;
+            
+            const alreadyOwned = owned && owned.quantity >= 1;
+
+
 
             return (
               <div key={asset.key} style={{
