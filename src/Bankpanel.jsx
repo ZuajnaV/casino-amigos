@@ -283,7 +283,7 @@ await supabase.from("profiles").update({
 
 
 
-
+/*
 export async function executeMortgage(userId, loanId, remainingDebt) {
   const { data: playerAssets } = await supabase
     .from("player_assets")
@@ -364,7 +364,7 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
   }).eq("id", loanId);
 
   return { mortgaged, noAssets: false, debtCovered: false, remaining: remainingDebt - totalAssetValue };
-}
+}*/
 
 
 
@@ -372,20 +372,6 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-//Hipoteca automatica
 export async function executeMortgage(userId, loanId, remainingDebt) {
   const { data: playerAssets } = await supabase
     .from("player_assets")
@@ -393,12 +379,19 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
     .eq("user_id", userId)
     .eq("mortgaged", false);
 
+  const today = todayStr();
+
+  // ── Sin activos → período de gracia 7 días ──
   if (!playerAssets || playerAssets.length === 0) {
-    await supabase.from("loans").update({ status: "grace" }).eq("id", loanId);
-    return { mortgaged: [], noAssets: true };
+    const graceUntil = addDays(today, 7);
+    await supabase.from("loans").update({
+      status: "grace",
+      grace_until: graceUntil,
+    }).eq("id", loanId);
+    return { mortgaged: [], noAssets: true, graceUntil };
   }
 
-  // Ordenar por precio descendente
+  // Ordenar por precio descendente (hipotecar los más valiosos primero)
   const sorted = [...playerAssets].sort(
     (a, b) => (ASSET_PRICES[b.asset_key] || 0) - (ASSET_PRICES[a.asset_key] || 0)
   );
@@ -407,7 +400,8 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
   const mortgaged = [];
 
   for (const asset of sorted) {
-    if (covered >= remainingDebt) break;
+    if (covered >= remainingDebt) break; // ya cubrimos la deuda, parar
+
     covered += (ASSET_PRICES[asset.asset_key] || 0) * asset.quantity;
 
     await supabase.from("player_assets")
@@ -415,7 +409,7 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
       .eq("id", asset.id);
     mortgaged.push(asset.asset_key);
 
-    // Restar SC del activo hipotecado
+    // Penalización SC por hipoteca
     const assetData = ASSETS[asset.asset_key];
     if (assetData) {
       const { data: prof } = await supabase
@@ -428,22 +422,40 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
     }
   }
 
-  // ── CLAVE: saldar la deuda completamente ──
+  // Obtener datos actuales del préstamo
+  const { data: loanData } = await supabase
+    .from("loans").select("total_debt, paid_amount").eq("id", loanId).single();
+  const currentPaid = loanData?.paid_amount || 0;
+  const totalDebt   = loanData?.total_debt   || remainingDebt;
+
+  // ── Activos cubren la deuda (incluso si sobrepasan) → préstamo saldado ──
+  if (covered >= remainingDebt) {
+    await supabase.from("loans").update({
+      paid_amount:  totalDebt,   // marcado como totalmente pagado
+      mora_days:    0,
+      status:       "paid",
+      mortgaged_at: today,
+    }).eq("id", loanId);
+    return { mortgaged, noAssets: false, debtCovered: true, excess: covered - remainingDebt };
+  }
+
+  // ── Activos no alcanzan → se abona lo que cubrieron y queda deuda pendiente ──
+  const graceUntil = addDays(today, 7);
   await supabase.from("loans").update({
-    paid_amount: (await supabase.from("loans").select("total_debt").eq("id", loanId).single())
-      .data?.total_debt || remainingDebt,
-    mora_days: 0,
-    status: "paid",
+    paid_amount:  currentPaid + covered,  // se abona el valor de los activos
+    mora_days:    0,
+    status:       "grace",
+    mortgaged_at: today,
+    grace_until:  graceUntil,
   }).eq("id", loanId);
 
-  return { mortgaged, noAssets: false };
+  return {
+    mortgaged,
+    noAssets:    false,
+    debtCovered: false,
+    remaining:   remainingDebt - covered,
+  };
 }
-
-*/
-
-
-
-
 
 
 
@@ -475,7 +487,8 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
   const load = useCallback(async () => {
     setLoading(true);
     const [loanRes, assetsRes, profileRes] = await Promise.all([
-      supabase.from("loans").select("*").eq("user_id", profile.id).eq("status", "active").order("created_at", { ascending: false }).limit(1),
+      //supabase.from("loans").select("*").eq("user_id", profile.id).eq("status", "active").order("created_at", { ascending: false }).limit(1),
+      supabase.from("loans").select("*").eq("user_id", profile.id).in("status", ["active", "grace"]).order("created_at", { ascending: false }).limit(1),
       supabase.from("player_assets").select("*").eq("user_id", profile.id),
       supabase.from("profiles").select("credit_score").eq("id", profile.id).single(),
     ]);
