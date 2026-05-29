@@ -73,7 +73,8 @@ export async function processLoanPayments(userId, currentBalance) {
     .from("loans")
     .select("*")
     .eq("user_id", userId)
-    .eq("status", "active");
+    //.eq("status", "active");
+    .in("status", ["active", "pending_mortgage"])
 
   if (!loans || loans.length === 0) return { newBalance: currentBalance, events: [] };
 
@@ -133,6 +134,9 @@ export async function processLoanPayments(userId, currentBalance) {
         await supabase.from("loans").update({
           paid_amount, days_paid, mora_days,
           next_payment: currentNextPayment,
+
+          status: "pending_mortgage",
+
         }).eq("id", loan.id);
         break;
       }
@@ -209,87 +213,11 @@ await supabase.from("profiles").update({
   balance,
   cdt_last_processed: today,
 }).eq("id", userId);
-
-
-
-
-
-
-
-
-
-
-
   return { newBalance: balance, interest: totalInterest, daysPending };
 
-
-
-
-
-    /*
-  async function init() {
-  await load();
-
-  // 1. Procesar cuotas de préstamo
-  const result = await processLoanPayments(profile.id, balance);
-  if (result.newBalance !== balance) setBalance(result.newBalance);
-
-  // 2. Procesar CDT si el jugador es nivel 1+
-  const lvl = bankLevelFor(creditScore);
-  if (lvl.level >= 1) {
-    const cdtResult = await processCDT(profile.id, result.newBalance, creditScore, lvl.level);
-    if (cdtResult.interest > 0) {
-      setBalance(cdtResult.newBalance);
-      setCdtEvents({ interest: cdtResult.interest, days: cdtResult.daysPending });
-    }
-  }
-
-  // 3. Hipoteca automática si aplica
-  if (result.events.length > 0) {
-    setEvents(result.events);
-    const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
-    if (mortgageTrigger) {
-      const mResult = await executeMortgage(profile.id, mortgageTrigger.loanId, mortgageTrigger.remainingDebt);
-      setMortgageEvents(mResult.mortgaged);
-    }
-    await load();
-  }
-  }*/
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*
 // ─── Ejecuta la hipoteca automática ──────────────────────────────────────────
 export async function executeMortgage(userId, loanId, remainingDebt) {
   // Obtener activos ordenados por precio descendente
@@ -347,7 +275,82 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
   }
 
   return { mortgaged, noAssets: false };
+}*/
+
+
+
+
+
+
+
+
+
+//Hipoteca automatica
+export async function executeMortgage(userId, loanId, remainingDebt) {
+  const { data: playerAssets } = await supabase
+    .from("player_assets")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("mortgaged", false);
+
+  if (!playerAssets || playerAssets.length === 0) {
+    await supabase.from("loans").update({ status: "grace" }).eq("id", loanId);
+    return { mortgaged: [], noAssets: true };
+  }
+
+  // Ordenar por precio descendente
+  const sorted = [...playerAssets].sort(
+    (a, b) => (ASSET_PRICES[b.asset_key] || 0) - (ASSET_PRICES[a.asset_key] || 0)
+  );
+
+  let covered = 0;
+  const mortgaged = [];
+
+  for (const asset of sorted) {
+    if (covered >= remainingDebt) break;
+    covered += (ASSET_PRICES[asset.asset_key] || 0) * asset.quantity;
+
+    await supabase.from("player_assets")
+      .update({ mortgaged: true })
+      .eq("id", asset.id);
+    mortgaged.push(asset.asset_key);
+
+    // Restar SC del activo hipotecado
+    const assetData = ASSETS[asset.asset_key];
+    if (assetData) {
+      const { data: prof } = await supabase
+        .from("profiles").select("credit_score").eq("id", userId).single();
+      if (prof) {
+        await supabase.from("profiles")
+          .update({ credit_score: Math.max(0, (prof.credit_score || 0) - assetData.sc * asset.quantity) })
+          .eq("id", userId);
+      }
+    }
+  }
+
+  // ── CLAVE: saldar la deuda completamente ──
+  await supabase.from("loans").update({
+    paid_amount: (await supabase.from("loans").select("total_debt").eq("id", loanId).single())
+      .data?.total_debt || remainingDebt,
+    mora_days: 0,
+    status: "paid",
+  }).eq("id", loanId);
+
+  return { mortgaged, noAssets: false };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 export default function BankPanel({ profile, balance, setBalance, onScChange }) {
@@ -383,39 +386,6 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     setLoading(false);
   }, [profile.id]);
 
-  // ── Procesar cuotas pendientes al montar ───────────────────────────────────
-  /*useEffect(() => {
-    async function init() {
-      await load();
-
-      // Procesar pagos automáticos
-      const result = await processLoanPayments(profile.id, balance);
-      if (result.newBalance !== balance) {
-        setBalance(result.newBalance);
-      }
-      if (result.events.length > 0) {
-        setEvents(result.events);
-
-        // Si hay trigger de hipoteca, ejecutarla
-        const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
-        if (mortgageTrigger) {
-          const mResult = await executeMortgage(
-            profile.id,
-            mortgageTrigger.loanId,
-            mortgageTrigger.remainingDebt
-          );
-          setMortgageEvents(mResult.mortgaged);
-        }
-
-        await load(); // recargar tras procesar
-      }
-    }
-    init();
-  }, [profile.id]);
-  */
-
-
-
   useEffect(() => {
   async function init() {
     await load();
@@ -448,28 +418,6 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
   }
   init();
 }, [profile.id]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // ── Solicitar préstamo ─────────────────────────────────────────────────────
   async function requestLoan() {
@@ -711,13 +659,6 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
       {tab === "estado" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
-
-
-
-
-
-
-
             {/* ── Notificación CDT ── */}
 {cdtEvents && cdtEvents.interest > 0 && (
   <div style={{
@@ -770,25 +711,6 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     </div>
   </div>
 )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
           {/* Préstamo activo */}
           {loan ? (
