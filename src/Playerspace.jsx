@@ -7,6 +7,7 @@ import ColorDash from "./Colordash.jsx";
 import BlockBreaker from "./BlockBreaker.jsx";
 import Geometrix from "./Geometrix.jsx";
 import ShopPanel, { ASSETS } from "./ShopPanel.jsx";
+import BankPanel, { processLoanPayments } from "./BankPanel.jsx";
 
 
 // ─── Sub-componente: Stats del jugador ───────────────────────────────────────
@@ -191,14 +192,14 @@ function SideBtn({ icon, label, onClick, active, color = "#fbbf24" }) {
 // Los vehículos van abajo/costados, las propiedades van de fondo.
 const ASSET_POSITIONS = {
   // Vehículos — a los costados del avatar
-  bicicleta: { bottom: 150,  left: "calc(50% - 275px)", width: 150,  zIndex: 3 },
-  moto:      { bottom: 100,  left: "calc(50% - 550px)", width: 150, zIndex: 3 },
-  carro:     { bottom: 30,  left: "calc(50% - 350px)", width: 250, zIndex: 2 },
+  bicicleta: { bottom: 100,  left: "calc(50% - 220px)", width: 160,  zIndex: 3 },
+  moto:      { bottom: 150,  left: "calc(50% - 500px)", width: 160, zIndex: 3 },
+  carro:     { bottom: 30,  left: "calc(50% - 450px)", width: 240, zIndex: 2 },
 
   // Vivienda — al fondo, más arriba
-  choza:     { bottom: 100, left: "calc(50% + 180px)", width: 150, zIndex: 1 },
-  casa:      { bottom: 50, left: "calc(50% + 490px)", width: 180, zIndex: 1 },
-  mansion:   { bottom: 250, left: "calc(50% + 325px)", width: 300, zIndex: 1 },
+  choza:     { bottom: 70, left: "calc(50% + 180px)", width: 150, zIndex: 1 },
+  casa:      { bottom: 30, left: "calc(50% + 450px)", width: 200, zIndex: 1 },
+  mansion:   { bottom: 250, left: "calc(50% + 260px)", width: 350, zIndex: 1 },
 };
 
 function OwnedAssets({ ownedMap }) {
@@ -505,6 +506,7 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
           gap: 10,
           zIndex: 5,
         }}>
+          <SideBtn icon="🏦" label="Banco"   onClick={() => togglePanel("bank")}   active={panel === "bank"}   color="#60a5fa" />
           <SideBtn icon="🏪" label="Tienda" onClick={() => togglePanel("shop")}  active={panel === "shop"}  color="#fbbf24" />
           <SideBtn icon="📊" label="Stats"  onClick={() => togglePanel("stats")} active={panel === "stats"} color="#00d4aa" />
           <SideBtn icon="💼" label="Trabajo" onClick={() => togglePanel("work")}  active={panel === "work"}  color="#8b5cf6" />
@@ -538,6 +540,20 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
         <div style={{ position: "absolute", inset: 0, zIndex: 15 }}>
           {/* Overlay para cerrar */}
           <div onClick={() => setPanel(null)} style={{ position: "absolute", inset: 0, background: "transparent" }} />
+
+          {/* ─ BANCO ─ */}
+          {panel === "bank" && (
+            <SidePanel title="Banco" icon="🏦" onClose={() => setPanel(null)}>
+              <BankPanel
+                profile={profile}
+                balance={balance}
+                setBalance={setBalance}
+                onScChange={newSC => {
+                  // Sincroniza el SC en profile local si hace falta
+                }}
+              />
+            </SidePanel>
+          )}
 
           {/* ─ TIENDA ─ */}
           {panel === "shop" && (
