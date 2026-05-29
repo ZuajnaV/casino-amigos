@@ -154,6 +154,62 @@ export async function processLoanPayments(userId, currentBalance) {
 
   // Guardar balance actualizado
   await supabase.from("profiles").update({ balance }).eq("id", userId);
+
+
+
+
+
+
+
+
+
+// ── Verificar préstamos en grace period vencido ──
+const { data: graceLoans } = await supabase
+  .from("loans")
+  .select("*")
+  .eq("user_id", userId)
+  .eq("status", "grace");
+
+for (const graceLoan of (graceLoans || [])) {
+  if (!graceLoan.grace_until) continue;
+  const daysOverdue = daysBetween(graceLoan.grace_until, today);
+  if (daysOverdue <= 0) continue;
+
+  // Ejecución forzada: eliminar todos los activos hipotecados
+  const { data: mortgagedAssets } = await supabase
+    .from("player_assets")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("mortgaged", true);
+
+  for (const asset of (mortgagedAssets || [])) {
+    await supabase.from("player_assets").delete().eq("id", asset.id);
+  }
+
+  // Marcar préstamo como ejecutado
+  await supabase.from("loans").update({
+    status: "foreclosed",
+    mora_days: 0,
+  }).eq("id", graceLoan.id);
+
+  events.push({ type: "foreclosure", loanId: graceLoan.id });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return { newBalance: balance, events };
 }
 
@@ -217,27 +273,44 @@ await supabase.from("profiles").update({
 
 }
 
-/*
-// ─── Ejecuta la hipoteca automática ──────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
 export async function executeMortgage(userId, loanId, remainingDebt) {
-  // Obtener activos ordenados por precio descendente
   const { data: playerAssets } = await supabase
     .from("player_assets")
     .select("*")
     .eq("user_id", userId)
     .eq("mortgaged", false);
 
+  const today = todayStr();
+
+  // ── Sin activos → período de gracia 7 días ──
   if (!playerAssets || playerAssets.length === 0) {
-    // Sin activos → marcar préstamo en grace period (7 días extra)
-    await supabase.from("loans")
-      .update({ status: "grace" })
-      .eq("id", loanId);
-    return { mortgaged: [], noAssets: true };
+    const graceUntil = addDays(today, 7);
+    await supabase.from("loans").update({
+      status: "grace",
+      grace_until: graceUntil,
+    }).eq("id", loanId);
+    return { mortgaged: [], noAssets: true, graceUntil };
   }
 
-  // Ordenar activos por precio desc
+  // Ordenar por precio descendente
   const sorted = [...playerAssets].sort(
     (a, b) => (ASSET_PRICES[b.asset_key] || 0) - (ASSET_PRICES[a.asset_key] || 0)
+  );
+
+  // Calcular valor total de activos disponibles
+  const totalAssetValue = sorted.reduce(
+    (sum, a) => sum + (ASSET_PRICES[a.asset_key] || 0) * a.quantity, 0
   );
 
   let covered = 0;
@@ -246,36 +319,52 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
   for (const asset of sorted) {
     if (covered >= remainingDebt) break;
     covered += (ASSET_PRICES[asset.asset_key] || 0) * asset.quantity;
+
     await supabase.from("player_assets")
       .update({ mortgaged: true })
       .eq("id", asset.id);
     mortgaged.push(asset.asset_key);
 
-    // Restar SC del activo hipotecado
+    // Restar SC
     const assetData = ASSETS[asset.asset_key];
     if (assetData) {
-      await supabase.rpc("decrement_credit_score", {
-        uid: userId,
-        amount: assetData.sc * asset.quantity,
-      }).catch(() => {
-        // fallback manual si no existe el RPC
-        supabase.from("profiles")
-          .select("credit_score")
-          .eq("id", userId)
-          .single()
-          .then(({ data }) => {
-            if (data) {
-              supabase.from("profiles")
-                .update({ credit_score: Math.max(0, (data.credit_score || 0) - assetData.sc * asset.quantity) })
-                .eq("id", userId);
-            }
-          });
-      });
+      const { data: prof } = await supabase
+        .from("profiles").select("credit_score").eq("id", userId).single();
+      if (prof) {
+        await supabase.from("profiles")
+          .update({ credit_score: Math.max(0, (prof.credit_score || 0) - assetData.sc * asset.quantity) })
+          .eq("id", userId);
+      }
     }
   }
 
-  return { mortgaged, noAssets: false };
-}*/
+  // ── Caso A y B: activos >= deuda → préstamo saldado ──
+  if (totalAssetValue >= remainingDebt) {
+    await supabase.from("loans").update({
+      paid_amount: (await supabase.from("loans").select("total_debt").eq("id", loanId).single()).data?.total_debt || remainingDebt,
+      mora_days: 0,
+      status: "mortgaged",   // activo, deuda saldada — pero activos bloqueados
+      mortgaged_at: today,
+    }).eq("id", loanId);
+    return { mortgaged, noAssets: false, debtCovered: true };
+  }
+
+  // ── Caso C: activos < deuda → mora prolongada ──
+  const { data: loanData } = await supabase
+    .from("loans").select("total_debt, paid_amount").eq("id", loanId).single();
+  const newPaidAmount = (loanData?.paid_amount || 0) + totalAssetValue;
+  const graceUntil = addDays(today, 7);
+
+  await supabase.from("loans").update({
+    paid_amount: newPaidAmount,
+    mora_days: 0,
+    status: "grace",
+    mortgaged_at: today,
+    grace_until: graceUntil,
+  }).eq("id", loanId);
+
+  return { mortgaged, noAssets: false, debtCovered: false, remaining: remainingDebt - totalAssetValue };
+}
 
 
 
@@ -285,6 +374,17 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+/*
 //Hipoteca automatica
 export async function executeMortgage(userId, loanId, remainingDebt) {
   const { data: playerAssets } = await supabase
@@ -339,7 +439,7 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
   return { mortgaged, noAssets: false };
 }
 
-
+*/
 
 
 
@@ -813,6 +913,59 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
               </div>
             </div>
           )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{/* ── Alerta de período de gracia ── */}
+{loan?.status === "grace" && loan.grace_until && (
+  <div style={alertStyle("#ff4444")}>
+    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
+      🚨 PERÍODO DE GRACIA — DEUDA PENDIENTE
+    </div>
+    <div style={{ fontSize: 12, color: "#ffaaaa" }}>
+      Vence el {loan.grace_until} · Paga o perderás todos los activos hipotecados
+    </div>
+    <div style={{ fontSize: 12, color: "#fff", marginTop: 4, fontWeight: 700 }}>
+      Deuda restante: ${remaining.toLocaleString()}
+    </div>
+  </div>
+)}
+
+{/* ── Alerta de ejecución forzada ── */}
+{events.some(e => e.type === "foreclosure") && (
+  <div style={alertStyle("#ff0000")}>
+    <div style={{ fontSize: 15, fontWeight: 700 }}>💀 EJECUCIÓN BANCARIA</div>
+    <div style={{ fontSize: 12, color: "#ffaaaa", marginTop: 4 }}>
+      Tus activos hipotecados fueron confiscados por el banco.
+    </div>
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
           {/* Activos hipotecados */}
           {hasMortgaged && (

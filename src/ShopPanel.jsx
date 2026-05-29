@@ -114,6 +114,12 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
   }
 
   async function buyAsset(asset) {
+    
+    if (existing && existing.quantity >= 1) {
+    setMsg({ text: `❌ Ya tienes una ${asset.label}`, ok: false });
+    return;
+  }
+    
     const finalPrice = getDiscountedPrice(asset);
     if (balance < finalPrice) {
       setMsg({ text: "❌ Saldo insuficiente", ok: false });
@@ -380,6 +386,48 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
                     }}>
                       ${finalPrice.toLocaleString()}
                     </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+{/*Cambia estas líneas en el botón:
+const alreadyOwned = owned && owned.quantity >= 1;*/}
+
+<button
+  onClick={() => !isBuying && canAfford && !alreadyOwned && buyAsset(asset)}
+  disabled={isBuying || !canAfford || alreadyOwned}
+  style={{
+    background: isBuying ? "#333"
+      : alreadyOwned ? "#1a1a26"        // ← nuevo
+      : !canAfford ? "#1a1a26"
+      : hasDiscount ? (isSuper ? "#ff4444" : "#00d4aa")
+      : "#fbbf24",
+    // ... resto igual
+    color: (!canAfford || alreadyOwned) ? "#444" : "#000",
+    cursor: canAfford && !isBuying && !alreadyOwned ? "pointer" : "not-allowed",
+  }}
+>
+  {isBuying ? "..." : alreadyOwned ? "Ya tienes 1" : !canAfford ? "Sin saldo" : "Comprar"}
+</button>
+
+
+
+
+
+
+
+
+
+{/*}
                     <button
                       onClick={() => !isBuying && canAfford && buyAsset(asset)}
                       disabled={isBuying || !canAfford}
@@ -398,6 +446,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
                     >
                       {isBuying ? "..." : !canAfford ? "Sin saldo" : "Comprar"}
                     </button>
+{*/}
                   </div>
                 </div>
 
