@@ -153,6 +153,8 @@ export async function processLoanPayments(userId, currentBalance) {
   return { newBalance: balance, events };
 }
 
+
+/*
 // ─── Ejecuta la hipoteca automática ──────────────────────────────────────────
 export async function executeMortgage(userId, loanId, remainingDebt) {
   // Obtener activos ordenados por precio descendente
@@ -211,6 +213,112 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
 
   return { mortgaged, noAssets: false };
 }
+*/
+
+
+
+
+
+
+
+// ─── Ejecuta la hipoteca automática (CORREGIDA) ──────────────────────────────
+export async function executeMortgage(userId, loan, remainingDebt) {
+  // Obtener activos no hipotecados
+  const { data: playerAssets } = await supabase
+    .from("player_assets")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("mortgaged", false);
+
+  // Si no tiene absolutamente ningún activo -> Estado de Gracia (Último aviso de 7 días)
+  if (!playerAssets || playerAssets.length === 0) {
+    await supabase.from("loans")
+      .update({ status: "grace" })
+      .eq("id", loan.id);
+    return { mortgaged: [], noAssets: true };
+  }
+
+  // Ordenar activos por precio descendente
+  const sorted = [...playerAssets].sort(
+    (a, b) => (ASSET_PRICES[b.asset_key] || 0) - (ASSET_PRICES[a.asset_key] || 0)
+  );
+
+  let covered = 0;
+  const mortgagedKeys = [];
+
+  for (const asset of sorted) {
+    if (covered >= remainingDebt) break;
+
+    // Calcular el valor total de este bloque de activos (precio * cantidad)
+    const assetValue = (ASSET_PRICES[asset.asset_key] || 0) * asset.quantity;
+    covered += assetValue;
+
+    // Hipotecar el activo en la DB
+    await supabase.from("player_assets")
+      .update({ mortgaged: true })
+      .eq("id", asset.id);
+      
+    mortgagedKeys.push(asset.asset_key);
+
+    // Restar el Score Crediticio correspondiente
+    const assetData = ASSETS[asset.asset_key];
+    if (assetData) {
+      const totalScDeduction = assetData.sc * asset.quantity;
+      await supabase.rpc("decrement_credit_score", {
+        uid: userId,
+        amount: totalScDeduction,
+      }).catch(async () => {
+        // Fallback manual si el RPC no está creado
+        const { data: prof } = await supabase.from("profiles").select("credit_score").eq("id", userId).single();
+        if (prof) {
+          await supabase.from("profiles")
+            .update({ credit_score: Math.max(0, (prof.credit_score || 0) - totalScDeduction) })
+            .eq("id", userId);
+        }
+      });
+    }
+  }
+
+  // ─── APLICACIÓN DE TUS CONDICIONES DE LIQUIDACIÓN ───
+  if (covered >= remainingDebt) {
+    // CONDICIÓN 1 y 2: Activos >= Deuda -> La deuda queda saldada (0)
+    await supabase.from("loans")
+      .update({ 
+        paid_amount: loan.total_debt, 
+        status: "paid",
+        mora_days: 0 
+      })
+      .eq("id", loan.id);
+  } else {
+    // CONDICIÓN 3: Activos < Deuda -> Reducción parcial y estado de Mora Prolongada hacia el Día 14
+    const newPaidAmount = loan.paid_amount + covered;
+    await supabase.from("loans")
+      .update({ 
+        paid_amount: newPaidAmount,
+        status: "mora_prolongada" 
+      })
+      .eq("id", loan.id);
+  }
+
+  return { mortgaged: mortgagedKeys, noAssets: false };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 export default function BankPanel({ profile, balance, setBalance, onScChange }) {
@@ -255,6 +363,36 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
       if (result.events.length > 0) {
         setEvents(result.events);
 
+
+
+
+// Si hay trigger de hipoteca, ejecutarla pasando el objeto loan encontrado
+const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
+if (mortgageTrigger) {
+  // Buscamos el objeto del préstamo correspondiente en el array de loans procesados
+  const activeLoanObj = loan; // O mapearlo desde el bucle si tienes múltiples
+  if (activeLoanObj) {
+    const mResult = await executeMortgage(
+      profile.id,
+      activeLoanObj, // <-- Enviamos el préstamo completo
+      mortgageTrigger.remainingDebt
+    );
+    setMortgageEvents(mResult.mortgaged);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+        /*
+
+
         // Si hay trigger de hipoteca, ejecutarla
         const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
         if (mortgageTrigger) {
@@ -264,7 +402,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
             mortgageTrigger.remainingDebt
           );
           setMortgageEvents(mResult.mortgaged);
-        }
+        }*/
 
         await load(); // recargar tras procesar
       }
@@ -359,6 +497,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
   }
 
   // ── Deshipotecar (paga deuda + 10% penalización) ──────────────────────────
+  /*
   async function unmortgage(assetEntry) {
     const asset = ASSETS[assetEntry.asset_key];
     if (!asset) return;
@@ -380,6 +519,61 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     if (onScChange) onScChange(newSC);
     await load();
   }
+  */
+
+
+
+
+// ─── Deshipotecar (CORREGIDA) ──────────────────────────
+async function unmortgage(assetEntry) {
+  // RESTRICCIÓN: Si tiene un préstamo activo, en mora prolongada o gracia, NO puede liberar activos
+  if (loan && (loan.status === "active" || loan.status === "mora_prolongada" || loan.status === "grace")) {
+    alert("No puedes deshipotecar activos mientras tengas deudas o saldos pendientes con el banco.");
+    return;
+  }
+
+  const asset = ASSETS[assetEntry.asset_key];
+  if (!asset) return;
+
+  // CORRECCIÓN: Multiplicar el precio base por la cantidad de la fila
+  const totalAssetPrice = asset.price * assetEntry.quantity;
+  const penalty = Math.round(totalAssetPrice * 1.10);
+  
+  if (balance < penalty) {
+    alert("No tienes saldo suficiente para pagar la deshipoteca.");
+    return;
+  }
+
+  const newBalance = balance - penalty;
+  const newSC = creditScore + (asset.sc * assetEntry.quantity); // Devolver el SC completo multiplicando por cantidad
+
+  await supabase.from("player_assets")
+    .update({ mortgaged: false })
+    .eq("id", assetEntry.id);
+    
+  await supabase.from("profiles")
+    .update({ balance: newBalance, credit_score: newSC })
+    .eq("id", profile.id);
+
+  setBalance(newBalance);
+  setCreditScore(newSC);
+  if (onScChange) onScChange(newSC);
+  await load();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   if (loading) return (
     <div style={{ textAlign: "center", color: "#555", padding: 32 }}>
