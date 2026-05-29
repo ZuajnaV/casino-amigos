@@ -7,7 +7,7 @@ import ColorDash from "./Colordash.jsx";
 import BlockBreaker from "./BlockBreaker.jsx";
 import Geometrix from "./Geometrix.jsx";
 import ShopPanel, { ASSETS } from "./ShopPanel.jsx";
-import BankPanel, { processLoanPayments } from "./BankPanel.jsx";
+import BankPanel, { processLoanPayments } from "./Bankpanel.jsx";
 
 
 // ─── Sub-componente: Stats del jugador ───────────────────────────────────────
