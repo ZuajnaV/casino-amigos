@@ -18,7 +18,7 @@ export const BANK_LEVELS = [
     level: 1,
     name: "Cliente",
     icon: "💳",
-    scRequired: 3_00,
+    scRequired: 3_000,
     loanLimit: 3_000_000,
     rate: 0.15,
     moraRate: 0.015,
@@ -28,7 +28,7 @@ export const BANK_LEVELS = [
     level: 2,
     name: "Inversor",
     icon: "📈",
-    scRequired: 2_500,
+    scRequired: 6_000,
     loanLimit: 10_000_000,
     rate: 0.08,
     moraRate: 0.01,
@@ -73,7 +73,8 @@ export async function processLoanPayments(userId, currentBalance) {
     .from("loans")
     .select("*")
     .eq("user_id", userId)
-    .eq("status", "active");
+    //.eq("status", "active");
+    .in("status", ["active", "pending_mortgage"])
 
   if (!loans || loans.length === 0) return { newBalance: currentBalance, events: [] };
 
@@ -133,6 +134,9 @@ export async function processLoanPayments(userId, currentBalance) {
         await supabase.from("loans").update({
           paid_amount, days_paid, mora_days,
           next_payment: currentNextPayment,
+
+          status: "pending_mortgage",
+
         }).eq("id", loan.id);
         break;
       }
@@ -153,6 +157,65 @@ export async function processLoanPayments(userId, currentBalance) {
   return { newBalance: balance, events };
 }
 
+
+
+
+
+
+// ─── PROCESADOR DE CDT (interés diario) ─────────────────────────────────────
+export async function processCDT(userId, currentBalance, creditScore, bankLevel) {
+  if (bankLevel < 1) return { newBalance: currentBalance, interest: 0 };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("cdt_last_processed")
+    .eq("id", userId)
+    .single();
+
+  if (!profile) return { newBalance: currentBalance, interest: 0 };
+
+  const today = todayStr();
+  const lastProcessed = profile.cdt_last_processed || today;
+  const daysPending = daysBetween(lastProcessed, today);
+
+  if (daysPending <= 0) return { newBalance: currentBalance, interest: 0 };
+
+  const TASA_BASE = 0.005;          // 0.5% diario
+  const TECHO_AHORRO = 5_000_000;   // solo genera sobre los primeros 5M
+
+  let balance = currentBalance;
+  let totalInterest = 0;
+
+  for (let d = 0; d < daysPending; d++) {
+    const baseEfectiva = Math.min(balance, TECHO_AHORRO);
+    //const tasa = TASA_BASE + (creditScore / 10000);
+    const tasa = TASA_BASE + (creditScore / 1_000_000);
+    const rendimiento = Math.floor(baseEfectiva * tasa);
+    balance += rendimiento;
+    totalInterest += rendimiento;
+  }
+
+  // Guardar nuevo balance y fecha
+  await supabase.from("profiles").update({
+    balance,
+    cdt_last_processed: today,
+  }).eq("id", userId);
+
+
+
+
+
+  // Al final de processCDT, antes del update:
+balance = Math.round(balance);
+totalInterest = Math.round(totalInterest);
+
+await supabase.from("profiles").update({
+  balance,
+  cdt_last_processed: today,
+}).eq("id", userId);
+  return { newBalance: balance, interest: totalInterest, daysPending };
+
+}
 
 /*
 // ─── Ejecuta la hipoteca automática ──────────────────────────────────────────
@@ -212,8 +275,7 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
   }
 
   return { mortgaged, noAssets: false };
-}
-*/
+}*/
 
 
 
@@ -221,91 +283,61 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
 
 
 
-// ─── Ejecuta la hipoteca automática (CORREGIDA) ──────────────────────────────
-export async function executeMortgage(userId, loan, remainingDebt) {
-  // Obtener activos no hipotecados
+
+
+//Hipoteca automatica
+export async function executeMortgage(userId, loanId, remainingDebt) {
   const { data: playerAssets } = await supabase
     .from("player_assets")
     .select("*")
     .eq("user_id", userId)
     .eq("mortgaged", false);
 
-  // Si no tiene absolutamente ningún activo -> Estado de Gracia (Último aviso de 7 días)
   if (!playerAssets || playerAssets.length === 0) {
-    await supabase.from("loans")
-      .update({ status: "grace" })
-      .eq("id", loan.id);
+    await supabase.from("loans").update({ status: "grace" }).eq("id", loanId);
     return { mortgaged: [], noAssets: true };
   }
 
-  // Ordenar activos por precio descendente
+  // Ordenar por precio descendente
   const sorted = [...playerAssets].sort(
     (a, b) => (ASSET_PRICES[b.asset_key] || 0) - (ASSET_PRICES[a.asset_key] || 0)
   );
 
   let covered = 0;
-  const mortgagedKeys = [];
+  const mortgaged = [];
 
   for (const asset of sorted) {
     if (covered >= remainingDebt) break;
+    covered += (ASSET_PRICES[asset.asset_key] || 0) * asset.quantity;
 
-    // Calcular el valor total de este bloque de activos (precio * cantidad)
-    const assetValue = (ASSET_PRICES[asset.asset_key] || 0) * asset.quantity;
-    covered += assetValue;
-
-    // Hipotecar el activo en la DB
     await supabase.from("player_assets")
       .update({ mortgaged: true })
       .eq("id", asset.id);
-      
-    mortgagedKeys.push(asset.asset_key);
+    mortgaged.push(asset.asset_key);
 
-    // Restar el Score Crediticio correspondiente
+    // Restar SC del activo hipotecado
     const assetData = ASSETS[asset.asset_key];
     if (assetData) {
-      const totalScDeduction = assetData.sc * asset.quantity;
-      await supabase.rpc("decrement_credit_score", {
-        uid: userId,
-        amount: totalScDeduction,
-      }).catch(async () => {
-        // Fallback manual si el RPC no está creado
-        const { data: prof } = await supabase.from("profiles").select("credit_score").eq("id", userId).single();
-        if (prof) {
-          await supabase.from("profiles")
-            .update({ credit_score: Math.max(0, (prof.credit_score || 0) - totalScDeduction) })
-            .eq("id", userId);
-        }
-      });
+      const { data: prof } = await supabase
+        .from("profiles").select("credit_score").eq("id", userId).single();
+      if (prof) {
+        await supabase.from("profiles")
+          .update({ credit_score: Math.max(0, (prof.credit_score || 0) - assetData.sc * asset.quantity) })
+          .eq("id", userId);
+      }
     }
   }
 
-  // ─── APLICACIÓN DE TUS CONDICIONES DE LIQUIDACIÓN ───
-  if (covered >= remainingDebt) {
-    // CONDICIÓN 1 y 2: Activos >= Deuda -> La deuda queda saldada (0)
-    await supabase.from("loans")
-      .update({ 
-        paid_amount: loan.total_debt, 
-        status: "paid",
-        mora_days: 0 
-      })
-      .eq("id", loan.id);
-  } else {
-    // CONDICIÓN 3: Activos < Deuda -> Reducción parcial y estado de Mora Prolongada hacia el Día 14
-    const newPaidAmount = loan.paid_amount + covered;
-    await supabase.from("loans")
-      .update({ 
-        paid_amount: newPaidAmount,
-        status: "mora_prolongada" 
-      })
-      .eq("id", loan.id);
-  }
+  // ── CLAVE: saldar la deuda completamente ──
+  await supabase.from("loans").update({
+    paid_amount: (await supabase.from("loans").select("total_debt").eq("id", loanId).single())
+      .data?.total_debt || remainingDebt,
+    mora_days: 0,
+    status: "paid",
+  }).eq("id", loanId);
 
-  return { mortgaged: mortgagedKeys, noAssets: false };
+  return { mortgaged, noAssets: false };
 }
-
-
-
-
 
 
 
@@ -333,6 +365,10 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
   const [ownedAssets, setOwnedAssets] = useState([]);
   const [mortgageEvents, setMortgageEvents] = useState([]);
 
+
+    const [cdtEvents, setCdtEvents] = useState(null);
+
+
   const bankLevel = bankLevelFor(creditScore);
 
   // ── Cargar préstamo activo + activos ───────────────────────────────────────
@@ -350,69 +386,44 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     setLoading(false);
   }, [profile.id]);
 
-  // ── Procesar cuotas pendientes al montar ───────────────────────────────────
   useEffect(() => {
-    async function init() {
-      await load();
+  async function init() {
+    await load();
 
-      // Procesar pagos automáticos
-      const result = await processLoanPayments(profile.id, balance);
-      if (result.newBalance !== balance) {
-        setBalance(result.newBalance);
-      }
-      if (result.events.length > 0) {
-        setEvents(result.events);
+    // 1. Procesar cuotas de préstamo
+    const result = await processLoanPayments(profile.id, balance);
+    if (result.newBalance !== balance) setBalance(result.newBalance);
 
-
-
-
-// Si hay trigger de hipoteca, ejecutarla pasando el objeto loan encontrado
-const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
-if (mortgageTrigger) {
-  // Buscamos el objeto del préstamo correspondiente en el array de loans procesados
-  const activeLoanObj = loan; // O mapearlo desde el bucle si tienes múltiples
-  if (activeLoanObj) {
-    const mResult = await executeMortgage(
-      profile.id,
-      activeLoanObj, // <-- Enviamos el préstamo completo
-      mortgageTrigger.remainingDebt
-    );
-    setMortgageEvents(mResult.mortgaged);
-  }
-}
-
-
-
-
-
-
-
-
-
-
-        /*
-
-
-        // Si hay trigger de hipoteca, ejecutarla
-        const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
-        if (mortgageTrigger) {
-          const mResult = await executeMortgage(
-            profile.id,
-            mortgageTrigger.loanId,
-            mortgageTrigger.remainingDebt
-          );
-          setMortgageEvents(mResult.mortgaged);
-        }*/
-
-        await load(); // recargar tras procesar
+    // 2. Procesar CDT si el jugador es nivel 1+
+    const sc = (await supabase.from("profiles").select("credit_score").eq("id", profile.id).single())?.data?.credit_score || 0;
+    const lvl = bankLevelFor(sc);
+    if (lvl.level >= 1) {
+      const cdtResult = await processCDT(profile.id, result.newBalance, sc, lvl.level);
+      if (cdtResult.interest > 0) {
+        setBalance(cdtResult.newBalance);
+        setCdtEvents({ interest: cdtResult.interest, days: cdtResult.daysPending });
       }
     }
-    init();
-  }, [profile.id]);
+
+    // 3. Hipoteca automática si aplica
+    if (result.events.length > 0) {
+      setEvents(result.events);
+      const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
+      if (mortgageTrigger) {
+        const mResult = await executeMortgage(profile.id, mortgageTrigger.loanId, mortgageTrigger.remainingDebt);
+        setMortgageEvents(mResult.mortgaged);
+      }
+      await load();
+    }
+  }
+  init();
+}, [profile.id]);
 
   // ── Solicitar préstamo ─────────────────────────────────────────────────────
   async function requestLoan() {
-    const amount = parseInt(loanAmount.replace(/\D/g, ""));
+    //const amount = parseInt(loanAmount.replace(/\D/g, ""));
+    const amount = parseInt(String(loanAmount));
+    
     if (!amount || amount <= 0) return;
     if (amount > bankLevel.loanLimit) return;
     if (loan) return; // ya tiene préstamo activo
@@ -497,7 +508,6 @@ if (mortgageTrigger) {
   }
 
   // ── Deshipotecar (paga deuda + 10% penalización) ──────────────────────────
-  /*
   async function unmortgage(assetEntry) {
     const asset = ASSETS[assetEntry.asset_key];
     if (!asset) return;
@@ -519,61 +529,6 @@ if (mortgageTrigger) {
     if (onScChange) onScChange(newSC);
     await load();
   }
-  */
-
-
-
-
-// ─── Deshipotecar (CORREGIDA) ──────────────────────────
-async function unmortgage(assetEntry) {
-  // RESTRICCIÓN: Si tiene un préstamo activo, en mora prolongada o gracia, NO puede liberar activos
-  if (loan && (loan.status === "active" || loan.status === "mora_prolongada" || loan.status === "grace")) {
-    alert("No puedes deshipotecar activos mientras tengas deudas o saldos pendientes con el banco.");
-    return;
-  }
-
-  const asset = ASSETS[assetEntry.asset_key];
-  if (!asset) return;
-
-  // CORRECCIÓN: Multiplicar el precio base por la cantidad de la fila
-  const totalAssetPrice = asset.price * assetEntry.quantity;
-  const penalty = Math.round(totalAssetPrice * 1.10);
-  
-  if (balance < penalty) {
-    alert("No tienes saldo suficiente para pagar la deshipoteca.");
-    return;
-  }
-
-  const newBalance = balance - penalty;
-  const newSC = creditScore + (asset.sc * assetEntry.quantity); // Devolver el SC completo multiplicando por cantidad
-
-  await supabase.from("player_assets")
-    .update({ mortgaged: false })
-    .eq("id", assetEntry.id);
-    
-  await supabase.from("profiles")
-    .update({ balance: newBalance, credit_score: newSC })
-    .eq("id", profile.id);
-
-  setBalance(newBalance);
-  setCreditScore(newSC);
-  if (onScChange) onScChange(newSC);
-  await load();
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   if (loading) return (
     <div style={{ textAlign: "center", color: "#555", padding: 32 }}>
@@ -703,6 +658,59 @@ async function unmortgage(assetEntry) {
       {/* ══════════════ TAB: ESTADO ══════════════ */}
       {tab === "estado" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+            {/* ── Notificación CDT ── */}
+{cdtEvents && cdtEvents.interest > 0 && (
+  <div style={{
+    background: "rgba(0,212,170,0.08)",
+    border: "1px solid #00d4aa44",
+    borderRadius: 10, padding: "10px 14px",
+  }}>
+    <div style={{ color: "#00d4aa", fontWeight: 700, fontSize: 13 }}>
+      💰 Cuenta de Ahorros — interés aplicado
+    </div>
+    <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>
+      +${cdtEvents.interest.toLocaleString()} en {cdtEvents.days} {cdtEvents.days === 1 ? "día" : "días"}
+    </div>
+  </div>
+)}
+
+{/* ── Info CDT si tiene nivel ── */}
+{bankLevel.level >= 1 && (
+  <div style={{
+    background: "rgba(13,13,20,0.9)",
+    border: "1px solid #00d4aa33",
+    borderRadius: 12, padding: "12px 14px",
+  }}>
+    <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+      📈 Cuenta de Ahorros (CDT)
+    </div>
+    {[
+      
+      ["Tasa base diaria", "0.5%"],
+      /*
+      ["Bonus por SC", `+${(creditScore / 10000).toFixed(4)}%`],
+      ["Tasa efectiva hoy", `${((0.005 + creditScore / 10000) * 100).toFixed(3)}%`],
+        */
+      ["Bonus por SC",      `+${(creditScore / 10_000).toFixed(4)}%`],
+["Tasa efectiva hoy", `${((0.005 + creditScore / 1_000_000) * 100).toFixed(3)}%`],
+["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],
+
+
+      ["Techo de ahorro", "$5.000.000"],
+      ["Base efectiva", `$${Math.min(balance, 5_000_000).toLocaleString()}`],
+     // ["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 10000)).toLocaleString()}`],
+    ].map(([label, val], i) => (
+      <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+        <span style={{ color: "#555" }}>{label}</span>
+        <span style={{ color: "#00d4aa", fontWeight: 700 }}>{val}</span>
+      </div>
+    ))}
+    <div style={{ fontSize: 10, color: "#333", marginTop: 6 }}>
+      Se aplica automáticamente cada día al abrir el banco · Solo sobre los primeros $5M
+    </div>
+  </div>
+)}
 
           {/* Préstamo activo */}
           {loan ? (
