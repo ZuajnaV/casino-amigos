@@ -490,6 +490,12 @@ export default function App() {
         {game === "space" && (<PlayerSpace profile={profile} balance={balance} setBalance={setBalance}   // ← añadir esto
     deaths={profile.deaths || 0}
     onBack={handleBack}
+    onDeath={async () => {
+      // loadProfile recarga desde DB (ya tiene deaths+1 y balance reseteado)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) await loadProfile(session.user.id);
+      setGame(null);
+    }}
   />
 )}
       </div>

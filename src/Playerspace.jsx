@@ -299,7 +299,7 @@ function OwnedAssets({ ownedMap }) {
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
-export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, onBack }) {
+export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, onBack, onDeath }) {
   const [panel, setPanel]       = useState(null);
   const [activeJob, setActiveJob] = useState(null);
   const [ownedAssets, setOwnedAssets] = useState({});   // { key: { quantity, mortgaged } }
@@ -548,9 +548,16 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
                 profile={profile}
                 balance={balance}
                 setBalance={setBalance}
-                onScChange={newSC => {
-                  // Sincroniza el SC en profile local si hace falta
-                }}
+                onScChange={newSC => {}}
+
+
+                onDeath={() => {
+    setPanel(null);
+    setOwnedAssets({});   // limpia activos del escenario
+    if (onDeath) onDeath();
+  }}
+
+
               />
             </SidePanel>
           )}

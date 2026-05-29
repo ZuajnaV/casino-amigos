@@ -65,6 +65,7 @@ function bankLevelFor(sc) {
   return BANK_LEVELS[0];
 }
 
+/*
 // ─── PROCESADOR AUTOMÁTICO DE CUOTAS ─────────────────────────────────────────
 // Llámalo al montar el componente. Evalúa los días transcurridos desde
 // next_payment y aplica las cuotas/mora que correspondan.
@@ -155,14 +156,6 @@ export async function processLoanPayments(userId, currentBalance) {
   // Guardar balance actualizado
   await supabase.from("profiles").update({ balance }).eq("id", userId);
 
-
-
-
-
-
-
-
-
 // ── Verificar préstamos en grace period vencido ──
 const { data: graceLoans } = await supabase
   .from("loans")
@@ -195,6 +188,8 @@ for (const graceLoan of (graceLoans || [])) {
   events.push({ type: "foreclosure", loanId: graceLoan.id });
 }
 
+  return { newBalance: balance, events };
+}*/
 
 
 
@@ -204,14 +199,151 @@ for (const graceLoan of (graceLoans || [])) {
 
 
 
+  export async function processLoanPayments(userId, currentBalance) {
+  const { data: loans } = await supabase
+    .from("loans")
+    .select("*")
+    .eq("user_id", userId)
+    .in("status", ["active", "pending_mortgage", "grace"]);
 
+  if (!loans || loans.length === 0) return { newBalance: currentBalance, events: [] };
 
+  const today = todayStr();
+  let balance = currentBalance;
+  const events = [];
 
+  for (const loan of loans) {
+    const daysDue = daysBetween(loan.next_payment, today);
 
+    // Sin días pendientes → solo verificar expiración de gracia
+    if (daysDue <= 0) {
+      if (loan.status === "grace" && loan.grace_until) {
+        if (daysBetween(loan.grace_until, today) > 0 && loan.total_debt - loan.paid_amount > 0) {
+          await handleGraceExpiry(userId, loan.id, events);
+        }
+      }
+      continue;
+    }
 
+    let { paid_amount, days_paid, mora_days, total_debt, daily_payment, next_payment } = loan;
+    const remainingDebt = total_debt - paid_amount;
 
+    if (remainingDebt <= 0) {
+      await supabase.from("loans").update({ status: "paid" }).eq("id", loan.id);
+      events.push({ type: "paid", loanId: loan.id });
+      continue;
+    }
+
+    let currentNextPayment = next_payment;
+    let loanDone = false;
+
+    for (let d = 0; d < daysDue; d++) {
+      const moraMultiplier = 1 + mora_days * 0.02;
+      const cuota = Math.round(daily_payment * moraMultiplier);
+      const remDebt = total_debt - paid_amount;
+      const toPay = Math.min(cuota, remDebt);
+
+      if (balance >= toPay) {
+        balance -= toPay;
+        paid_amount += toPay;
+        days_paid += 1;
+        currentNextPayment = addDays(currentNextPayment, 1);
+        events.push({ type: "payment", amount: toPay, day: days_paid });
+      } else {
+        mora_days += 1;
+        currentNextPayment = addDays(currentNextPayment, 1);
+        events.push({ type: "mora", moraDays: mora_days });
+      }
+
+      if (paid_amount >= total_debt) {
+        await supabase.from("loans").update({
+          paid_amount, days_paid, mora_days,
+          status: "paid", next_payment: currentNextPayment,
+        }).eq("id", loan.id);
+        await supabase.from("profiles").update({ balance }).eq("id", userId);
+        events.push({ type: "paid", loanId: loan.id });
+        loanDone = true;
+        break;
+      }
+
+      // Hipoteca: solo para préstamos activos (NO durante grace)
+      if (mora_days >= 7 && loan.status === "active") {
+        events.push({ type: "mortgage_trigger", loanId: loan.id, remainingDebt: total_debt - paid_amount });
+        await supabase.from("loans").update({
+          paid_amount, days_paid, mora_days,
+          next_payment: currentNextPayment,
+          status: "pending_mortgage",
+        }).eq("id", loan.id);
+        loanDone = true;
+        break;
+      }
+    }
+
+    if (loanDone) continue;
+
+    // Actualizar estado intermedio
+    const { data: cur } = await supabase.from("loans").select("status").eq("id", loan.id).single();
+    if (cur?.status === "active" || cur?.status === "grace") {
+      await supabase.from("loans").update({
+        paid_amount, days_paid, mora_days,
+        next_payment: currentNextPayment,
+      }).eq("id", loan.id);
+    }
+
+    // Verificar expiración de gracia tras procesar días
+    if (cur?.status === "grace" && loan.grace_until) {
+      if (daysBetween(loan.grace_until, today) > 0 && paid_amount < total_debt) {
+        await handleGraceExpiry(userId, loan.id, events);
+      }
+    }
+  }
+
+  await supabase.from("profiles").update({ balance }).eq("id", userId);
   return { newBalance: balance, events };
 }
+
+
+
+
+
+
+
+
+
+async function handleGraceExpiry(userId, loanId, events) {
+  // Eliminar activos hipotecados ("vendidos" por el banco)
+  const { data: mortgagedAssets } = await supabase
+    .from("player_assets")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("mortgaged", true);
+
+  if (mortgagedAssets && mortgagedAssets.length > 0) {
+    for (const asset of mortgagedAssets) {
+      await supabase.from("player_assets").delete().eq("id", asset.id);
+    }
+    events.push({ type: "foreclosure", loanId });
+  }
+
+  // En ambos casos (con o sin activos) → deuda incobrable
+  await supabase.from("loans").update({ status: "irrecoverable" }).eq("id", loanId);
+  events.push({ type: "irrecoverable", loanId });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -258,9 +390,6 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel)
   }).eq("id", userId);
 
 
-
-
-
   // Al final de processCDT, antes del update:
 balance = Math.round(balance);
 totalInterest = Math.round(totalInterest);
@@ -272,105 +401,6 @@ await supabase.from("profiles").update({
   return { newBalance: balance, interest: totalInterest, daysPending };
 
 }
-
-
-
-
-
-
-
-
-
-
-
-/*
-export async function executeMortgage(userId, loanId, remainingDebt) {
-  const { data: playerAssets } = await supabase
-    .from("player_assets")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("mortgaged", false);
-
-  const today = todayStr();
-
-  // ── Sin activos → período de gracia 7 días ──
-  if (!playerAssets || playerAssets.length === 0) {
-    const graceUntil = addDays(today, 7);
-    await supabase.from("loans").update({
-      status: "grace",
-      grace_until: graceUntil,
-    }).eq("id", loanId);
-    return { mortgaged: [], noAssets: true, graceUntil };
-  }
-
-  // Ordenar por precio descendente
-  const sorted = [...playerAssets].sort(
-    (a, b) => (ASSET_PRICES[b.asset_key] || 0) - (ASSET_PRICES[a.asset_key] || 0)
-  );
-
-  // Calcular valor total de activos disponibles
-  const totalAssetValue = sorted.reduce(
-    (sum, a) => sum + (ASSET_PRICES[a.asset_key] || 0) * a.quantity, 0
-  );
-
-  let covered = 0;
-  const mortgaged = [];
-
-  for (const asset of sorted) {
-    if (covered >= remainingDebt) break;
-    covered += (ASSET_PRICES[asset.asset_key] || 0) * asset.quantity;
-
-    await supabase.from("player_assets")
-      .update({ mortgaged: true })
-      .eq("id", asset.id);
-    mortgaged.push(asset.asset_key);
-
-    // Restar SC
-    const assetData = ASSETS[asset.asset_key];
-    if (assetData) {
-      const { data: prof } = await supabase
-        .from("profiles").select("credit_score").eq("id", userId).single();
-      if (prof) {
-        await supabase.from("profiles")
-          .update({ credit_score: Math.max(0, (prof.credit_score || 0) - assetData.sc * asset.quantity) })
-          .eq("id", userId);
-      }
-    }
-  }
-
-  // ── Caso A y B: activos >= deuda → préstamo saldado ──
-  if (totalAssetValue >= remainingDebt) {
-    await supabase.from("loans").update({
-      paid_amount: (await supabase.from("loans").select("total_debt").eq("id", loanId).single()).data?.total_debt || remainingDebt,
-      mora_days: 0,
-      status: "mortgaged",   // activo, deuda saldada — pero activos bloqueados
-      mortgaged_at: today,
-    }).eq("id", loanId);
-    return { mortgaged, noAssets: false, debtCovered: true };
-  }
-
-  // ── Caso C: activos < deuda → mora prolongada ──
-  const { data: loanData } = await supabase
-    .from("loans").select("total_debt, paid_amount").eq("id", loanId).single();
-  const newPaidAmount = (loanData?.paid_amount || 0) + totalAssetValue;
-  const graceUntil = addDays(today, 7);
-
-  await supabase.from("loans").update({
-    paid_amount: newPaidAmount,
-    mora_days: 0,
-    status: "grace",
-    mortgaged_at: today,
-    grace_until: graceUntil,
-  }).eq("id", loanId);
-
-  return { mortgaged, noAssets: false, debtCovered: false, remaining: remainingDebt - totalAssetValue };
-}*/
-
-
-
-
-
-
 
 export async function executeMortgage(userId, loanId, remainingDebt) {
   const { data: playerAssets } = await supabase
@@ -458,14 +488,8 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
 }
 
 
-
-
-
-
-
-
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
-export default function BankPanel({ profile, balance, setBalance, onScChange }) {
+export default function BankPanel({ profile, balance, setBalance, onScChange, onDeath }) {
   const [loan, setLoan]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [requesting, setRequesting] = useState(false);
@@ -487,8 +511,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
   const load = useCallback(async () => {
     setLoading(true);
     const [loanRes, assetsRes, profileRes] = await Promise.all([
-      //supabase.from("loans").select("*").eq("user_id", profile.id).eq("status", "active").order("created_at", { ascending: false }).limit(1),
-      supabase.from("loans").select("*").eq("user_id", profile.id).in("status", ["active", "grace"]).order("created_at", { ascending: false }).limit(1),
+      supabase.from("loans").select("*").eq("user_id", profile.id).in("status", ["active", "grace", "irrecoverable"]).order("created_at", { ascending: false }).limit(1),
       supabase.from("player_assets").select("*").eq("user_id", profile.id),
       supabase.from("profiles").select("credit_score").eq("id", profile.id).single(),
     ]);
@@ -591,7 +614,8 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
       paid_amount: newPaid,
       days_paid: newDaysPaid,
       mora_days: Math.max(0, loan.mora_days - 1), // cada pago reduce 1 día de mora
-      status: isNowPaid ? "paid" : "active",
+      //status: isNowPaid ? "paid" : "active",
+      status: isNowPaid ? "paid" : (loan.status === "grace" ? "grace" : "active"),
       next_payment: addDays(loan.next_payment, 1),
     }).eq("id", loan.id);
 
@@ -600,7 +624,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     await load();
     setPaying(false);
   }
-
+/*
   // ── Pago total anticipado (sin penalización si < 7 días) ──────────────────
   async function payAll() {
     if (!loan || paying) return;
@@ -619,6 +643,69 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     await load();
     setPaying(false);
   }
+*/
+
+
+
+
+
+  async function payAll() {
+  if (!loan || paying) return;
+  const baseRemaining = loan.total_debt - loan.paid_amount;
+  const moraMultiplier = loan.mora_days > 0 ? (1 + loan.mora_days * 0.02) : 1;
+  const remaining = Math.ceil(baseRemaining * moraMultiplier);
+  if (balance < remaining) return;
+  setPaying(true);
+
+  const newBalance = balance - remaining;
+  await supabase.from("loans").update({
+    paid_amount: loan.total_debt,
+    status: "paid",
+    mora_days: 0,
+  }).eq("id", loan.id);
+  await supabase.from("profiles").update({ balance: newBalance }).eq("id", profile.id);
+  setBalance(newBalance);
+  await load();
+  setPaying(false);
+}
+
+
+
+async function handleSuicide() {
+  if (paying) return;
+  setPaying(true);
+  const STARTING_BALANCE = 100_000;
+
+  await supabase.from("profiles").update({
+    deaths:            (profile.deaths || 0) + 1,
+    credit_score:      0,
+    balance:           STARTING_BALANCE,
+    cdt_last_processed: todayStr(),
+  }).eq("id", profile.id);
+
+  await supabase.from("loans")
+    .update({ status: "foreclosed" })
+    .eq("user_id", profile.id)
+    .in("status", ["active", "grace", "irrecoverable", "pending_mortgage"]);
+
+  await supabase.from("player_assets")
+    .delete()
+    .eq("user_id", profile.id);
+
+  setBalance(STARTING_BALANCE);
+  if (onDeath) onDeath();
+  setPaying(false);
+}
+
+
+
+
+
+
+
+
+
+
 
   // ── Deshipotecar (paga deuda + 10% penalización) ──────────────────────────
   async function unmortgage(assetEntry) {
@@ -650,7 +737,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     </div>
   );
 
-  const isInMora = loan && loan.mora_days > 0;
+  /*const isInMora = loan && loan.mora_days > 0;
   const remaining = loan ? loan.total_debt - loan.paid_amount : 0;
   const progress = loan ? (loan.paid_amount / loan.total_debt) * 100 : 0;
   const cuotaHoy = loan
@@ -659,6 +746,21 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
         remaining
       )
     : 0;
+    */
+
+  const isInMora       = loan && loan.mora_days > 0 && loan.status !== "grace";
+const remaining      = loan ? loan.total_debt - loan.paid_amount : 0;
+const moraMultiplier = loan?.mora_days > 0 ? (1 + loan.mora_days * 0.02) : 1;
+const remainingWithMora = Math.ceil(remaining * moraMultiplier);
+const progress = loan ? (loan.paid_amount / loan.total_debt) * 100 : 0;
+const cuotaHoy = loan
+  ? Math.min(Math.ceil(loan.daily_payment * moraMultiplier), remaining)
+  : 0;
+
+
+
+
+
 
   const mortgagedAssets = ownedAssets.filter(a => a.mortgaged);
   const hasMortgaged = mortgagedAssets.length > 0;
@@ -893,16 +995,21 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
                 </button>
                 <button
                   onClick={payAll}
-                  disabled={paying || balance < remaining}
+                  //disabled={paying || balance < remaining}
+                  disabled={paying || balance < remainingWithMora}
                   style={{
                     flex: 1, padding: "11px",
-                    background: balance >= remaining ? "linear-gradient(135deg, #fbbf24, #f97316)" : "#1a1a26",
+                    //background: balance >= remaining ? "linear-gradient(135deg, #fbbf24, #f97316)" : "#1a1a26",
+                    background: balance >= remainingWithMora ? "linear-gradient(135deg, #fbbf24, #f97316)" : "#1a1a26",
                     border: "none", borderRadius: 8,
                     color: balance >= remaining ? "#000" : "#444",
                     fontWeight: 800, fontSize: 13, cursor: balance >= remaining ? "pointer" : "not-allowed",
                   }}
                 >
+                  {/*}
                   {paying ? "..." : `⚡ Saldar todo ($${remaining.toLocaleString()})`}
+                  {*/}
+                  {paying ? "..." : `⚡ Saldar todo ($${remainingWithMora.toLocaleString()})`}
                 </button>
               </div>
 
@@ -927,18 +1034,6 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
             </div>
           )}
 
-
-
-
-
-
-
-
-
-
-
-
-
 {/* ── Alerta de período de gracia ── */}
 {loan?.status === "grace" && loan.grace_until && (
   <div style={alertStyle("#ff4444")}>
@@ -954,6 +1049,54 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
   </div>
 )}
 
+
+
+  {/* ── Deuda Incobrable ── */}
+{loan?.status === "irrecoverable" && (
+  <div style={{
+    background: "rgba(127,0,0,0.15)",
+    border: "2px solid #ff000066",
+    borderRadius: 12, padding: "16px 14px",
+    textAlign: "center",
+  }}>
+    <div style={{ fontSize: 28, marginBottom: 6 }}>☠️</div>
+    <div style={{ color: "#ff4444", fontWeight: 900, fontSize: 17, marginBottom: 8 }}>
+      DEUDA INCOBRABLE
+    </div>
+    <div style={{ fontSize: 12, color: "#ff8888", marginBottom: 4 }}>
+      Tus propiedades fueron ejecutadas por el banco.
+    </div>
+    <div style={{ fontSize: 13, color: "#fff", fontWeight: 700, marginBottom: 12 }}>
+      Deuda pendiente: ${remaining.toLocaleString()}
+    </div>
+    <div style={{ fontSize: 11, color: "#666", marginBottom: 16, lineHeight: 1.6 }}>
+      No tienes activos ni liquidez para pagar.<br />Solo hay una salida.
+    </div>
+    <button
+      onClick={handleSuicide}
+      disabled={paying}
+      style={{
+        width: "100%", padding: "14px",
+        background: paying ? "#333" : "linear-gradient(135deg, #7f0000, #cc0000)",
+        border: "2px solid #ff4444",
+        borderRadius: 10, color: "#fff",
+        fontSize: 16, fontWeight: 900,
+        cursor: paying ? "not-allowed" : "pointer",
+        letterSpacing: 1,
+      }}
+    >
+      {paying ? "..." : "💀 COLGARSE"}
+    </button>
+    <div style={{ fontSize: 10, color: "#444", marginTop: 8 }}>
+      Reinicia tu personaje · suma al contador de muertes
+    </div>
+  </div>
+)}
+
+
+
+
+
 {/* ── Alerta de ejecución forzada ── */}
 {events.some(e => e.type === "foreclosure") && (
   <div style={alertStyle("#ff0000")}>
@@ -963,22 +1106,6 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
     </div>
   </div>
 )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
           {/* Activos hipotecados */}
           {hasMortgaged && (

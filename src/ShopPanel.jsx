@@ -393,18 +393,6 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
                       ${finalPrice.toLocaleString()}
                     </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
 {/*Cambia estas líneas en el botón:
 const alreadyOwned = owned && owned.quantity >= 1;*/}
 
@@ -424,35 +412,6 @@ const alreadyOwned = owned && owned.quantity >= 1;*/}
 >
   {isBuying ? "..." : alreadyOwned ? "Ya tienes 1" : !canAfford ? "Sin saldo" : "Comprar"}
 </button>
-
-
-
-
-
-
-
-
-
-{/*}
-                    <button
-                      onClick={() => !isBuying && canAfford && buyAsset(asset)}
-                      disabled={isBuying || !canAfford}
-                      style={{
-                        background: isBuying ? "#333"
-                          : !canAfford ? "#1a1a26"
-                          : hasDiscount ? (isSuper ? "#ff4444" : "#00d4aa")
-                          : "#fbbf24",
-                        border: "none", borderRadius: 7,
-                        padding: "6px 12px",
-                        fontSize: 11, fontWeight: 800,
-                        color: !canAfford ? "#444" : "#000",
-                        cursor: canAfford && !isBuying ? "pointer" : "not-allowed",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {isBuying ? "..." : !canAfford ? "Sin saldo" : "Comprar"}
-                    </button>
-{*/}
                   </div>
                 </div>
 
