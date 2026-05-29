@@ -184,7 +184,8 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel)
 
   for (let d = 0; d < daysPending; d++) {
     const baseEfectiva = Math.min(balance, TECHO_AHORRO);
-    const tasa = TASA_BASE + (creditScore / 10000);
+    //const tasa = TASA_BASE + (creditScore / 10000);
+    const tasa = TASA_BASE + (creditScore / 1_000_000);
     const rendimiento = Math.floor(baseEfectiva * tasa);
     balance += rendimiento;
     totalInterest += rendimiento;
@@ -744,12 +745,20 @@ export default function BankPanel({ profile, balance, setBalance, onScChange }) 
       📈 Cuenta de Ahorros (CDT)
     </div>
     {[
+      
       ["Tasa base diaria", "0.5%"],
+      /*
       ["Bonus por SC", `+${(creditScore / 10000).toFixed(4)}%`],
       ["Tasa efectiva hoy", `${((0.005 + creditScore / 10000) * 100).toFixed(3)}%`],
+        */
+      ["Bonus por SC",      `+${(creditScore / 10_000).toFixed(4)}%`],
+["Tasa efectiva hoy", `${((0.005 + creditScore / 1_000_000) * 100).toFixed(3)}%`],
+["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],
+
+
       ["Techo de ahorro", "$5.000.000"],
       ["Base efectiva", `$${Math.min(balance, 5_000_000).toLocaleString()}`],
-      ["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 10000)).toLocaleString()}`],
+     // ["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 10000)).toLocaleString()}`],
     ].map(([label, val], i) => (
       <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
         <span style={{ color: "#555" }}>{label}</span>
