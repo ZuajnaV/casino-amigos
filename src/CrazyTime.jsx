@@ -1333,7 +1333,7 @@ supabase.auth.getSession().then(async ({ data: { session } }) => {
 
 
 
-
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
   await supabase.rpc("insert_crazytime_and_trim", {
   p_user_id:    session.user.id,
   p_segment:    landed.type,
@@ -1341,7 +1341,7 @@ supabase.auth.getSession().then(async ({ data: { session } }) => {
   p_payout:     winnings,
   p_multiplier: winnings > 0 ? parseInt(landed.type) : 0,
 });
-
+});
 
 
 
@@ -1387,7 +1387,7 @@ function handleBonusComplete(payout, mult, ...args) {
 
 
 
-
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
 
   await supabase.rpc("insert_crazytime_and_trim", {
   p_user_id:    session.user.id,
@@ -1397,7 +1397,7 @@ function handleBonusComplete(payout, mult, ...args) {
   p_multiplier: mult || 0,
 });
 
-
+});
 
 
 
