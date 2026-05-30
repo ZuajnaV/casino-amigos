@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { saveMinigameRecord } from "./minigameRecords";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const W = 400;
@@ -9,13 +10,13 @@ const OBJ_R = 20;
 const PLAYER_SPEED = 4.5;
 const OBJ_SPEED_INIT = 2.8;
 const OBJ_SPEED_MAX  = 8.5;
-const OBJ_SPEED_INC  = 0.0007;
-const SPAWN_INTERVAL_INIT = 1600;  // ms entre bolas
-const SPAWN_INTERVAL_MIN  = 650;   // mín 650ms → máx ~1.5 bolas/seg
-const SPAWN_DEC = 0.993;           // reducción muy gradual
-const MAX_ON_SCREEN = 4;           // tope: máx 4 bolas simultáneas
+const OBJ_SPEED_INC  = 0.0015;      // aceleración gradual de los objetos
+const SPAWN_INTERVAL_INIT = 1600;   // intervalo inicial de spawn (ms)
+const SPAWN_INTERVAL_MIN  = 650;     // límite de spawn (máxima dificultad)
+const SPAWN_DEC = 0.993;            //0.984 factor de reducción del intervalo de spawn por cada objeto generado
 const HIT_RADIUS = TRI_R - 4;   // radio de colisión con la punta activa
-const PAGO_POR_OBJ = 5000;
+const MAX_ON_SCREEN = 4;
+const PAGO_POR_OBJ = 1500;
 
 // Los 3 colores/puntas
 const COLORS = [
@@ -89,23 +90,62 @@ export default function ColorDash({ balance, setBalance, onBack }) {
     spawnRef.current = setTimeout(() => {
       const st = stateRef.current;
       if (!st) return;
-
-      // Contar bolas activas en pantalla (no las que ya salieron abajo)
-      const onScreen = st.objects.filter(o => o.y < H + OBJ_R).length;
-
-      if (onScreen < MAX_ON_SCREEN) {
-        // Hay espacio: spawnear y reducir intervalo normalmente
-        const colorIdx = Math.floor(Math.random() * 3);
-        const x = OBJ_R + 10 + Math.random() * (W - OBJ_R * 2 - 20);
-        st.objects.push({ x, y: -OBJ_R - 5, colorIdx, id: st.nextId++ });
-        st.spawnInterval = Math.max(SPAWN_INTERVAL_MIN, st.spawnInterval * SPAWN_DEC);
-        scheduleSpawn(st);
-      } else {
-        // Pantalla llena: reintenta en 300ms sin bajar el intervalo
-        spawnRef.current = setTimeout(() => scheduleSpawn(st), 300);
-      }
+      const colorIdx = Math.floor(Math.random() * 3);
+      const x = OBJ_R + 10 + Math.random() * (W - OBJ_R * 2 - 20);
+      st.objects.push({ x, y: -OBJ_R - 5, colorIdx, id: st.nextId++ });
+      st.spawnInterval = Math.max(SPAWN_INTERVAL_MIN, st.spawnInterval * SPAWN_DEC);
+      scheduleSpawn(st);
     }, s.spawnInterval);
   }
+
+
+
+
+
+/*
+  // ANTES:
+function scheduleSpawn(s) {
+  clearTimeout(spawnRef.current);
+  spawnRef.current = setTimeout(() => {
+    const st = stateRef.current;
+    if (!st) return;
+    const colorIdx = Math.floor(Math.random() * 3);
+    const x = OBJ_R + 10 + Math.random() * (W - OBJ_R * 2 - 20);
+    st.objects.push({ x, y: -OBJ_R - 5, colorIdx, id: st.nextId++ });
+    st.spawnInterval = Math.max(SPAWN_INTERVAL_MIN, st.spawnInterval * SPAWN_DEC);
+    scheduleSpawn(st);
+  }, s.spawnInterval);
+}*/
+
+// DESPUÉS:
+function scheduleSpawn(s) {
+  clearTimeout(spawnRef.current);
+  spawnRef.current = setTimeout(() => {
+    const st = stateRef.current;
+    if (!st) return;
+    const onScreen = st.objects.filter(o => o.y < H + OBJ_R).length;
+    if (onScreen < MAX_ON_SCREEN) {
+      const colorIdx = Math.floor(Math.random() * 3);
+      const x = OBJ_R + 10 + Math.random() * (W - OBJ_R * 2 - 20);
+      st.objects.push({ x, y: -OBJ_R - 5, colorIdx, id: st.nextId++ });
+      st.spawnInterval = Math.max(SPAWN_INTERVAL_MIN, st.spawnInterval * SPAWN_DEC);
+      scheduleSpawn(st);
+    } else {
+      // Pantalla llena: reintenta en 300ms sin reducir el intervalo
+      spawnRef.current = setTimeout(() => scheduleSpawn(st), 300);
+    }
+  }, s.spawnInterval);
+}
+
+
+
+
+
+
+
+
+
+
 
   // ── Loop ────────────────────────────────────────────────────────────────────
   const loop = useCallback((ts) => {
@@ -136,7 +176,8 @@ export default function ColorDash({ balance, setBalance, onBack }) {
     s.objects = s.objects.map(o => ({ ...o, y: o.y + s.speed * dt }));
 
     // Vértice activo = punta arriba (vértice 0 del triángulo)
-    const verts = triVertsAt(s.px, s.py, s.rotAngle);
+    //const verts = triVertsAt(s.px, s.py, s.rotAngle);
+    const verts = triVertsAt(s.px, s.py, 0);
     const [tipX, tipY] = verts[0]; // arriba siempre
     const activeColor = getVertexColors(s.rotStep)[0];
 
@@ -185,6 +226,9 @@ export default function ColorDash({ balance, setBalance, onBack }) {
       setLastE(amt);
       if (amt > 0) setBalance(balance + amt);
       setPhase("dead");
+
+      saveMinigameRecord("colordash", finalScore, amt);
+
       draw(ctx, s, true);
       return;
     }
@@ -237,7 +281,8 @@ export default function ColorDash({ balance, setBalance, onBack }) {
     }
 
     // Triángulo
-    const verts = triVertsAt(s.px, s.py, s.rotAngle);
+    //const verts = triVertsAt(s.px, s.py, s.rotAngle);
+    const verts = triVertsAt(s.px, s.py, 0);
     const vcols = getVertexColors(s.rotStep);
     const cx = s.px, cy = s.py;
 
@@ -350,19 +395,12 @@ export default function ColorDash({ balance, setBalance, onBack }) {
     const s = stateRef.current;
     if (!s) return;
     s.rotStep = (s.rotStep + 1) % 3;
-    s.rotTarget = s.rotStep * 120;  // cada paso = 120°
-    // ajuste para que gire en dirección correcta
-    if (s.rotTarget - s.rotAngle > 180) s.rotAngle += 360;
-    if (s.rotAngle - s.rotTarget > 180) s.rotAngle -= 360;
   }, []);
 
   const rotateDown = useCallback(() => {
     const s = stateRef.current;
     if (!s) return;
     s.rotStep = (s.rotStep + 2) % 3;
-    s.rotTarget = s.rotStep * 120;
-    if (s.rotTarget - s.rotAngle > 180) s.rotAngle += 360;
-    if (s.rotAngle - s.rotTarget > 180) s.rotAngle -= 360;
   }, []);
 
   useEffect(() => {
@@ -436,12 +474,12 @@ export default function ColorDash({ balance, setBalance, onBack }) {
     const ctx = canvas.getContext("2d");
     const s = initState();
     draw(ctx, s, false);
-    ctx.fillStyle = "#ffffff18";
-    ctx.font = "bold 18px 'Courier New', monospace";
+    ctx.fillStyle = "#e9e9e9";
+    ctx.font = "bold 20px 'Courier New', monospace";
     ctx.textAlign = "center";
     ctx.fillText("TAP PARA INICIAR", W/2, H/2 - 14);
-    ctx.font = "12px 'Courier New', monospace";
-    ctx.fillStyle = "#ffffff33";
+    ctx.font = "20px 'Courier New', monospace";
+    ctx.fillStyle = "#c6c6c6";
     ctx.fillText("← → mover   ↑ ↓ rotar color", W/2, H/2 + 12);
     ctx.textAlign = "left";
   }, [phase]);
@@ -453,21 +491,21 @@ export default function ColorDash({ balance, setBalance, onBack }) {
     <div style={{
       minHeight: "100vh", background: "#07070e",
       display: "flex", flexDirection: "column", alignItems: "center",
-      padding: "16px", fontFamily: "'Courier New', monospace", color: "#fff",
+      padding: "25px", fontFamily: "'Courier New', monospace", color: "#fff",
     }}>
       {/* Header */}
       <div style={{ width: maxW, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <button onClick={onBack} style={{
           background: "rgba(10,10,18,0.8)", border: "1px solid #2a2a3a",
-          borderRadius: 8, color: "#aaa", fontSize: 13, padding: "6px 14px", cursor: "pointer",
+          borderRadius: 8, color: "#aaa", fontSize: 16, padding: "6px 14px", cursor: "pointer",
         }}>← Volver</button>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 18, fontWeight: 900, color: "#fbbf24", letterSpacing: 2 }}>🔺 COLOR DASH</div>
-          <div style={{ fontSize: 11, color: "#555" }}>$5.000 por objeto superado</div>
+          <div style={{ fontSize: 25, fontWeight: 900, color: "#fbbf24", letterSpacing: 2 }}>🔺 COLOR DASH</div>
+          <div style={{ fontSize: 15, color: "#ffffff" }}>$5.000 por objeto superado</div>
         </div>
         <div style={{ background: "rgba(251,191,36,0.1)", border: "1px solid #fbbf2444", borderRadius: 10, padding: "6px 10px", textAlign: "right" }}>
-          <div style={{ fontSize: 9, color: "#666" }}>BALANCE</div>
-          <div style={{ fontSize: 13, color: "#fbbf24", fontWeight: 700 }}>${balance.toLocaleString()}</div>
+          <div style={{ fontSize: 15, color: "#ffffff" }}>BALANCE</div>
+          <div style={{ fontSize: 15, color: "#fbbf24", fontWeight: 700 }}>${balance.toLocaleString()}</div>
         </div>
       </div>
 
@@ -479,8 +517,8 @@ export default function ColorDash({ balance, setBalance, onBack }) {
           { l: "MEJOR", v: String(best).padStart(3,"0"), c: "#fbbf24" },
         ].map(s => (
           <div key={s.l} style={{ flex:1, background:"rgba(13,13,20,0.9)", border:`1px solid ${s.c}33`, borderRadius:8, padding:"6px", textAlign:"center" }}>
-            <div style={{ fontSize:9, color:"#444", letterSpacing:1 }}>{s.l}</div>
-            <div style={{ fontSize:17, fontWeight:900, color:s.c }}>{s.v}</div>
+            <div style={{ fontSize:15, color:"#dfdfdf", letterSpacing:1 }}>{s.l}</div>
+            <div style={{ fontSize:20, fontWeight:900, color:s.c }}>{s.v}</div>
           </div>
         ))}
       </div>
@@ -506,7 +544,7 @@ export default function ColorDash({ balance, setBalance, onBack }) {
             display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10,
           }}>
             <div style={{ fontSize:26, fontWeight:900, color:"#ff4444" }}>GAME OVER</div>
-            <div style={{ fontSize:14, color:"#aaa" }}>Superaste <strong style={{color:"#fff"}}>{score}</strong> objetos</div>
+            <div style={{ fontSize:16, color:"#aaa" }}>Superaste <strong style={{color:"#fff"}}>{score}</strong> objetos</div>
             {lastEarned > 0 && (
               <div style={{ background:"rgba(0,212,170,0.12)", border:"1px solid #00d4aa44", borderRadius:10, padding:"8px 18px", fontSize:18, color:"#00d4aa", fontWeight:700 }}>
                 💰 +${lastEarned.toLocaleString()}
@@ -514,7 +552,7 @@ export default function ColorDash({ balance, setBalance, onBack }) {
             )}
             <button onClick={(e)=>{e.stopPropagation();startGame();}} style={{
               marginTop:6, background:"#fbbf24", border:"none", borderRadius:8,
-              padding:"10px 24px", fontSize:14, fontWeight:800, color:"#000", cursor:"pointer",
+              padding:"10px 24px", fontSize:20, fontWeight:800, color:"#000", cursor:"pointer",
             }}>▶ REINTENTAR</button>
           </div>
         )}
@@ -528,19 +566,19 @@ export default function ColorDash({ balance, setBalance, onBack }) {
           onTouchEnd={(e)=>{e.preventDefault(); onBtnUp("left");}}
           onMouseDown={()=>{ if(phase==="playing") onBtnDown("left"); else startGame(); }}
           onMouseUp={()=>onBtnUp("left")}
-          style={{ flex:2, background:"rgba(96,165,250,0.1)", border:"2px solid #60a5fa44", borderRadius:12, padding:"14px", fontSize:18, color:"#60a5fa", fontWeight:900, cursor:"pointer" }}
+          style={{ flex:2, background:"rgba(96,165,250,0.1)", border:"2px solid #60a5fa44", borderRadius:12, padding:"14px", fontSize:25, color:"#60a5fa", fontWeight:900, cursor:"pointer" }}
         >◀</button>
         {/* Rotar */}
         <div style={{ flex:1.5, display:"flex", flexDirection:"column", gap:6 }}>
           <button
             onTouchStart={(e)=>{e.preventDefault(); if(phase==="playing") rotateUp(); else startGame();}}
             onClick={()=>{ if(phase==="playing") rotateUp(); else startGame(); }}
-            style={{ flex:1, background:"rgba(74,222,128,0.1)", border:"2px solid #4ade8044", borderRadius:8, padding:"8px", fontSize:14, color:"#4ade80", fontWeight:700, cursor:"pointer" }}
+            style={{ flex:1, background:"rgba(74,222,128,0.1)", border:"2px solid #4ade8044", borderRadius:8, padding:"8px", fontSize:20, color:"#4ade80", fontWeight:700, cursor:"pointer" }}
           >↑ ROTAR</button>
           <button
             onTouchStart={(e)=>{e.preventDefault(); if(phase==="playing") rotateDown(); else startGame();}}
             onClick={()=>{ if(phase==="playing") rotateDown(); else startGame(); }}
-            style={{ flex:1, background:"rgba(248,113,113,0.1)", border:"2px solid #f8717144", borderRadius:8, padding:"8px", fontSize:14, color:"#f87171", fontWeight:700, cursor:"pointer" }}
+            style={{ flex:1, background:"rgba(248,113,113,0.1)", border:"2px solid #f8717144", borderRadius:8, padding:"8px", fontSize:20, color:"#f87171", fontWeight:700, cursor:"pointer" }}
           >↓ ROTAR</button>
         </div>
         {/* Mover der */}
@@ -549,7 +587,7 @@ export default function ColorDash({ balance, setBalance, onBack }) {
           onTouchEnd={(e)=>{e.preventDefault(); onBtnUp("right");}}
           onMouseDown={()=>{ if(phase==="playing") onBtnDown("right"); else startGame(); }}
           onMouseUp={()=>onBtnUp("right")}
-          style={{ flex:2, background:"rgba(248,113,113,0.1)", border:"2px solid #f8717144", borderRadius:12, padding:"14px", fontSize:18, color:"#f87171", fontWeight:900, cursor:"pointer" }}
+          style={{ flex:2, background:"rgba(248,113,113,0.1)", border:"2px solid #f8717144", borderRadius:12, padding:"14px", fontSize:25, color:"#f87171", fontWeight:900, cursor:"pointer" }}
         >▶</button>
       </div>
 
@@ -559,12 +597,12 @@ export default function ColorDash({ balance, setBalance, onBack }) {
           {COLORS.map(c => (
             <div key={c.id} style={{ flex:1, background:c.hex+"18", border:`1px solid ${c.hex}44`, borderRadius:8, padding:"6px", textAlign:"center" }}>
               <div style={{ width:14, height:14, borderRadius:"50%", background:c.hex, margin:"0 auto 3px" }} />
-              <div style={{ fontSize:10, color:c.hex, fontWeight:700 }}>{c.label}</div>
+              <div style={{ fontSize:15, color:c.hex, fontWeight:700 }}>{c.label}</div>
             </div>
           ))}
         </div>
-        <div style={{ fontSize:11, color:"#555", textAlign:"center", lineHeight:1.7 }}>
-          <strong style={{color:"#aaa"}}>← →</strong> mover · <strong style={{color:"#aaa"}}>↑ ↓ / W S</strong> rotar color activo (punta arriba)<br/>
+        <div style={{ fontSize:15, color:"#ffffff", textAlign:"center", lineHeight:1.7 }}>
+          <strong style={{color:"#ffffff"}}>← →</strong> mover · <strong style={{color:"#aaa"}}>↑ ↓ / W S</strong> rotar color activo (punta arriba)<br/>
           Impacta el objeto con la punta del mismo color. Cuerpo o color incorrecto → mueres.
         </div>
       </div>
