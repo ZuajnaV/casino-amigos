@@ -178,10 +178,20 @@ function daysBetween(dateA, dateB) {
   const b = new Date(dateB); b.setHours(0, 0, 0, 0);
   return Math.floor((b - a) / msPerDay);
 }
-
+/*
 function todayStr() {
   return new Date().toISOString().split("T")[0];
 }
+*/
+
+function todayStr() {
+  const now = new Date();
+  // Restamos 12 horas (43.200.000 milisegundos)
+  const adjustedDate = new Date(now.getTime() - 43200000);
+  return adjustedDate.toISOString().split("T")[0];
+}
+
+
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr);
