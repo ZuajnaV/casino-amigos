@@ -3,12 +3,12 @@ import { supabase } from "./supabase";
 
 // ─── Colores por juego ────────────────────────────────────────────────────────
 const GAME_COLORS = {
-  blackjack:  "#00d4aa",
-  slots:      "#ff6b35",
-  mines:      "#491cff",
-  spaceman:   "#8b5cf6",
-  horses:     "#ef4444",
-  chicken:    "#f59e0b",
+  blackjack: "#00d4aa",
+  slots:     "#ff6b35",
+  mines:     "#491cff",
+  spaceman:  "#8b5cf6",
+  horses:    "#ef4444",
+  chicken:   "#f59e0b",
 };
 
 // ─── Bloque de estadísticas ───────────────────────────────────────────────────
@@ -37,9 +37,14 @@ function StatBlock({ icon, title, rows, color }) {
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
-// Usa agregación en el servidor para evitar el límite de 1000 filas de Supabase.
-// count:exact + head:true  → solo el número, sin traer filas
-// .select("alias:col.sum()")  → suma server-side, sin traer filas
+// Usa funciones RPC de Supabase (SQL SECURITY DEFINER) para calcular todo
+// en el servidor. Sin límite de 1000 filas, sin traer datos innecesarios.
+//
+// Requiere haber ejecutado supabase_stats_functions.sql en el SQL Editor.
+//
+// Props:
+//   userId  — UUID del jugador
+//   layout  — "grid" (2 columnas, default) | "flex" (wrap horizontal)
 export default function PlayerStats({ userId, layout = "grid" }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -50,133 +55,39 @@ export default function PlayerStats({ userId, layout = "grid" }) {
     async function load() {
       setLoading(true);
 
-      const [
-        bjRes,
+      // Todas las queries en paralelo.
+      // Las 4 de juego usan .rpc() → función SQL en el servidor, sin row limit.
+      // Blackjack y Chicken son filas únicas, sin problema de límite.
+      const [bjRes, slotsRes, minesRes, spaceRes, horsesRes, chickenRes] =
+        await Promise.all([
+          supabase
+            .from("blackjack_stats")
+            .select("wins, losses, ties, blackjacks")
+            .eq("user_id", userId)
+            .single(),
 
-        // ── Slots ──────────────────────────────────────────────────────────
-        { count: slotsCount },           // total giros (sin limit de filas)
-        slotsAgg,                        // suma de payout y free_spins
+          supabase.rpc("get_slots_stats",    { p_user_id: userId }),
+          supabase.rpc("get_mines_stats",    { p_user_id: userId }),
+          supabase.rpc("get_spaceman_stats", { p_user_id: userId }),
+          supabase.rpc("get_horses_stats",   { p_user_id: userId }),
 
-        // ── Mines ──────────────────────────────────────────────────────────
-        { count: minesTotal },
-        { count: minesWins },
-        minesNetRes,
+          supabase
+            .from("chickenroad_stats")
+            .select("hist_net")
+            .eq("user_id", userId)
+            .single(),
+        ]);
 
-        // ── Spaceman ───────────────────────────────────────────────────────
-        { count: spaceTotal },
-        { count: spaceCrashes },
-        spaceAgg,
+      // Cada RPC devuelve { data: { campo: valor, ... }, error }
+      const bj    = bjRes.data    ?? { wins: 0, losses: 0, ties: 0, blackjacks: 0 };
+      const slots  = slotsRes.data  ?? { giros: 0, pago_total: 0, tiros_gratis: 0 };
+      const mines  = minesRes.data  ?? { partidas: 0, victorias: 0, net_total: 0 };
+      const space  = spaceRes.data  ?? { vuelos: 0, crashes: 0, mult_promedio: 0, net_total: 0 };
+      const horses = horsesRes.data ?? { apuestas: 0, victorias: 0 };
 
-        // ── Horse Race ─────────────────────────────────────────────────────
-        { count: horsesTotal },
-        { count: horsesWins },
-
-        // ── Chicken Road ───────────────────────────────────────────────────
-        chickenRes,
-      ] = await Promise.all([
-        // Blackjack — fila única, sin problema de límite
-        supabase
-          .from("blackjack_stats")
-          .select("*")
-          .eq("user_id", userId)
-          .single(),
-
-        // ── Slots ──────────────────────────────────────────────────────────
-        supabase
-          .from("slots_history")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId),
-
-        supabase
-          .from("slots_history")
-          .select("total_payout:payout.sum(), total_free:free_spins.sum()")
-          .eq("user_id", userId),
-
-        // ── Mines ──────────────────────────────────────────────────────────
-        supabase
-          .from("mines_history")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId),
-
-        supabase
-          .from("mines_history")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .gt("delta", 0),
-
-        supabase
-          .from("mines_history")
-          .select("total_net:delta.sum()")
-          .eq("user_id", userId),
-
-        // ── Spaceman ───────────────────────────────────────────────────────
-        supabase
-          .from("spaceman_history")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId),
-
-        supabase
-          .from("spaceman_history")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("crash", true),
-
-        supabase
-          .from("spaceman_history")
-          .select("avg_mult:multiplier.avg(), total_net:net.sum()")
-          .eq("user_id", userId),
-
-        // ── Horses ─────────────────────────────────────────────────────────
-        supabase
-          .from("horserace_history")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId),
-
-        supabase
-          .from("horserace_history")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("won", true),
-
-        // ── Chicken ────────────────────────────────────────────────────────
-        supabase
-          .from("chickenroad_stats")
-          .select("hist_net")
-          .eq("user_id", userId)
-          .single(),
-      ]);
-
-      const bj = bjRes.data || { wins: 0, losses: 0, ties: 0, blackjacks: 0 };
-
-      setStats({
-        bj,
-        slots: {
-          giros:       slotsCount ?? 0,
-          pagoTotal:   slotsAgg.data?.[0]?.total_payout ?? 0,
-          tirosGratis: slotsAgg.data?.[0]?.total_free   ?? 0,
-        },
-        mines: {
-          partidas:  minesTotal ?? 0,
-          victorias: minesWins  ?? 0,
-          netTotal:  minesNetRes.data?.[0]?.total_net ?? 0,
-        },
-        spaceman: {
-          vuelos:      spaceTotal   ?? 0,
-          crashes:     spaceCrashes ?? 0,
-          multPromedio: spaceAgg.data?.[0]?.avg_mult != null
-            ? Number(spaceAgg.data[0].avg_mult).toFixed(2)
-            : "0.00",
-          netTotal: spaceAgg.data?.[0]?.total_net ?? 0,
-        },
-        horses: {
-          apuestas:  horsesTotal ?? 0,
-          victorias: horsesWins  ?? 0,
-        },
-        chicken: {
-          netTotal: chickenRes.data?.hist_net ?? 0,
-        },
+      setStats({ bj, slots, mines, space, horses,
+        chicken: { netTotal: chickenRes.data?.hist_net ?? 0 },
       });
-
       setLoading(false);
     }
 
@@ -190,18 +101,15 @@ export default function PlayerStats({ userId, layout = "grid" }) {
   );
   if (!stats) return null;
 
-  const bjTotal   = stats.bj.wins + stats.bj.losses + stats.bj.ties;
-  const bjWinRate = bjTotal > 0
-    ? ((stats.bj.wins / bjTotal) * 100).toFixed(1)
-    : "0.0";
+  // ── Derivados ───────────────────────────────────────────────────────────────
+  const { bj, slots, mines, space, horses, chicken } = stats;
 
-  const minesWinRate = stats.mines.partidas > 0
-    ? ((stats.mines.victorias / stats.mines.partidas) * 100).toFixed(1)
-    : "0.0";
-
-  const horsesWinRate = stats.horses.apuestas > 0
-    ? ((stats.horses.victorias / stats.horses.apuestas) * 100).toFixed(1)
-    : "0.0";
+  const bjTotal      = bj.wins + bj.losses + bj.ties;
+  const bjWinRate    = bjTotal > 0 ? ((bj.wins / bjTotal) * 100).toFixed(1) : "0.0";
+  const minesWinRate = mines.partidas > 0
+    ? ((mines.victorias / mines.partidas) * 100).toFixed(1) : "0.0";
+  const horsesWinRate = horses.apuestas > 0
+    ? ((horses.victorias / horses.apuestas) * 100).toFixed(1) : "0.0";
 
   const gridStyle = layout === "flex"
     ? { display: "flex", flexWrap: "wrap", gap: 10 }
@@ -213,48 +121,48 @@ export default function PlayerStats({ userId, layout = "grid" }) {
         icon="🃏" title="Blackjack" color={GAME_COLORS.blackjack}
         rows={[
           ["Partidas",   bjTotal],
-          ["Victorias",  `${stats.bj.wins} (${bjWinRate}%)`],
-          ["Derrotas",   stats.bj.losses],
-          ["Empates",    stats.bj.ties],
-          ["Blackjacks", stats.bj.blackjacks],
+          ["Victorias",  `${bj.wins} (${bjWinRate}%)`],
+          ["Derrotas",   bj.losses],
+          ["Empates",    bj.ties],
+          ["Blackjacks", bj.blackjacks],
         ]}
       />
       <StatBlock
         icon="🎰" title="Tragamonedas" color={GAME_COLORS.slots}
         rows={[
-          ["Giros",       stats.slots.giros.toLocaleString()],
-          ["Pago total",  Math.round(stats.slots.pagoTotal).toLocaleString()],
-          ["Tiros gratis", stats.slots.tirosGratis.toLocaleString()],
+          ["Giros",        Number(slots.giros).toLocaleString()],
+          ["Pago total",   Math.round(slots.pago_total).toLocaleString()],
+          ["Tiros gratis", Number(slots.tiros_gratis).toLocaleString()],
         ]}
       />
       <StatBlock
         icon="💣" title="Mines" color={GAME_COLORS.mines}
         rows={[
-          ["Partidas",   stats.mines.partidas.toLocaleString()],
-          ["Victorias",  `${stats.mines.victorias.toLocaleString()} (${minesWinRate}%)`],
-          ["Neto total", Math.round(stats.mines.netTotal).toLocaleString()],
+          ["Partidas",   Number(mines.partidas).toLocaleString()],
+          ["Victorias",  `${Number(mines.victorias).toLocaleString()} (${minesWinRate}%)`],
+          ["Neto total", Math.round(mines.net_total).toLocaleString()],
         ]}
       />
       <StatBlock
         icon="🚀" title="Spaceman" color={GAME_COLORS.spaceman}
         rows={[
-          ["Vuelos",    stats.spaceman.vuelos.toLocaleString()],
-          ["Crashes",   stats.spaceman.crashes.toLocaleString()],
-          ["×̄ prom.",  `×${stats.spaceman.multPromedio}`],
-          ["Neto",      Math.round(stats.spaceman.netTotal).toLocaleString()],
+          ["Vuelos",   Number(space.vuelos).toLocaleString()],
+          ["Crashes",  Number(space.crashes).toLocaleString()],
+          ["×̄ prom.", `×${Number(space.mult_promedio).toFixed(2)}`],
+          ["Neto",     Math.round(space.net_total).toLocaleString()],
         ]}
       />
       <StatBlock
         icon="🐎" title="Horse Race" color={GAME_COLORS.horses}
         rows={[
-          ["Apuestas",  stats.horses.apuestas.toLocaleString()],
-          ["Victorias", `${stats.horses.victorias.toLocaleString()} (${horsesWinRate}%)`],
+          ["Apuestas",  Number(horses.apuestas).toLocaleString()],
+          ["Victorias", `${Number(horses.victorias).toLocaleString()} (${horsesWinRate}%)`],
         ]}
       />
       <StatBlock
         icon="🐔" title="Chicken Road" color={GAME_COLORS.chicken}
         rows={[
-          ["Neto total", Math.round(stats.chicken.netTotal).toLocaleString()],
+          ["Neto total", Math.round(chicken.netTotal).toLocaleString()],
         ]}
       />
     </div>
