@@ -9,6 +9,8 @@ import HorseRace from "./HorseRace.jsx";
 import SlotsGame from "./Slots.jsx";
 import CrazyTimeGame from "./CrazyTime.jsx";
 import PlayerSpace from "./Playerspace.jsx";
+import PlayerStats from "./PlayerStats.jsx";
+
 
 const GAMES = [
   { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                       color: "#ff6b35" },
@@ -23,117 +25,7 @@ const GAMES = [
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈","🗿","🚨","🗽","🛸","🛰️"];
 
-function PlayerStats({ userId }) {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      const [bj, slots, mines, spaceman, horses, chicken] = await Promise.all([
-        supabase.from("blackjack_stats").select("*").eq("user_id", userId).single(),
-        supabase.from("slots_history").select("time, payout, free_spins").eq("user_id", userId),
-        supabase.from("mines_history").select("delta").eq("user_id", userId),
-        supabase.from("spaceman_history").select("crash, multiplier, net").eq("user_id", userId),
-        supabase.from("horserace_history").select("won, multiplier").eq("user_id", userId),
-        supabase.from("chickenroad_stats").select("hist_net").eq("user_id", userId).single(),
-      ]);
-
-      const slotsRows = slots.data || [];
-      const minesRows = mines.data || [];
-      const spaceRows = spaceman.data || [];
-      const horseRows = horses.data || [];
-
-      setStats({
-        bj: bj.data || { wins:0, losses:0, ties:0, blackjacks:0 },
-        slots: {
-          giros: slotsRows.length,
-          pagoTotal: slotsRows.reduce((a, h) => a + (h.payout || 0), 0),
-          tirosGratis: slotsRows.reduce((a, h) => a + (h.free_spins || 0), 0),
-        },
-        mines: {
-          partidas: minesRows.length,
-          victorias: minesRows.filter(h => h.delta > 0).length,
-          netTotal: minesRows.reduce((a, h) => a + (h.delta || 0), 0),
-        },
-        spaceman: {
-          vuelos: spaceRows.length,
-          crashes: spaceRows.filter(h => h.crash).length,
-          multPromedio: spaceRows.length
-            ? (spaceRows.reduce((a, h) => a + (h.multiplier || 0), 0) / spaceRows.length).toFixed(2)
-            : 0,
-          netTotal: spaceRows.reduce((a, h) => a + (h.net || 0), 0),
-        },
-        horses: {
-          apuestas: horseRows.length,
-          victorias: horseRows.filter(h => h.won).length,
-        },
-        chicken: {
-          netTotal: chicken.data?.hist_net || 0,
-        },
-      });
-      setLoading(false);
-    }
-    load();
-  }, [userId]);
-
-  if (loading) return <div style={{ color: "#555", fontSize: 13, padding: 12 }}>Cargando stats...</div>;
-  if (!stats) return null;
-
-  const bjTotal = stats.bj.wins + stats.bj.losses + stats.bj.ties;
-  const bjWinRate = bjTotal > 0 ? ((stats.bj.wins / bjTotal) * 100).toFixed(1) : 0;
-
-  const statBlock = (icon, title, rows, color) => (
-    <div style={{ background: "#0d0d14", border: `1px solid ${color}33`, borderRadius: 10, padding: "10px 14px", minWidth: 160 }}>
-      <div style={{ color, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>{icon} {title}</div>
-      {rows.map(([label, val], i) => (
-        <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
-          <span style={{ color: "#666" }}>{label}</span>
-          <span style={{ color: "#ccc", fontWeight: 600 }}>{val}</span>
-        </div>
-      ))}
-    </div>
-  );
-
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12 }}>
-      {statBlock("🃏", "Blackjack", [
-        ["Partidas", bjTotal],
-        ["Victorias", `${stats.bj.wins} (${bjWinRate}%)`],
-        ["Derrotas", stats.bj.losses],
-        ["Empates", stats.bj.ties],
-        ["Blackjacks", stats.bj.blackjacks],
-      ], "#00d4aa")}
-
-      {statBlock("🎰", "Tragamonedas", [
-        ["Giros", stats.slots.giros],
-        ["Pago total", stats.slots.pagoTotal.toLocaleString()],
-        ["Tiros gratis", stats.slots.tirosGratis],
-      ], "#ff6b35")}
-
-      {statBlock("💣", "Mines", [
-        ["Partidas", stats.mines.partidas],
-        ["Victorias", `${stats.mines.victorias} (${stats.mines.partidas > 0 ? ((stats.mines.victorias/stats.mines.partidas)*100).toFixed(1) : 0}%)`],
-        ["Neto total", stats.mines.netTotal.toLocaleString()],
-      ], "#491cff")}
-
-      {statBlock("🚀", "Spaceman", [
-        ["Vuelos", stats.spaceman.vuelos],
-        ["Crashes", stats.spaceman.crashes],
-        ["×̄ promedio", `×${stats.spaceman.multPromedio}`],
-        ["Neto total", Math.round(stats.spaceman.netTotal).toLocaleString()],
-      ], "#8b5cf6")}
-
-      {statBlock("🐎", "Horse Race", [
-        ["Apuestas", stats.horses.apuestas],
-        ["Victorias", `${stats.horses.victorias} (${stats.horses.apuestas > 0 ? ((stats.horses.victorias/stats.horses.apuestas)*100).toFixed(1) : 0}%)`],
-      ], "#ef4444")}
-
-      {statBlock("🐔", "Chicken Road", [
-        ["Neto total", Math.round(stats.chicken.netTotal).toLocaleString()],
-      ], "#f59e0b")}
-    </div>
-  );
-}
 
 function Lobby({ profile, balance, setGame, onDeposit }) {
   const [profiles, setProfiles] = useState([]);
@@ -301,7 +193,10 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
       </div>
 
       {/* Panel de stats del jugador */}
-      {showStats && <PlayerStats userId={profile.id} />}
+      {/*{showStats && <PlayerStats userId={profile.id} />}*/}
+      {showStats && <PlayerStats userId={profile.id} layout="flex" />}
+
+
 
       {showDeposit && (
         <div style={styles.depositBox}>
