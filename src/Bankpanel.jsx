@@ -2,14 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 import { ASSETS } from "./ShopPanel.jsx";
 
-
-
-
-
-
-
-
-
 // ─── MERCADO DIARIO ────────────────────────────────────────────────────────
 function generateMarketForDate() {
   // Math.random() real — impredecible cada vez que se llama
@@ -49,23 +41,6 @@ async function getOrCreateMarketForDate(dateStr) {
   }
   return inserted;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -143,8 +118,8 @@ export const BANK_LEVELS = [
     level: 1,
     name: "Cliente",
     icon: "💳",
-    scRequired: 3_000,
-    loanLimit: 3_000_000,
+    scRequired: 2_500,
+    loanLimit: 5_000_000,
     rate: 0.15,
     moraRate: 0.015,
     products: ["Préstamo Medio", "CDT"],
@@ -153,8 +128,8 @@ export const BANK_LEVELS = [
     level: 2,
     name: "Inversor",
     icon: "📈",
-    scRequired: 6_000,
-    loanLimit: 10_000_000,
+    scRequired: 6_500,
+    loanLimit: 15_000_000,
     rate: 0.08,
     moraRate: 0.01,
     products: ["Préstamo Mayor", "CDT", "Fondo de Inversión"],

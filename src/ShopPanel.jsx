@@ -7,49 +7,49 @@ export const ASSETS = {
   bicicleta: {
     key: "bicicleta", label: "Bicicleta", icon: "🚲",
     img: "/Bicicleta.png", category: "vehiculos",
-    price: 100000, sc: 50, cdt: 0.2,
+    price: 200000, sc: 50, cdt: 0.2,
     desc: "Vehículo básico — gana movilidad y puntaje",
   },
   moto: {
     key: "moto", label: "Moto", icon: "🏍️",
     img: "/Moto.png", category: "vehiculos",
-    price: 1000000, sc: 500, cdt: 5,
+    price: 1500000, sc: 500, cdt: 2,
     desc: "Vehículo veloz — gran salto crediticio",
   },
   carro: {
     key: "carro", label: "Carro Lujoso", icon: "🚗",
     img: "/Carro.png", category: "vehiculos",
-    price: 6000000, sc: 2000, cdt: 10,
+    price: 6000000, sc: 1000, cdt: 5,
     desc: "Símbolo de estatus",
   },
   jet: {
     key: "jet", label: "Jet privado", icon: "✈️",
     img: "/Jet.png", category: "vehiculos",
-    price: 10000000, sc: 6000, cdt: 15,
+    price: 15000000, sc: 3400, cdt: 10,
     desc: "Lujos privados",
   },
   choza: {
     key: "choza", label: "Choza", icon: "🛖",
     img: "/Choza.png", category: "vivienda",
-    price: 300000, sc: 50, cdt: 0.5,
+    price: 300000, sc: 50, cdt: 0.2,
     desc: "Primera propiedad — el inicio del camino",
   },
   casa: {
     key: "casa", label: "Casa de Santiago", icon: "🏠",
     img: "/Casa.png", category: "vivienda",
-    price: 3000000, sc: 500, cdt: 7,
+    price: 1500000, sc: 500, cdt: 5,
     desc: "Hogar propio — sólido historial crediticio",
   },
     cabaña: {
     key: "cabaña", label: "Cabaña", icon: "⛺",
     img: "/Cabaña.png", category: "vivienda",
-    price: 6000000, sc: 2000, cdt: 10,
+    price: 6000000, sc: 1000, cdt: 10,
     desc: "Lugar vacacional propio",
   },
   mansion: {
     key: "mansion", label: "Mansión", icon: "🏰",
     img: "/Mansion.png", category: "vivienda",
-    price: 10000000, sc: 6000, cdt: 15,
+    price: 40000000, sc: 10000, cdt: 50,     // estaba en 15 el aumento del CDT
     desc: "Propiedad de lujo — el pináculo del score",
   },
 };
