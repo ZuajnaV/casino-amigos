@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-//import { supabase } from "./supabase";
+import { supabase } from "./supabase";
 import { saveMinigameRecord } from "./minigameRecords";
 
 
@@ -72,6 +72,7 @@ useEffect(() => {
 }, []);
 
 // ── Guardar balance en Supabase al cobrar ──
+/*
 async function cobrarYGuardar(manzanas, ganancia) {
   setSaving(true);
   const newBal = balanceRef.current + ganancia;
@@ -82,14 +83,44 @@ async function cobrarYGuardar(manzanas, ganancia) {
       await supabase.from("profiles").update({ balance: newBal }).eq("id", session.user.id);
       // Registrar en historial de trabajo (tabla snake_history si existe, sino ignorar)
       await saveMinigameRecord("snake", manzanas, ganancia);
-      /*await supabase.from("snake_history").insert({
-        user_id: session.user.id,
-        manzanas,
-        payout: ganancia,
-      }).then(() => {}).catch(() => {}); // silenciar si no existe la tabla    */
     }
     setSaving(false);
   }
+  
+*/
+
+
+
+
+  async function cobrarYGuardar(manzanas, ganancia) {
+  setSaving(true);
+  const newBal = balanceRef.current + ganancia;
+
+  try {
+    setBalance(newBal);
+    balanceRef.current = newBal;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase.from("profiles")
+        .update({ balance: newBal })
+        .eq("id", session.user.id);
+    }
+  } catch (err) {
+    console.error("Error al guardar:", err);
+  } finally {
+    setSaving(false);  // ← siempre se ejecuta, pase lo que pase
+  }
+}
+
+
+
+
+
+
+
+
+
 
   // ── Loop del juego ──
   const tick = useCallback(() => {
