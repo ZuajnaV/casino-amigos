@@ -30,7 +30,7 @@ function generateMarketForDate(dateStr) {
   }
   return { state, pct: Math.round(pct * 100) / 100 };
 }
-
+window.generateMarketForDate = generateMarketForDate;
 async function getOrCreateMarketForDate(dateStr) {
   const { data } = await supabase
     .from("market_daily").select("*").eq("date", dateStr).single();
