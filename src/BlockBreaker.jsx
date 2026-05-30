@@ -325,7 +325,7 @@ function update(s, paddleX, fireRef) {
   if (s.gphase === "playing") {
     const destroyable = s.blocks.filter(b => !b.dead && b.type !== "metal");
     if (destroyable.length === 0) {
-      const payment  = PAY_LVL * s.level;
+      const payment  = PAY_LVL;     //*s.level;
       s.earned      += payment;
       s.lastLevelPay = payment;
       s.gphase       = "levelclear";
@@ -788,7 +788,7 @@ export default function BlockBreaker({ balance, setBalance, onBack }) {
 
         <div style={{ textAlign: "center" }}>
           <div style={{ color: "#8b5cf6", fontWeight: 800, fontSize: 20 }}>🧱 Block Breaker</div>
-          <div style={{ color: "#555", fontSize: 12 }}>Nivel 1: $20.000 · sube $20.000 por nivel</div>
+          <div style={{ color: "#555", fontSize: 12 }}>Nivel 1: $30.000 · sube $30.000 por nivel</div>
         </div>
 
         <div style={{
@@ -837,7 +837,7 @@ export default function BlockBreaker({ balance, setBalance, onBack }) {
               Recoge power-ups… y evita las trampas.
             </div>
             <div style={{ color: "#00d4aa", fontSize: 15, fontWeight: 700, marginBottom: 22 }}>
-              $20.000 en Nivel 1 · +$20.000 por cada nivel
+              $30.000 en Nivel 1 · +$30.000 por cada nivel
             </div>
             <button onClick={startGame} style={{
               background: "#8b5cf6", border: "none", borderRadius: 10,
