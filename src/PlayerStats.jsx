@@ -11,7 +11,14 @@ const GAME_COLORS = {
   chicken:   "#f59e0b",
 };
 
-// ─── Bloque de estadísticas ───────────────────────────────────────────────────
+// ─── Config CrazyTime ────────────────────────────────────────────────────────
+const CT_TYPES  = ["1","2","5","10","coin_flip","cash_hunt","pachinko","crazy_time"];
+const CT_LABELS = { "1":"1","2":"2","5":"5","10":"10","coin_flip":"Coin Flip","cash_hunt":"Cash Hunt","pachinko":"Pachinko","crazy_time":"Crazy Time" };
+const CT_EMOJIS = { "1":"1️⃣","2":"2️⃣","5":"5️⃣","10":"🔟","coin_flip":"🪙","cash_hunt":"🎯","pachinko":"🎳","crazy_time":"🎡" };
+const CT_COLORS = { "1":"#3a7bd5","2":"#f7c948","5":"#7ed321","10":"#d0021b","coin_flip":"#e84393","cash_hunt":"#f5a623","pachinko":"#9b59b6","crazy_time":"#ff6b00" };
+const CT_BONUSES = ["coin_flip","cash_hunt","pachinko","crazy_time"];
+
+// ─── Bloque de estadísticas genérico ─────────────────────────────────────────
 function StatBlock({ icon, title, rows, color }) {
   return (
     <div style={{
@@ -36,15 +43,126 @@ function StatBlock({ icon, title, rows, color }) {
   );
 }
 
+// ─── Bloque CrazyTime ────────────────────────────────────────────────────────
+function CrazyTimeBlock({ ct }) {
+  if (!ct || ct.totalSpins === 0) return (
+    <div style={{
+      gridColumn: "span 2",
+      background: "rgba(13,13,20,0.85)",
+      border: "1px solid #ff6b0033",
+      borderRadius: 10, padding: "10px 14px",
+    }}>
+      <div style={{ color: "#ff6b00", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
+        💥 Crazy Time
+      </div>
+      <div style={{ color: "#444", fontSize: 12 }}>Sin giros registrados aún.</div>
+    </div>
+  );
+
+  return (
+    <div style={{
+      gridColumn: "span 2",
+      background: "rgba(13,13,20,0.85)",
+      border: "1px solid #ff6b0044",
+      borderRadius: 10, padding: "10px 14px",
+      display: "flex", flexDirection: "column", gap: 10,
+    }}>
+      {/* Título */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ color: "#ff6b00", fontWeight: 700, fontSize: 13 }}>
+          💥 Crazy Time
+        </div>
+        <div style={{ color: "#555", fontSize: 11 }}>
+          {ct.totalSpins} giro{ct.totalSpins !== 1 ? "s" : ""} registrado{ct.totalSpins !== 1 ? "s" : ""}
+        </div>
+      </div>
+
+      {/* Proporciones */}
+      <div>
+        <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
+          Proporción por segmento
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {CT_TYPES.map(s => {
+            const count = ct.segCounts[s] || 0;
+            const pct   = ct.totalSpins > 0 ? ((count / ct.totalSpins) * 100).toFixed(1) : "0.0";
+            return (
+              <div key={s} style={{
+                background: CT_COLORS[s] + "18",
+                border: `1px solid ${CT_COLORS[s]}55`,
+                borderRadius: 6, padding: "2px 7px",
+                display: "flex", alignItems: "center", gap: 3,
+              }}>
+                <span style={{ fontSize: 11 }}>{CT_EMOJIS[s]}</span>
+                <span style={{ color: CT_COLORS[s], fontWeight: 700, fontSize: 11 }}>{pct}%</span>
+                <span style={{ color: "#444", fontSize: 10 }}>({count})</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Spins since last hit */}
+      <div>
+        <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
+          Giros desde última aparición
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {CT_TYPES.map(s => {
+            const since  = ct.spinsSince[s]; // -1 = nunca, 0 = último giro
+            const isHot  = since === 0;
+            const isCold = since > 10 || since === -1;
+            return (
+              <div key={s} style={{
+                background: isHot ? "#00d4aa18" : isCold ? "#ff444418" : "#1e1e2e",
+                border: `1px solid ${isHot ? "#00d4aa" : isCold ? "#ff4444" : "#2a2a3a"}`,
+                borderRadius: 6, padding: "2px 8px",
+                display: "flex", alignItems: "center", gap: 4,
+              }}>
+                <span style={{ fontSize: 11 }}>{CT_EMOJIS[s]}</span>
+                <span style={{
+                  color: isHot ? "#00d4aa" : isCold ? "#ff6666" : "#aaa",
+                  fontWeight: 700, fontSize: 11,
+                }}>
+                  {since === -1 ? "—" : since === 0 ? "¡YA!" : `${since}`}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ color: "#333", fontSize: 10, marginTop: 4 }}>
+          Verde = salió en el último giro · Rojo = &gt;10 giros sin aparecer · Número = giros desde la última vez
+        </div>
+      </div>
+
+      {/* Max multiplicador por bonus */}
+      <div>
+        <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
+          Multiplicador máximo registrado por bonus
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {CT_BONUSES.map(b => (
+            <div key={b} style={{
+              background: CT_COLORS[b] + "18",
+              border: `1px solid ${CT_COLORS[b]}55`,
+              borderRadius: 6, padding: "4px 10px",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
+            }}>
+              <span style={{ color: CT_COLORS[b], fontWeight: 700, fontSize: 11 }}>
+                {CT_EMOJIS[b]} {CT_LABELS[b]}
+              </span>
+              <span style={{ color: "#fbbf24", fontWeight: 900, fontSize: 12 }}>
+                {ct.maxMult[b] > 0 ? `${ct.maxMult[b]}x` : "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
-// Usa funciones RPC de Supabase (SQL SECURITY DEFINER) para calcular todo
-// en el servidor. Sin límite de 1000 filas, sin traer datos innecesarios.
-//
-// Requiere haber ejecutado supabase_stats_functions.sql en el SQL Editor.
-//
-// Props:
-//   userId  — UUID del jugador
-//   layout  — "grid" (2 columnas, default) | "flex" (wrap horizontal)
 export default function PlayerStats({ userId, layout = "grid" }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,10 +173,7 @@ export default function PlayerStats({ userId, layout = "grid" }) {
     async function load() {
       setLoading(true);
 
-      // Todas las queries en paralelo.
-      // Las 4 de juego usan .rpc() → función SQL en el servidor, sin row limit.
-      // Blackjack y Chicken son filas únicas, sin problema de límite.
-      const [bjRes, slotsRes, minesRes, spaceRes, horsesRes, chickenRes] =
+      const [bjRes, slotsRes, minesRes, spaceRes, horsesRes, chickenRes, ctRes] =
         await Promise.all([
           supabase
             .from("blackjack_stats")
@@ -76,17 +191,49 @@ export default function PlayerStats({ userId, layout = "grid" }) {
             .select("hist_net")
             .eq("user_id", userId)
             .single(),
+
+          // CrazyTime: máx 100 registros por el trim, sin problema de row limit
+          supabase
+            .from("crazytime_history")
+            .select("segment, won, payout, multiplier, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
         ]);
 
-      // Cada RPC devuelve { data: { campo: valor, ... }, error }
-      const bj    = bjRes.data    ?? { wins: 0, losses: 0, ties: 0, blackjacks: 0 };
+      const bj     = bjRes.data    ?? { wins: 0, losses: 0, ties: 0, blackjacks: 0 };
       const slots  = slotsRes.data  ?? { giros: 0, pago_total: 0, tiros_gratis: 0 };
       const mines  = minesRes.data  ?? { partidas: 0, victorias: 0, net_total: 0 };
       const space  = spaceRes.data  ?? { vuelos: 0, crashes: 0, mult_promedio: 0, net_total: 0 };
       const horses = horsesRes.data ?? { apuestas: 0, victorias: 0 };
 
-      setStats({ bj, slots, mines, space, horses,
+      // ── CrazyTime: calcular stats localmente ──────────────────────────────
+      const ctRows = ctRes.data || [];
+
+      const segCounts = {};
+      ctRows.forEach(r => {
+        segCounts[r.segment] = (segCounts[r.segment] || 0) + 1;
+      });
+
+      const spinsSince = {};
+      CT_TYPES.forEach(s => {
+        spinsSince[s] = ctRows.findIndex(r => r.segment === s); // -1 = nunca
+      });
+
+      const maxMult = {};
+      CT_BONUSES.forEach(b => {
+        const rows = ctRows.filter(r => r.segment === b && (r.multiplier || 0) > 0);
+        maxMult[b] = rows.length > 0 ? Math.max(...rows.map(r => r.multiplier)) : 0;
+      });
+
+      setStats({
+        bj, slots, mines, space, horses,
         chicken: { netTotal: chickenRes.data?.hist_net ?? 0 },
+        crazytime: {
+          totalSpins: ctRows.length,
+          segCounts,
+          spinsSince,
+          maxMult,
+        },
       });
       setLoading(false);
     }
@@ -101,15 +248,12 @@ export default function PlayerStats({ userId, layout = "grid" }) {
   );
   if (!stats) return null;
 
-  // ── Derivados ───────────────────────────────────────────────────────────────
-  const { bj, slots, mines, space, horses, chicken } = stats;
+  const { bj, slots, mines, space, horses, chicken, crazytime } = stats;
 
-  const bjTotal      = bj.wins + bj.losses + bj.ties;
-  const bjWinRate    = bjTotal > 0 ? ((bj.wins / bjTotal) * 100).toFixed(1) : "0.0";
-  const minesWinRate = mines.partidas > 0
-    ? ((mines.victorias / mines.partidas) * 100).toFixed(1) : "0.0";
-  const horsesWinRate = horses.apuestas > 0
-    ? ((horses.victorias / horses.apuestas) * 100).toFixed(1) : "0.0";
+  const bjTotal       = bj.wins + bj.losses + bj.ties;
+  const bjWinRate     = bjTotal > 0 ? ((bj.wins / bjTotal) * 100).toFixed(1) : "0.0";
+  const minesWinRate  = mines.partidas > 0 ? ((mines.victorias / mines.partidas) * 100).toFixed(1) : "0.0";
+  const horsesWinRate = horses.apuestas > 0 ? ((horses.victorias / horses.apuestas) * 100).toFixed(1) : "0.0";
 
   const gridStyle = layout === "flex"
     ? { display: "flex", flexWrap: "wrap", gap: 10 }
@@ -165,6 +309,9 @@ export default function PlayerStats({ userId, layout = "grid" }) {
           ["Neto total", Math.round(chicken.netTotal).toLocaleString()],
         ]}
       />
+
+      {/* CrazyTime — ocupa las 2 columnas */}
+      <CrazyTimeBlock ct={crazytime} />
     </div>
   );
 }

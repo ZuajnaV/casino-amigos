@@ -737,8 +737,6 @@ const CT_WHEEL_LAYOUT = [
   "DOUBLE", 20, 5, 100, "DOUBLE", 10, 20, 5,
 ];
 
-
-
 function CrazyTimeBonus({ bet, onComplete }) {
   // La rueda se genera una sola vez al montar el componente
 
@@ -1107,11 +1105,6 @@ function CrazyTimeBonus({ bet, onComplete }) {
 
 
 // ─── MAIN WHEEL COMPONENT ────────────────────────────────────────────────────
-
-
-// En el JSX:
-
-
 // En el componente MainWheel, acepta el prop:
 function MainWheel({ wheelRef }) {
   return (
@@ -1170,7 +1163,6 @@ function TopSlot({ result }) {
     </div>
   );
 }
-
 
 
 // ─── MAIN GAME ────────────────────────────────────────────────────────────────
@@ -1316,19 +1308,6 @@ function spin() {
         if (tsRes.segment === landed.type) mult *= tsRes.multiplier;
         winnings = userBetOnLanded * mult + userBetOnLanded;
       }
-      /*setBalance(prev => prev + winnings);
-      const info = SEGMENT_INFO[landed.type];
-      setMessage(winnings > 0
-        ? `✅ ¡Cayó ${info?.label}! Ganaste ${winnings.toLocaleString()} fichas!`
-        : `❌ Cayó ${info?.label}. Sin premio esta ronda.`
-      );
-      setHistory(h => [{ type: landed.type, win: winnings > 0, amount: winnings }, ...h.slice(0, 9)]);
-      */
-
-
-
-      
-
 
       setBalance(prev => prev + winnings);
 const info = SEGMENT_INFO[landed.type];
@@ -1339,6 +1318,7 @@ setMessage(winnings > 0
 const newEntry = { type: landed.type, win: winnings > 0, amount: winnings };
 setHistory(h => [newEntry, ...h.slice(0, 19)]);
 
+/*
 supabase.auth.getSession().then(async ({ data: { session } }) => {
   if (!session) return;
   await supabase.rpc("insert_crazytime_and_trim", {
@@ -1347,21 +1327,36 @@ supabase.auth.getSession().then(async ({ data: { session } }) => {
     p_won: winnings > 0,
     p_payout: winnings,
   });
+});*/
+
+
+
+
+
+
+  await supabase.rpc("insert_crazytime_and_trim", {
+  p_user_id:    session.user.id,
+  p_segment:    landed.type,
+  p_won:        winnings > 0,
+  p_payout:     winnings,
+  p_multiplier: winnings > 0 ? parseInt(landed.type) : 0,
 });
+
+
+
+
+
+
+
+
+
+
+
+
 
 setBets({});
 setPhase("result");
 setTimeout(() => { setPhase("betting"); setMessage(null); }, 3000);
-// ← FIN. Elimina el segundo bloque idéntico que viene después.
-
-
-
-
-
-
-
-
-
       setBets({});
       setPhase("result");
       setTimeout(() => { setPhase("betting"); setMessage(null); }, 3000);
@@ -1371,22 +1366,6 @@ setTimeout(() => { setPhase("betting"); setMessage(null); }, 3000);
   animRef.current = requestAnimationFrame(frame);
 }
 
-/*
-  function handleBonusComplete(payout, mult, ...args) {
-    setBalance(prev => prev + payout + (bets[bonus.type] || 0));
-    setHistory(h => [{ type: bonus.type, win: payout > 0, amount: payout }, ...h.slice(0, 9)]);
-    setBonus(null);
-    setBets({});
-    setPhase("result");
-    setMessage(payout > 0
-      ? `🎉 ¡Bonificación completada! +${payout.toLocaleString()} fichas (${mult}x)`
-      : "❌ Sin premio en el bonificador."
-    );
-    setTimeout(() => { setPhase("betting"); setMessage(null); }, 3500);
-  }*/
-
-
-
   // ── En handleBonusComplete ──
 function handleBonusComplete(payout, mult, ...args) {
   setBalance(prev => prev + payout + (bets[bonus.type] || 0));
@@ -1394,6 +1373,7 @@ function handleBonusComplete(payout, mult, ...args) {
   setHistory(h => [newEntry, ...h.slice(0, 19)]);
 
   // ← NUEVO: guardar en Supabase
+  /*
   supabase.auth.getSession().then(async ({ data: { session } }) => {
     if (!session) return;
     await supabase.rpc("insert_crazytime_and_trim", {
@@ -1403,6 +1383,34 @@ function handleBonusComplete(payout, mult, ...args) {
       p_payout: payout + (bets[bonus.type] || 0),
     });
   });
+*/
+
+
+
+
+
+  await supabase.rpc("insert_crazytime_and_trim", {
+  p_user_id:    session.user.id,
+  p_segment:    bonus.type,
+  p_won:        payout > 0,
+  p_payout:     payout + (bets[bonus.type] || 0),
+  p_multiplier: mult || 0,
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   setBonus(null);
   setBets({});
@@ -1413,14 +1421,6 @@ function handleBonusComplete(payout, mult, ...args) {
   );
   setTimeout(() => { setPhase("betting"); setMessage(null); }, 3500);
 }
-
-
-
-
-
-
-
-
 
   return (
     <div style={styles.wrap}>
@@ -1537,9 +1537,6 @@ function handleBonusComplete(payout, mult, ...args) {
   </div>
 </div>
 
-
-
-            
           </div>
 
           {/* Segments to bet on */}
@@ -1658,20 +1655,6 @@ function handleBonusComplete(payout, mult, ...args) {
       </div>
 
       {/* History */}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       {history.length > 0 && (
   <div style={{ ...styles.card, marginTop: 16 }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
@@ -1727,23 +1710,6 @@ function handleBonusComplete(payout, mult, ...args) {
     </div>
   </div>
 )}
-
-
-
-
-
-
-
-
-
-
-
-
-    {/*Aquí va el codigo que eliminé para agregar lo de arriba del supabase*/}
-      
-
-      
-
       {/* RTP info */}
       <div style={{ color: "#333", fontSize: 11, textAlign: "center", marginTop: 16 }}>
         RTP teórico: 95.41% · Juega responsablemente 🎰
