@@ -17,7 +17,7 @@ const SPD0 = 5.4;       //4.8
 const SPD_MAX = 10.5;
 const ITEM_V  = 2.4;
 const LASER_V = 9;
-const PAY_LVL = 40000;
+const PAY_LVL = 30000;
 const EFF_DUR = 480;        // effect duration in frames (~8s)
 
 const ITEM_TYPES = ["expand","shrink","multi","laser","slow","fast","life"];
