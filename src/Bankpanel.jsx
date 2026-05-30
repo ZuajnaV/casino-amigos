@@ -751,14 +751,14 @@ const cuotaHoy = loan
       {/* ── Alertas de mora / hipoteca ── */}
       {isInMora && (
         <div style={alertStyle("#ff4444")}>
-          <div style={{ fontSize: 18, marginBottom: 4 }}>⚠️ DEUDA EN MORA</div>
-          <div style={{ fontSize: 12, color: "#ffaaaa" }}>
+          <div style={{ fontSize: 20, marginBottom: 4 }}>⚠️ DEUDA EN MORA</div>
+          <div style={{ fontSize: 15, color: "#ffaaaa" }}>
             {loan.mora_days} {loan.mora_days === 1 ? "día" : "días"} sin pagar ·{" "}
             {loan.mora_days >= 7
               ? "¡Hipoteca activada!"
               : `${7 - loan.mora_days} día${7 - loan.mora_days !== 1 ? "s" : ""} para hipoteca`}
           </div>
-          <div style={{ fontSize: 11, color: "#cc7777", marginTop: 4 }}>
+          <div style={{ fontSize: 15, color: "#cc7777", marginTop: 4 }}>
             Cuota con mora: +{(loan.mora_days * 2)}% ={" "}
             <strong style={{ color: "#fff" }}>${cuotaHoy.toLocaleString()}</strong>
           </div>
@@ -767,9 +767,9 @@ const cuotaHoy = loan
 
       {mortgageEvents.length > 0 && (
         <div style={alertStyle("#f97316")}>
-          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>🏚️ Propiedades hipotecadas automáticamente</div>
+          <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>🏚️ Propiedades hipotecadas automáticamente</div>
           {mortgageEvents.map(k => (
-            <div key={k} style={{ fontSize: 12, color: "#ffdab9" }}>
+            <div key={k} style={{ fontSize: 15, color: "#ffdab9" }}>
               {ASSETS[k]?.icon} {ASSETS[k]?.label}
             </div>
           ))}
@@ -783,16 +783,16 @@ const cuotaHoy = loan
         borderRadius: 12,
         padding: "12px 14px",
       }}>
-        <div style={{ fontSize: 10, color: "#444", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+        <div style={{ fontSize: 15, color: "#ffffff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
           Tu nivel bancario
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ fontSize: 36 }}>{bankLevel.icon}</div>
+          <div style={{ fontSize: 40 }}>{bankLevel.icon}</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 16, color: "#fbbf24" }}>
+            <div style={{ fontWeight: 800, fontSize: 20, color: "#fbbf24" }}>
               Nivel {bankLevel.level} — {bankLevel.name}
             </div>
-            <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>
+            <div style={{ fontSize: 14, color: "#b2b2b2", marginTop: 2 }}>
               SC actual: <span style={{ color: "#00d4aa", fontWeight: 700 }}>{creditScore.toLocaleString()}</span>
               {bankLevel.level < 2 && (
                 <span style={{ color: "#555", marginLeft: 8 }}>
@@ -820,14 +820,14 @@ const cuotaHoy = loan
             <span key={p} style={{
               background: "#fbbf2415", border: "1px solid #fbbf2433",
               borderRadius: 6, padding: "3px 8px",
-              fontSize: 10, color: "#fbbf24",
+              fontSize: 13, color: "#fbbf24",
             }}>{p}</span>
           ))}
           {BANK_LEVELS.filter(l => l.level > bankLevel.level).flatMap(l => l.products).map(p => (
             <span key={p} style={{
               background: "#1e1e2e", border: "1px solid #2a2a3a",
               borderRadius: 6, padding: "3px 8px",
-              fontSize: 10, color: "#333",
+              fontSize: 13, color: "#333",
             }}>🔒 {p}</span>
           ))}
         </div>
@@ -839,19 +839,14 @@ const cuotaHoy = loan
           { id: "estado", label: "📋 Estado" },
           { id: "pedir",  label: "💸 Pedir préstamo" },
           { id: "info",   label: "ℹ️ Niveles" },
-
-
           { id: "fondo", label: "📈 Fondo" },
-
-
-
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             flex: 1, padding: "8px 4px",
             background: tab === t.id ? "rgba(251,191,36,0.12)" : "rgba(13,13,20,0.8)",
             border: `1px solid ${tab === t.id ? "#fbbf2466" : "#2a2a3a"}`,
-            borderRadius: 8, color: tab === t.id ? "#fbbf24" : "#555",
-            fontSize: 11, fontWeight: 700, cursor: "pointer",
+            borderRadius: 8, color: tab === t.id ? "#fbbf24" : "#b4b4b4",
+            fontSize: 15, fontWeight: 700, cursor: "pointer",
           }}>{t.label}</button>
         ))}
       </div>
@@ -867,10 +862,10 @@ const cuotaHoy = loan
     border: "1px solid #00d4aa44",
     borderRadius: 10, padding: "10px 14px",
   }}>
-    <div style={{ color: "#00d4aa", fontWeight: 700, fontSize: 13 }}>
+    <div style={{ color: "#00d4aa", fontWeight: 700, fontSize: 20 }}>
       💰 Cuenta de Ahorros — interés aplicado
     </div>
-    <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>
+    <div style={{ fontSize: 15, color: "#aaa", marginTop: 4 }}>
       +${cdtEvents.interest.toLocaleString()} en {cdtEvents.days} {cdtEvents.days === 1 ? "día" : "días"}
     </div>
   </div>
@@ -883,7 +878,7 @@ const cuotaHoy = loan
     border: "1px solid #00d4aa33",
     borderRadius: 12, padding: "12px 14px",
   }}>
-    <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+    <div style={{ fontSize: 15, color: "#bababa", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
       📈 Cuenta de Ahorros (CDT)
     </div>
     {[
@@ -891,20 +886,20 @@ const cuotaHoy = loan
       ["Tasa base diaria", "0.5%"],
       ["Bonus por SC",      `+${(creditScore / 10_000).toFixed(4)}%`],
 ["Tasa efectiva hoy", `${((0.005 + creditScore / 1_000_000) * 100).toFixed(3)}%`],
-["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 10_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],
+["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 20_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],
 
 
-      ["Techo de ahorro", "$10.000.000"],
-      ["Base efectiva", `$${Math.min(balance, 10_000_000).toLocaleString()}`],
+      ["Techo de ahorro", "$20.000.000"],
+      ["Base efectiva", `$${Math.min(balance, 20_000_000).toLocaleString()}`],
      // ["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 10000)).toLocaleString()}`],
     ].map(([label, val], i) => (
-      <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
-        <span style={{ color: "#555" }}>{label}</span>
+      <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 15, marginBottom: 5 }}>
+        <span style={{ color: "#a2a2a2" }}>{label}</span>
         <span style={{ color: "#00d4aa", fontWeight: 700 }}>{val}</span>
       </div>
     ))}
-    <div style={{ fontSize: 10, color: "#333", marginTop: 6 }}>
-      Se aplica automáticamente cada día al abrir el banco · Solo sobre los primeros $10M
+    <div style={{ fontSize: 12, color: "#ececec", marginTop: 6 }}>
+      Se aplica automáticamente cada día al abrir el banco · Solo sobre los primeros $20M
     </div>
   </div>
 )}
@@ -916,13 +911,13 @@ const cuotaHoy = loan
               border: `1px solid ${isInMora ? "#ff444444" : "#fbbf2433"}`,
               borderRadius: 12, padding: "14px",
             }}>
-              <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+              <div style={{ fontSize: 15, color: "#bdbdbd", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
                 Préstamo activo
               </div>
 
               {/* Barra de progreso */}
               <div style={{ marginBottom: 10 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#555", marginBottom: 4 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#ffffff", marginBottom: 4 }}>
                   <span>Pagado: ${loan.paid_amount.toLocaleString()}</span>
                   <span>Total: ${loan.total_debt.toLocaleString()}</span>
                 </div>
@@ -936,7 +931,7 @@ const cuotaHoy = loan
                     transition: "width 0.5s",
                   }} />
                 </div>
-                <div style={{ fontSize: 10, color: "#444", marginTop: 3, textAlign: "right" }}>
+                <div style={{ fontSize: 12, color: "#8000ff", marginTop: 3, textAlign: "right" }}>
                   {progress.toFixed(1)}% completado
                 </div>
               </div>
@@ -954,8 +949,8 @@ const cuotaHoy = loan
                   ["Próximo cobro", loan.next_payment],
                 ].map(([label, val], i) => (
                   <div key={i} style={{ background: "#0d0d14", borderRadius: 8, padding: "8px 10px" }}>
-                    <div style={{ fontSize: 9, color: "#444", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#ddd", marginTop: 2 }}>{val}</div>
+                    <div style={{ fontSize: 11, color: "#c8c8c8", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#ddd", marginTop: 2 }}>{val}</div>
                   </div>
                 ))}
               </div>
@@ -970,7 +965,7 @@ const cuotaHoy = loan
                     background: balance >= cuotaHoy ? "linear-gradient(135deg, #00d4aa, #009977)" : "#1a1a26",
                     border: "none", borderRadius: 8,
                     color: balance >= cuotaHoy ? "#000" : "#444",
-                    fontWeight: 800, fontSize: 13, cursor: balance >= cuotaHoy ? "pointer" : "not-allowed",
+                    fontWeight: 800, fontSize: 15, cursor: balance >= cuotaHoy ? "pointer" : "not-allowed",
                   }}
                 >
                   {paying ? "..." : `💳 Pagar cuota ($${cuotaHoy.toLocaleString()})`}
@@ -985,18 +980,15 @@ const cuotaHoy = loan
                     background: balance >= remainingWithMora ? "linear-gradient(135deg, #fbbf24, #f97316)" : "#1a1a26",
                     border: "none", borderRadius: 8,
                     color: balance >= remaining ? "#000" : "#444",
-                    fontWeight: 800, fontSize: 13, cursor: balance >= remaining ? "pointer" : "not-allowed",
+                    fontWeight: 800, fontSize: 15, cursor: balance >= remaining ? "pointer" : "not-allowed",
                   }}
                 >
-                  {/*}
-                  {paying ? "..." : `⚡ Saldar todo ($${remaining.toLocaleString()})`}
-                  {*/}
                   {paying ? "..." : `⚡ Saldar todo ($${remainingWithMora.toLocaleString()})`}
                 </button>
               </div>
 
               {balance < cuotaHoy && (
-                <div style={{ fontSize: 11, color: "#ff6666", textAlign: "center", marginTop: 8 }}>
+                <div style={{ fontSize: 15, color: "#ff6666", textAlign: "center", marginTop: 8 }}>
                   ⚠️ Saldo insuficiente — la cuota se cobrará automáticamente mañana con mora adicional
                 </div>
               )}
@@ -1010,7 +1002,7 @@ const cuotaHoy = loan
             }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
               <div style={{ color: "#00d4aa", fontWeight: 700, fontSize: 15 }}>Sin deudas activas</div>
-              <div style={{ color: "#555", fontSize: 12, marginTop: 4 }}>
+              <div style={{ color: "#bebebe", fontSize: 12, marginTop: 4 }}>
                 Puedes solicitar un préstamo en la pestaña "Pedir préstamo"
               </div>
             </div>
@@ -1019,19 +1011,17 @@ const cuotaHoy = loan
 {/* ── Alerta de período de gracia ── */}
 {loan?.status === "grace" && loan.grace_until && (
   <div style={alertStyle("#ff4444")}>
-    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
+    <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
       🚨 PERÍODO DE GRACIA — DEUDA PENDIENTE
     </div>
-    <div style={{ fontSize: 12, color: "#ffaaaa" }}>
+    <div style={{ fontSize: 15, color: "#ffaaaa" }}>
       Vence el {loan.grace_until} · Paga o perderás todos los activos hipotecados
     </div>
-    <div style={{ fontSize: 12, color: "#fff", marginTop: 4, fontWeight: 700 }}>
+    <div style={{ fontSize: 15, color: "#fff", marginTop: 4, fontWeight: 700 }}>
       Deuda restante: ${remaining.toLocaleString()}
     </div>
   </div>
 )}
-
-
 
   {/* ── Deuda Incobrable ── */}
 {loan?.status === "irrecoverable" && (
@@ -1041,17 +1031,17 @@ const cuotaHoy = loan
     borderRadius: 12, padding: "16px 14px",
     textAlign: "center",
   }}>
-    <div style={{ fontSize: 28, marginBottom: 6 }}>☠️</div>
+    <div style={{ fontSize: 30, marginBottom: 6 }}>☠️</div>
     <div style={{ color: "#ff4444", fontWeight: 900, fontSize: 17, marginBottom: 8 }}>
       DEUDA INCOBRABLE
     </div>
-    <div style={{ fontSize: 12, color: "#ff8888", marginBottom: 4 }}>
+    <div style={{ fontSize: 17, color: "#ff8888", marginBottom: 4 }}>
       Tus propiedades fueron ejecutadas por el banco.
     </div>
-    <div style={{ fontSize: 13, color: "#fff", fontWeight: 700, marginBottom: 12 }}>
+    <div style={{ fontSize: 15, color: "#fff", fontWeight: 700, marginBottom: 12 }}>
       Deuda pendiente: ${remaining.toLocaleString()}
     </div>
-    <div style={{ fontSize: 11, color: "#666", marginBottom: 16, lineHeight: 1.6 }}>
+    <div style={{ fontSize: 14, color: "#666", marginBottom: 16, lineHeight: 1.6 }}>
       No tienes activos ni liquidez para pagar.<br />Solo hay una salida.
     </div>
     <button
@@ -1062,14 +1052,14 @@ const cuotaHoy = loan
         background: paying ? "#333" : "linear-gradient(135deg, #7f0000, #cc0000)",
         border: "2px solid #ff4444",
         borderRadius: 10, color: "#fff",
-        fontSize: 16, fontWeight: 900,
+        fontSize: 20, fontWeight: 900,
         cursor: paying ? "not-allowed" : "pointer",
         letterSpacing: 1,
       }}
     >
       {paying ? "..." : "💀 COLGARSE"}
     </button>
-    <div style={{ fontSize: 10, color: "#444", marginTop: 8 }}>
+    <div style={{ fontSize: 15, color: "#c8c8c8", marginTop: 8 }}>
       Reinicia tu personaje · suma al contador de muertes
     </div>
   </div>
@@ -1078,8 +1068,8 @@ const cuotaHoy = loan
 {/* ── Alerta de ejecución forzada ── */}
 {events.some(e => e.type === "foreclosure") && (
   <div style={alertStyle("#ff0000")}>
-    <div style={{ fontSize: 15, fontWeight: 700 }}>💀 EJECUCIÓN BANCARIA</div>
-    <div style={{ fontSize: 12, color: "#ffaaaa", marginTop: 4 }}>
+    <div style={{ fontSize: 20, fontWeight: 700 }}>💀 EJECUCIÓN BANCARIA</div>
+    <div style={{ fontSize: 15, color: "#ffaaaa", marginTop: 4 }}>
       Tus activos hipotecados fueron confiscados por el banco.
     </div>
   </div>
@@ -1092,7 +1082,7 @@ const cuotaHoy = loan
               border: "1px solid #ff444433",
               borderRadius: 12, padding: "12px 14px",
             }}>
-              <div style={{ fontSize: 11, color: "#ff4444", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+              <div style={{ fontSize: 15, color: "#ff4444", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
                 ⛓️ Activos hipotecados
               </div>
               {mortgagedAssets.map(a => {
@@ -1105,10 +1095,10 @@ const cuotaHoy = loan
                     display: "flex", alignItems: "center", gap: 10,
                     background: "#0d0d14", borderRadius: 8, padding: "10px 12px", marginBottom: 8,
                   }}>
-                    <span style={{ fontSize: 24 }}>{asset.icon}</span>
+                    <span style={{ fontSize: 30 }}>{asset.icon}</span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#bbb" }}>{asset.label}</div>
-                      <div style={{ fontSize: 11, color: "#555" }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: "#bbb" }}>{asset.label}</div>
+                      <div style={{ fontSize: 15, color: "#d4d4d4" }}>
                         Deshipotecar: ${penalty.toLocaleString()} (+10% penalización)
                       </div>
                     </div>
@@ -1118,8 +1108,8 @@ const cuotaHoy = loan
                       style={{
                         background: canAfford ? "#fbbf24" : "#1a1a26",
                         border: "none", borderRadius: 7,
-                        padding: "7px 12px", fontSize: 11, fontWeight: 800,
-                        color: canAfford ? "#000" : "#444",
+                        padding: "7px 12px", fontSize: 15, fontWeight: 800,
+                        color: canAfford ? "#000" : "#c5c5c5",
                         cursor: canAfford ? "pointer" : "not-allowed",
                         whiteSpace: "nowrap",
                       }}
@@ -1139,11 +1129,11 @@ const cuotaHoy = loan
               border: "1px solid #1e1e2e",
               borderRadius: 10, padding: "10px 14px",
             }}>
-              <div style={{ fontSize: 10, color: "#444", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+              <div style={{ fontSize: 15, color: "#c4c4c4", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
                 Actividad automática de hoy
               </div>
               {events.slice(0, 6).map((e, i) => (
-                <div key={i} style={{ fontSize: 12, color: e.type === "mora" ? "#ff8888" : e.type === "payment" ? "#00d4aa" : "#fbbf24", marginBottom: 3 }}>
+                <div key={i} style={{ fontSize: 15, color: e.type === "mora" ? "#ff8888" : e.type === "payment" ? "#00d4aa" : "#fbbf24", marginBottom: 3 }}>
                   {e.type === "payment" && `✅ Cuota deducida: $${e.amount?.toLocaleString()}`}
                   {e.type === "mora" && `⚠️ Día de mora #${e.moraDays} — sin fondos suficientes`}
                   {e.type === "paid" && `🎉 ¡Préstamo saldado!`}
@@ -1161,8 +1151,8 @@ const cuotaHoy = loan
 
           {loan && (
             <div style={alertStyle("#f97316")}>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>⛔ Ya tienes un préstamo activo</div>
-              <div style={{ fontSize: 12, color: "#ffdab9", marginTop: 4 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>⛔ Ya tienes un préstamo activo</div>
+              <div style={{ fontSize: 15, color: "#ffdab9", marginTop: 4 }}>
                 Debes saldarlo antes de pedir otro.
               </div>
             </div>
@@ -1170,8 +1160,8 @@ const cuotaHoy = loan
 
           {isInMora && !loan && (
             <div style={alertStyle("#ff4444")}>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>🚫 Bloqueado por mora</div>
-              <div style={{ fontSize: 12, color: "#ffaaaa", marginTop: 4 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>🚫 Bloqueado por mora</div>
+              <div style={{ fontSize: 15, color: "#ffaaaa", marginTop: 4 }}>
                 Regulariza tu deuda antes de solicitar nuevos préstamos.
               </div>
             </div>
@@ -1183,7 +1173,7 @@ const cuotaHoy = loan
                 background: "rgba(13,13,20,0.9)", border: "1px solid #2a2a3a",
                 borderRadius: 12, padding: "12px 14px",
               }}>
-                <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+                <div style={{ fontSize: 15, color: "#c8c8c8", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
                   Condiciones actuales
                 </div>
                 {[
@@ -1192,8 +1182,8 @@ const cuotaHoy = loan
                   ["Plazo", "7 días"],
                   ["Mora por día", `+${(bankLevel.moraRate * 100).toFixed(0)}% sobre cuota`],
                 ].map(([label, val], i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                    <span style={{ color: "#666" }}>{label}</span>
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 15, marginBottom: 6 }}>
+                    <span style={{ color: "#c0c0c0" }}>{label}</span>
                     <span style={{ color: "#ddd", fontWeight: 700 }}>{val}</span>
                   </div>
                 ))}
@@ -1204,7 +1194,7 @@ const cuotaHoy = loan
                 background: "rgba(13,13,20,0.9)", border: "1px solid #2a2a3a",
                 borderRadius: 12, padding: "12px 14px",
               }}>
-                <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+                <div style={{ fontSize: 15, color: "#d8d8d8", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
                   Simulador de préstamo
                 </div>
                 <input
@@ -1224,7 +1214,7 @@ const cuotaHoy = loan
                   {[100_000, 250_000, 500_000, bankLevel.loanLimit].filter((v, i, a) => a.indexOf(v) === i).map(v => (
                     <button key={v} onClick={() => setLoanAmount(String(v))} style={{
                       background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 6,
-                      color: "#aaa", fontSize: 11, padding: "5px 10px", cursor: "pointer",
+                      color: "#aaa", fontSize: 13, padding: "5px 10px", cursor: "pointer",
                     }}>
                       ${v >= 1_000_000 ? `${v / 1_000_000}M` : v >= 1_000 ? `${v / 1_000}k` : v}
                     </button>
@@ -1251,14 +1241,14 @@ const cuotaHoy = loan
                       : "#1a1a26",
                     border: "none", borderRadius: 10, marginTop: 8,
                     color: !requesting && loanAmount ? "#000" : "#444",
-                    fontWeight: 800, fontSize: 14, cursor: "pointer",
+                    fontWeight: 800, fontSize: 20, cursor: "pointer",
                   }}
                 >
                   {requesting ? "Procesando..." : "🏦 Solicitar préstamo"}
                 </button>
 
                 {parseInt(loanAmount) > bankLevel.loanLimit && (
-                  <div style={{ fontSize: 11, color: "#ff6666", textAlign: "center", marginTop: 6 }}>
+                  <div style={{ fontSize: 15, color: "#ff6666", textAlign: "center", marginTop: 6 }}>
                     Supera tu límite de ${bankLevel.loanLimit.toLocaleString()}
                     {bankLevel.level < 2 && ` — sube tu SC a ${BANK_LEVELS[bankLevel.level + 1].scRequired.toLocaleString()} para acceder al siguiente nivel`}
                   </div>
@@ -1285,11 +1275,11 @@ const cuotaHoy = loan
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                   <span style={{ fontSize: 28 }}>{lvl.icon}</span>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: isCurrentLevel ? "#fbbf24" : "#bbb" }}>
+                    <div style={{ fontWeight: 800, fontSize: 20, color: isCurrentLevel ? "#fbbf24" : "#bbb" }}>
                       Nivel {lvl.level} — {lvl.name}
                       {isCurrentLevel && <span style={{ marginLeft: 8, fontSize: 10, color: "#fbbf24", background: "#fbbf2422", padding: "2px 6px", borderRadius: 4 }}>ACTUAL</span>}
                     </div>
-                    <div style={{ fontSize: 11, color: "#555" }}>
+                    <div style={{ fontSize: 13, color: "#c0c0c0" }}>
                       Requiere {lvl.scRequired.toLocaleString()} SC
                     </div>
                   </div>
@@ -1299,8 +1289,8 @@ const cuotaHoy = loan
                   ["Tasa semanal", `${(lvl.rate * 100).toFixed(0)}%`],
                   ["Mora diaria", `+${(lvl.moraRate * 100).toFixed(0)}%`],
                 ].map(([label, val], i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                    <span style={{ color: "#555" }}>{label}</span>
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 15, marginBottom: 4 }}>
+                    <span style={{ color: "#c2c2c2" }}>{label}</span>
                     <span style={{ color: "#aaa", fontWeight: 700 }}>{val}</span>
                   </div>
                 ))}
@@ -1310,7 +1300,7 @@ const cuotaHoy = loan
                       background: isUnlocked ? "#fbbf2415" : "#1a1a26",
                       border: `1px solid ${isUnlocked ? "#fbbf2433" : "#2a2a3a"}`,
                       borderRadius: 6, padding: "2px 7px",
-                      fontSize: 10, color: isUnlocked ? "#fbbf24" : "#333",
+                      fontSize: 12, color: isUnlocked ? "#fbbf24" : "#333",
                     }}>{p}</span>
                   ))}
                 </div>
@@ -1324,7 +1314,7 @@ const cuotaHoy = loan
             border: "1px solid #ff444422",
             borderRadius: 12, padding: "12px 14px",
           }}>
-            <div style={{ fontWeight: 700, color: "#ff6666", marginBottom: 8, fontSize: 13 }}>
+            <div style={{ fontWeight: 700, color: "#ff6666", marginBottom: 8, fontSize: 15 }}>
               📋 Reglas de mora y embargo
             </div>
             {[
@@ -1334,8 +1324,8 @@ const cuotaHoy = loan
               ["Deshipotecar", "Paga la deuda original + 10% de penalización para recuperar el activo."],
             ].map(([fase, desc], i) => (
               <div key={i} style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#ff8888" }}>{fase}</div>
-                <div style={{ fontSize: 11, color: "#555", lineHeight: 1.5 }}>{desc}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#ff8888" }}>{fase}</div>
+                <div style={{ fontSize: 13, color: "#e7e7e7", lineHeight: 1.5 }}>{desc}</div>
               </div>
             ))}
           </div>
@@ -1352,11 +1342,11 @@ const cuotaHoy = loan
         background: "rgba(13,13,20,0.9)", border: "1px solid #2a2a3a",
         borderRadius: 12, padding: "24px 16px", textAlign: "center", opacity: 0.6,
       }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
-        <div style={{ color: "#555", fontWeight: 700, fontSize: 14 }}>
+        <div style={{ fontSize: 35, marginBottom: 8 }}>🔒</div>
+        <div style={{ color: "#b3b3b3", fontWeight: 700, fontSize: 15 }}>
           Requiere Nivel 2 — Inversor
         </div>
-        <div style={{ color: "#444", fontSize: 12, marginTop: 6 }}>
+        <div style={{ color: "#ebebeb", fontSize: 15, marginTop: 6 }}>
           Alcanza {BANK_LEVELS[2].scRequired.toLocaleString()} SC para desbloquear
         </div>
       </div>
@@ -1369,22 +1359,22 @@ const cuotaHoy = loan
           const today = marketHistory[marketHistory.length - 1];
           const colors = { crisis: "#ef4444", stability: "#fbbf24", growth: "#22c55e" };
           const labels = { crisis: "Crisis", stability: "Estabilidad", growth: "Crecimiento" };
-          const col    = colors[today.state] || "#aaa";
+          const col    = colors[today.state] || "#ffffff";
           return (
             <div style={{
               background: `${col}0f`,
               border: `1px solid ${col}44`,
               borderRadius: 12, padding: "12px 14px",
             }}>
-              <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+              <div style={{ fontSize: 15, color: "#ffffff", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
                 Mercado hoy
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ color: col, fontWeight: 800, fontSize: 16 }}>
+                <span style={{ color: col, fontWeight: 800, fontSize: 20 }}>
                   {today.state === "crisis" ? "📉" : today.state === "growth" ? "📈" : "➡️"}{" "}
                   {labels[today.state]}
                 </span>
-                <span style={{ color: col, fontWeight: 900, fontSize: 22 }}>
+                <span style={{ color: col, fontWeight: 900, fontSize: 25 }}>
                   {today.pct > 0 ? "+" : ""}{today.pct}%
                 </span>
               </div>
@@ -1395,10 +1385,10 @@ const cuotaHoy = loan
         {/* ── Gráfica de velas (últimos 3 días) ── */}
         {marketHistory.length > 0 && (
           <div style={{
-            background: "rgba(13,13,20,0.9)", border: "1px solid #1e1e2e",
+            background: "rgba(13,13,20,0.9)", border: "1px solid #ffffff",
             borderRadius: 12, padding: "12px 14px",
           }}>
-            <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+            <div style={{ fontSize: 15, color: "#bababa", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
               Histórico (últimos {marketHistory.length} días)
             </div>
             <CandlestickChart days={marketHistory} />
@@ -1411,13 +1401,13 @@ const cuotaHoy = loan
             background: "rgba(13,13,20,0.7)", border: "1px solid #1e1e2e",
             borderRadius: 10, padding: "10px 14px",
           }}>
-            <div style={{ fontSize: 10, color: "#444", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+            <div style={{ fontSize: 15, color: "#d2d2d2", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
               Rendimiento aplicado
             </div>
             {fundEvents.map((e, i) => {
               const col = e.state === "crisis" ? "#ef4444" : e.state === "growth" ? "#22c55e" : "#fbbf24";
               return (
-                <div key={i} style={{ fontSize: 12, color: col, marginBottom: 3 }}>
+                <div key={i} style={{ fontSize: 15, color: col, marginBottom: 3 }}>
                   {e.date} · {e.state} {e.finalPct > 0 ? "+" : ""}{e.finalPct}%
                   {" "}→ {e.returns >= 0 ? "+" : ""}${e.returns.toLocaleString()}
                 </div>
@@ -1433,7 +1423,7 @@ const cuotaHoy = loan
             border: `1px solid ${fund.current_value >= fund.deposited ? "#22c55e44" : "#ef444444"}`,
             borderRadius: 12, padding: "14px",
           }}>
-            <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+            <div style={{ fontSize: 15, color: "#ffffff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
               Inversión activa
             </div>
 
@@ -1458,9 +1448,9 @@ const cuotaHoy = loan
                       ["Recibirías",         `$${recv.toLocaleString()}`],
                     ].map(([label, val], i) => (
                       <div key={i} style={{ background: "#0d0d14", borderRadius: 8, padding: "8px 10px" }}>
-                        <div style={{ fontSize: 9, color: "#444", textTransform: "uppercase" }}>{label}</div>
+                        <div style={{ fontSize: 11, color: "#c3c3c3", textTransform: "uppercase" }}>{label}</div>
                         <div style={{
-                          fontSize: 12, fontWeight: 700, marginTop: 2,
+                          fontSize: 14, fontWeight: 700, marginTop: 2,
                           color: i === 2 ? (isPos ? "#22c55e" : "#ef4444")
                                : i === 4 ? "#ff8888"
                                : i === 5 ? "#00d4aa"
@@ -1472,7 +1462,7 @@ const cuotaHoy = loan
 
                   {/* Bloqueo durante quiebra */}
                   {loan?.status === "irrecoverable" && (
-                    <div style={{ fontSize: 11, color: "#ff6666", textAlign: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 20, color: "#ff6666", textAlign: "center", marginBottom: 10 }}>
                       ⛓️ Retiro bloqueado en estado de quiebra
                     </div>
                   )}
@@ -1486,12 +1476,12 @@ const cuotaHoy = loan
                         ? "#1a1a26"
                         : "linear-gradient(135deg, #f97316, #dc2626)",
                       border: "none", borderRadius: 10, color: "#fff",
-                      fontWeight: 800, fontSize: 13, cursor: "pointer",
+                      fontWeight: 800, fontSize: 15, cursor: "pointer",
                     }}
                   >
                     {paying ? "..." : `💸 Retirar inversión ($${recv.toLocaleString()})`}
                   </button>
-                  <div style={{ fontSize: 10, color: "#333", textAlign: "center", marginTop: 6 }}>
+                  <div style={{ fontSize: 15, color: "#cecece", textAlign: "center", marginTop: 6 }}>
                     Se descuenta 10% del total retirado como impuesto de salida
                   </div>
                 </>
@@ -1506,7 +1496,7 @@ const cuotaHoy = loan
             background: "rgba(13,13,20,0.9)", border: "1px solid #2a2a3a",
             borderRadius: 12, padding: "14px",
           }}>
-            <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+            <div style={{ fontSize: 15, color: "#f3f3f3", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
               Abrir nueva inversión
             </div>
             <input
@@ -1517,7 +1507,7 @@ const cuotaHoy = loan
               style={{
                 width: "100%", background: "#0d0d14", border: "1px solid #2a2a3a",
                 borderRadius: 8, padding: "10px 12px", color: "#fff",
-                fontSize: 15, boxSizing: "border-box", outline: "none", marginBottom: 8,
+                fontSize: 20, boxSizing: "border-box", outline: "none", marginBottom: 8,
               }}
             />
 
@@ -1526,14 +1516,14 @@ const cuotaHoy = loan
               {[100_000, 500_000, 1_000_000, 5_000_000].map(v => (
                 <button key={v} onClick={() => setFundAmount(String(v))} style={{
                   background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 6,
-                  color: "#aaa", fontSize: 11, padding: "5px 10px", cursor: "pointer",
+                  color: "#aaa", fontSize: 13, padding: "5px 10px", cursor: "pointer",
                 }}>
                   ${v >= 1_000_000 ? `${v / 1_000_000}M` : `${v / 1_000}k`}
                 </button>
               ))}
               <button onClick={() => setFundAmount(String(balance))} style={{
                 background: "#0d0d14", border: "1px solid #fbbf2444", borderRadius: 6,
-                color: "#fbbf24", fontSize: 11, padding: "5px 10px", cursor: "pointer",
+                color: "#fbbf24", fontSize: 13, padding: "5px 10px", cursor: "pointer",
               }}>
                 Todo
               </button>
@@ -1553,7 +1543,7 @@ const cuotaHoy = loan
                   background: "rgba(139,92,246,0.06)", border: "1px solid #8b5cf622",
                   borderRadius: 10, padding: "10px 12px", marginBottom: 10,
                 }}>
-                  <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", marginBottom: 6 }}>
+                  <div style={{ fontSize: 15, color: "#f3f3f3", textTransform: "uppercase", marginBottom: 6 }}>
                     Estimado con el mercado de hoy
                   </div>
                   {[
@@ -1562,8 +1552,8 @@ const cuotaHoy = loan
                     ["Rendimiento",  `${mktDay.pct > 0 ? "+" : ""}${mktDay.pct}% + SC`],
                     ["Resultado est.", `${est >= 0 ? "+" : ""}$${est.toLocaleString()}`],
                   ].map(([l, v], i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                      <span style={{ color: "#555" }}>{l}</span>
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 15, marginBottom: 4 }}>
+                      <span style={{ color: "#b6b6b6" }}>{l}</span>
                       <span style={{ color: i === 3 ? (est >= 0 ? "#22c55e" : "#ef4444") : "#aaa", fontWeight: 700 }}>{v}</span>
                     </div>
                   ))}
@@ -1586,13 +1576,13 @@ const cuotaHoy = loan
                   ? "linear-gradient(135deg, #8b5cf6, #6d28d9)"
                   : "#1a1a26",
                 border: "none", borderRadius: 10, color: "#fff",
-                fontWeight: 800, fontSize: 14, cursor: "pointer",
+                fontWeight: 800, fontSize: 16, cursor: "pointer",
               }}
             >
               {requesting ? "..." : "📈 Abrir inversión"}
             </button>
 
-            <div style={{ fontSize: 10, color: "#333", textAlign: "center", marginTop: 8, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: "#cbcbcb", textAlign: "center", marginTop: 8, lineHeight: 1.5 }}>
               Capital congelado hasta retiro · 10% impuesto al retirar<br />
               Rendimiento varía cada día según el mercado
             </div>
@@ -1618,7 +1608,7 @@ function LoanPreview({ amount, bankLevel }) {
       border: "1px solid #fbbf2422",
       borderRadius: 10, padding: "10px 12px", marginBottom: 8,
     }}>
-      <div style={{ fontSize: 10, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+      <div style={{ fontSize: 15, color: "#e5e5e5", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
         Resumen del préstamo
       </div>
       {[
@@ -1628,7 +1618,7 @@ function LoanPreview({ amount, bankLevel }) {
         ["Cuota diaria", `$${dailyPayment.toLocaleString()} × 7 días`],
       ].map(([label, val], i) => (
         <div key={i} style={{
-          display: "flex", justifyContent: "space-between", fontSize: 12,
+          display: "flex", justifyContent: "space-between", fontSize: 15,
           marginBottom: 5, paddingBottom: 5,
           borderBottom: i < 3 ? "1px solid #1e1e2e" : "none",
         }}>
@@ -1639,10 +1629,6 @@ function LoanPreview({ amount, bankLevel }) {
     </div>
   );
 }
-
-
-
-
 
 function CandlestickChart({ days }) {
   const W = 300, H = 130;
@@ -1662,7 +1648,7 @@ function CandlestickChart({ days }) {
       {[-10, -5, 0, 5, 10].map(p => (
         <line key={p}
           x1={0} y1={midY - p * scale} x2={W} y2={midY - p * scale}
-          stroke={p === 0 ? "#2a2a3a" : "#16161f"}
+          stroke={p === 0 ? "#747474" : "#767676"}
           strokeWidth={p === 0 ? 1.5 : 1}
           strokeDasharray={p !== 0 ? "3,4" : undefined}
         />
@@ -1671,7 +1657,7 @@ function CandlestickChart({ days }) {
       {/* Y labels */}
       {[-10, -5, 0, 5, 10].map(p => (
         <text key={p} x={2} y={midY - p * scale + 3.5}
-          fill="#333" fontSize={8}>
+          fill="#ffffff" fontSize={10}>
           {p > 0 ? "+" : ""}{p}%
         </text>
       ))}
@@ -1708,7 +1694,7 @@ function CandlestickChart({ days }) {
             </text>
             {/* Day label */}
             <text x={cx} y={H - 1}
-              textAnchor="middle" fill="#444" fontSize={8}>
+              textAnchor="middle" fill="#ffffff" fontSize={10}>
               {dayLabels[labelI]}
             </text>
           </g>
@@ -1717,31 +1703,6 @@ function CandlestickChart({ days }) {
     </svg>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ─── Helpers de estilo ────────────────────────────────────────────────────────
 function alertStyle(color) {

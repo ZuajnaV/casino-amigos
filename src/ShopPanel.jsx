@@ -233,12 +233,12 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
             {isSuper ? "🔥 SUPER DESCUENTO" : "🏷️ DESCUENTO DEL DÍA"}
           </div>
           <div style={{
-            fontSize: 22, fontWeight: 900,
+            fontSize: 25, fontWeight: 900,
             color: isSuper ? "#ff4444" : "#00d4aa",
           }}>
             -{discount.discount_pct}% en {CATEGORY_LABELS[discount.category]}
           </div>
-          <div style={{ fontSize: 11, color: "#ffffff", marginTop: 3 }}>
+          <div style={{ fontSize: 15, color: "#ffffff", marginTop: 3 }}>
             Solo hoy · igual para todos los jugadores
           </div>
         </div>
@@ -246,7 +246,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
         <div style={{
           background: "rgba(13,13,20,0.7)", border: "1px solid #1e1e2e",
           borderRadius: 10, padding: "8px 14px", textAlign: "center",
-          fontSize: 11, color: "#ffffff",
+          fontSize: 15, color: "#ffffff",
         }}>
           Sin descuento hoy — vuelve mañana para nuevas ofertas
         </div>
@@ -258,7 +258,7 @@ export default function ShopPanel({ profile, balance, setBalance, onPurchase }) 
           background: msg.ok ? "rgba(0,212,170,0.1)" : "rgba(255,68,68,0.1)",
           border: `1px solid ${msg.ok ? "#00d4aa44" : "#ff444444"}`,
           borderRadius: 8, padding: "8px 12px",
-          fontSize: 12, color: msg.ok ? "#00d4aa" : "#ff6666",
+          fontSize: 15, color: msg.ok ? "#00d4aa" : "#ff6666",
           fontWeight: 700, textAlign: "center",
         }}>
           {msg.text}

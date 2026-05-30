@@ -601,7 +601,7 @@ useEffect(() => {
                 padding: "12px 14px",
                 marginBottom: 14,
               }}>
-                <div style={{ fontSize: 12, color: "#666", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Resumen</div>
+                <div style={{ fontSize: 14, color: "#bbff00", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Resumen</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {[
                     ["💰 Balance actual",    `${balance.toLocaleString()} fichas`],
@@ -611,14 +611,14 @@ useEffect(() => {
                     ["💀 Muertes",           deaths],
                     ["🏠 Activos",           Object.values(ownedAssets).reduce((a, b) => a + b.quantity, 0)],
                   ].map(([label, val], i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                      <span style={{ color: "#777" }}>{label}</span>
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 15 }}>
+                      <span style={{ color: "#b3b3b3" }}>{label}</span>
                       <span style={{ color: "#ddd", fontWeight: 700 }}>{val}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+              <div style={{ fontSize: 15, color: "#ffffff", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
                 Por juego
               </div>
               <PlayerStats userId={profile.id} />
@@ -641,23 +641,23 @@ useEffect(() => {
         borderRadius: 10, padding: "12px 14px", marginBottom: 16,
         textAlign: "center",
       }}>
-        <div style={{ fontSize: 22, marginBottom: 4 }}>☠️</div>
+        <div style={{ fontSize: 25, marginBottom: 4 }}>☠️</div>
         <div style={{ color: "#ff4444", fontWeight: 900, fontSize: 14, marginBottom: 4 }}>
           QUIEBRA IRRECUPERABLE
         </div>
-        <div style={{ color: "#ff8888", fontSize: 12, lineHeight: 1.5 }}>
+        <div style={{ color: "#ff8888", fontSize: 15, lineHeight: 1.5 }}>
           No puedes generar ingresos en este estado.<br />
           Ve al Banco y usa la opción "Colgarse".
         </div>
       </div>
     )}
 
-    <div style={{ color: isInsolvent ? "#444" : "#ffffff", fontSize: 14, marginBottom: 16 }}>
+    <div style={{ color: isInsolvent ? "#efefef" : "#ffffff", fontSize: 15, marginBottom: 16 }}>
       Juega y gana fichas reales. Cuanto mejor lo hagas, más cobras.
     </div>
 
     {[
-      { id: "snake",        icon: "🐍", name: "Snake",         desc: "$1.000 por manzana",                   color: "#00d4aa" },
+      { id: "snake",        icon: "🐍", name: "Snake",         desc: "$2.000 por manzana",                   color: "#00d4aa" },
       { id: "dino",         icon: "🦕", name: "Dinosaur Game", desc: "$2.000 por cada 100 puntos",           color: "#fbbf24" },
       { id: "minesweeper",  icon: "💥", name: "Buscaminas",    desc: "Diferentes premios",                   color: "#ff6b35" },
       { id: "colordash",    icon: "🔺", name: "Color Dash",    desc: "$5.000 por objeto superado",           color: "#c084fc" },
@@ -684,14 +684,14 @@ useEffect(() => {
       >
         <span style={{ fontSize: 28 }}>{job.icon}</span>
         <div style={{ flex: 1 }}>
-          <div style={{ color: isInsolvent ? "#444" : job.color, fontWeight: 700, fontSize: 14 }}>{job.name}</div>
-          <div style={{ color: "#555", fontSize: 12 }}>{job.desc}</div>
+          <div style={{ color: isInsolvent ? "#444" : job.color, fontWeight: 700, fontSize: 18 }}>{job.name}</div>
+          <div style={{ color: "#ffffff", fontSize: 13 }}>{job.desc}</div>
         </div>
         <div style={{
           background: isInsolvent ? "#1a1a26" : job.color,
           border: isInsolvent ? "1px solid #2a2a3a" : "none",
           borderRadius: 6, padding: "4px 10px",
-          fontSize: 11,
+          fontSize: 15,
           color: isInsolvent ? "#444" : ["#fbbf24", "#00d4aa", "#c084fc"].includes(job.color) ? "#000" : "#fff",
           fontWeight: 700,
         }}>
