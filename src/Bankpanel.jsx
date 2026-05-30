@@ -2,6 +2,136 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 import { ASSETS } from "./ShopPanel.jsx";
 
+
+
+
+
+
+// ─── MERCADO DIARIO ────────────────────────────────────────────────────────
+// Generación determinista: misma fecha → mismo resultado para todos los jugadores
+function seededRandom(seed) {
+  const str = String(seed);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash) / 2_147_483_647;
+}
+
+function generateMarketForDate(dateStr) {
+  const r1 = seededRandom(dateStr);
+  const r2 = seededRandom(dateStr + "_pct");
+  let state, pct;
+  if (r1 < 0.25) {
+    state = "crisis";
+    pct = -(r2 * 5 + 5);          // -10% … -5%
+  } else if (r1 < 0.75) {
+    state = "stability";
+    pct = r2 * 2 - 1;              // -1% … +1%
+  } else {
+    state = "growth";
+    pct = r2 * 5 + 5;              // +5% … +10%
+  }
+  return { state, pct: Math.round(pct * 100) / 100 };
+}
+
+async function getOrCreateMarketForDate(dateStr) {
+  const { data } = await supabase
+    .from("market_daily").select("*").eq("date", dateStr).single();
+  if (data) return data;
+
+  const { state, pct } = generateMarketForDate(dateStr);
+  const { data: inserted, error } = await supabase
+    .from("market_daily").insert({ date: dateStr, state, pct }).select().single();
+
+  if (error) {
+    // Race condition: otro jugador lo creó al mismo tiempo
+    const { data: retry } = await supabase
+      .from("market_daily").select("*").eq("date", dateStr).single();
+    return retry || { date: dateStr, state, pct };
+  }
+  return inserted;
+}
+
+// ─── PROCESADOR DEL FONDO ────────────────────────────────────────────────────
+export async function processInvestmentFund(userId, creditScore) {
+  const { data: fund } = await supabase
+    .from("investment_fund").select("*")
+    .eq("user_id", userId).eq("status", "active").maybeSingle();
+
+  if (!fund) return { processed: false };
+
+  const today     = todayStr();
+  const lastProc  = fund.last_processed || today;
+  const daysPend  = daysBetween(lastProc, today);
+  if (daysPend <= 0) return { processed: false, fund };
+
+  // Sin rendimiento si hay quiebra irrecuperable
+  const { data: blocking } = await supabase
+    .from("loans").select("id").eq("user_id", userId)
+    .eq("status", "irrecoverable").limit(1);
+  if (blocking && blocking.length > 0) return { processed: false, fund, blocked: true };
+
+  // Número de activos activos (no hipotecados) — bonus por propiedades
+  const { data: assets } = await supabase
+    .from("player_assets").select("quantity, mortgaged").eq("user_id", userId);
+  const totalAssets = (assets || [])
+    .filter(a => !a.mortgaged)
+    .reduce((sum, a) => sum + a.quantity, 0);
+
+  let currentValue = fund.current_value;
+  const events = [];
+
+  // Procesar cada día pendiente (del más antiguo al más reciente)
+  for (let d = daysPend - 1; d >= 0; d--) {
+    const dayDate = addDays(today, -d);
+    const mkt = await getOrCreateMarketForDate(dayDate);
+
+    // Fórmula: pct_base + SC*0.0001 + activos*0.5% (bonificación activos)
+    const scBonus     = creditScore * 0.0001;
+    const assetBonus  = totalAssets * 0.005;
+    const finalPct    = (mkt.pct / 100) + scBonus + assetBonus;
+    const returns     = Math.round(currentValue * finalPct);
+    currentValue      = Math.max(0, currentValue + returns);
+
+    events.push({
+      date:     dayDate,
+      state:    mkt.state,
+      pct:      mkt.pct,
+      finalPct: +(finalPct * 100).toFixed(2),
+      returns,
+    });
+  }
+
+  await supabase.from("investment_fund").update({
+    current_value:  currentValue,
+    last_processed: today,
+  }).eq("id", fund.id);
+
+  return { processed: true, fund: { ...fund, current_value: currentValue }, events };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ─── CONFIGURACIÓN DEL BANCO ─────────────────────────────────────────────────
 export const BANK_LEVELS = [
   {
@@ -356,9 +486,29 @@ export default function BankPanel({ profile, balance, setBalance, onScChange, on
     const [cdtEvents, setCdtEvents] = useState(null);
 
 
+  const [fund,         setFund]         = useState(null);
+const [marketHistory, setMarketHistory] = useState([]);
+const [fundAmount,   setFundAmount]   = useState("");
+const [fundEvents,   setFundEvents]   = useState([]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const bankLevel = bankLevelFor(creditScore);
 
   // ── Cargar préstamo activo + activos ───────────────────────────────────────
+  /*
   const load = useCallback(async () => {
     setLoading(true);
     const [loanRes, assetsRes, profileRes] = await Promise.all([
@@ -372,6 +522,46 @@ export default function BankPanel({ profile, balance, setBalance, onScChange, on
     if (profileRes.data) setCreditScore(profileRes.data.credit_score || 0);
     setLoading(false);
   }, [profile.id]);
+*/
+
+
+
+
+
+  const load = useCallback(async () => {
+  setLoading(true);
+  const [loanRes, assetsRes, profileRes, fundRes, marketRes] = await Promise.all([
+    supabase.from("loans").select("*").eq("user_id", profile.id)
+      .in("status", ["active", "grace", "irrecoverable"])
+      .order("created_at", { ascending: false }).limit(1),
+    supabase.from("player_assets").select("*").eq("user_id", profile.id),
+    supabase.from("profiles").select("credit_score").eq("id", profile.id).single(),
+    supabase.from("investment_fund").select("*").eq("user_id", profile.id)
+      .eq("status", "active").maybeSingle(),                          // ← nuevo
+    supabase.from("market_daily").select("*")
+      .order("date", { ascending: false }).limit(3),                  // ← nuevo
+  ]);
+
+  setLoan(loanRes.data?.[0] || null);
+  setOwnedAssets(assetsRes.data || []);
+  if (profileRes.data) setCreditScore(profileRes.data.credit_score || 0);
+  setFund(fundRes.data || null);                                        // ← nuevo
+  setMarketHistory((marketRes.data || []).reverse());                  // ← nuevo (cronológico)
+  setLoading(false);
+}, [profile.id]);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   useEffect(() => {
   async function init() {
@@ -402,6 +592,30 @@ export default function BankPanel({ profile, balance, setBalance, onScChange, on
       }
       await load();
     }
+
+
+    // Paso 4: Procesar fondo de inversión si existe
+const fundResult = await processInvestmentFund(profile.id, sc);
+if (fundResult.processed) {
+  setFund(fundResult.fund);
+  setFundEvents(fundResult.events || []);
+  // Recargar historial de mercado
+  const { data: mkt } = await supabase
+    .from("market_daily").select("*")
+    .order("date", { ascending: false }).limit(3);
+  if (mkt) setMarketHistory([...mkt].reverse());
+}
+
+
+
+
+
+
+
+
+
+
+
   }
   init();
 }, [profile.id]);
@@ -498,6 +712,65 @@ export default function BankPanel({ profile, balance, setBalance, onScChange, on
 
 
 
+
+
+
+
+
+async function depositFund() {
+  const amount = parseInt(String(fundAmount));
+  if (!amount || amount <= 0 || amount > balance) return;
+  if (fund || bankLevel.level < 2) return;
+  if (loan?.status === "irrecoverable") return;
+
+  setRequesting(true);
+  const newBalance = balance - amount;
+
+  await supabase.from("investment_fund").insert({
+    user_id:       profile.id,
+    deposited:     amount,
+    current_value: amount,
+    status:        "active",
+    last_processed: todayStr(),
+  });
+  await supabase.from("profiles")
+    .update({ balance: newBalance }).eq("id", profile.id);
+
+  setBalance(newBalance);
+  setFundAmount("");
+  await load();
+  setRequesting(false);
+}
+
+async function withdrawFund() {
+  if (!fund || paying) return;
+  if (loan?.status === "irrecoverable") return;  // bloqueado en quiebra
+
+  setPaying(true);
+  const tax      = Math.round(fund.current_value * 0.10);
+  const received = fund.current_value - tax;
+  const newBalance = balance + received;
+
+  await supabase.from("investment_fund")
+    .update({ status: "closed" }).eq("id", fund.id);
+  await supabase.from("profiles")
+    .update({ balance: newBalance }).eq("id", profile.id);
+
+  setFund(null);
+  setBalance(newBalance);
+  await load();
+  setPaying(false);
+}
+
+
+
+
+
+
+
+
+
+/*
 async function handleSuicide() {
   if (paying) return;
   setPaying(true);
@@ -528,6 +801,57 @@ async function handleSuicide() {
   if (onDeath) onDeath();
   setPaying(false);
 }
+*/
+
+
+
+
+
+
+
+
+
+  async function handleSuicide() {
+  if (paying) return;
+  setPaying(true);
+  const STARTING_BALANCE = 100_000;
+
+  const { error: assetError, count } = await supabase
+    .from("player_assets").delete({ count: "exact" }).eq("user_id", profile.id);
+  if (assetError) console.error("❌ Error borrando activos:", assetError);
+  else console.log(`✅ Activos eliminados: ${count}`);
+
+  // Cerrar fondo (capital congelado se pierde)
+  await supabase.from("investment_fund")
+    .update({ status: "closed" })
+    .eq("user_id", profile.id).eq("status", "active");
+
+  await supabase.from("loans")
+    .update({ status: "foreclosed" })
+    .eq("user_id", profile.id)
+    .in("status", ["active", "grace", "irrecoverable", "pending_mortgage"]);
+
+  await supabase.from("profiles").update({
+    deaths:             (profile.deaths || 0) + 1,
+    credit_score:       0,
+    balance:            STARTING_BALANCE,
+    cdt_last_processed: todayStr(),
+  }).eq("id", profile.id);
+
+  setFund(null);
+  setBalance(STARTING_BALANCE);
+  if (onDeath) onDeath();
+  setPaying(false);
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -668,6 +992,12 @@ const cuotaHoy = loan
           { id: "estado", label: "📋 Estado" },
           { id: "pedir",  label: "💸 Pedir préstamo" },
           { id: "info",   label: "ℹ️ Niveles" },
+
+
+          { id: "fondo", label: "📈 Fondo" },
+
+
+
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             flex: 1, padding: "8px 4px",
@@ -1164,6 +1494,291 @@ const cuotaHoy = loan
           </div>
         </div>
       )}
+
+
+
+
+
+
+
+
+      {/* ══════════════ TAB: FONDO DE INVERSIÓN ══════════════ */}
+{tab === "fondo" && (
+  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+    {/* Bloqueado si no es nivel 2 */}
+    {bankLevel.level < 2 && (
+      <div style={{
+        background: "rgba(13,13,20,0.9)", border: "1px solid #2a2a3a",
+        borderRadius: 12, padding: "24px 16px", textAlign: "center", opacity: 0.6,
+      }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
+        <div style={{ color: "#555", fontWeight: 700, fontSize: 14 }}>
+          Requiere Nivel 2 — Inversor
+        </div>
+        <div style={{ color: "#444", fontSize: 12, marginTop: 6 }}>
+          Alcanza {BANK_LEVELS[2].scRequired.toLocaleString()} SC para desbloquear
+        </div>
+      </div>
+    )}
+
+    {bankLevel.level >= 2 && (
+      <>
+        {/* ── Estado del mercado hoy ── */}
+        {marketHistory.length > 0 && (() => {
+          const today = marketHistory[marketHistory.length - 1];
+          const colors = { crisis: "#ef4444", stability: "#fbbf24", growth: "#22c55e" };
+          const labels = { crisis: "Crisis", stability: "Estabilidad", growth: "Crecimiento" };
+          const col    = colors[today.state] || "#aaa";
+          return (
+            <div style={{
+              background: `${col}0f`,
+              border: `1px solid ${col}44`,
+              borderRadius: 12, padding: "12px 14px",
+            }}>
+              <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+                Mercado hoy
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ color: col, fontWeight: 800, fontSize: 16 }}>
+                  {today.state === "crisis" ? "📉" : today.state === "growth" ? "📈" : "➡️"}{" "}
+                  {labels[today.state]}
+                </span>
+                <span style={{ color: col, fontWeight: 900, fontSize: 22 }}>
+                  {today.pct > 0 ? "+" : ""}{today.pct}%
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Gráfica de velas (últimos 3 días) ── */}
+        {marketHistory.length > 0 && (
+          <div style={{
+            background: "rgba(13,13,20,0.9)", border: "1px solid #1e1e2e",
+            borderRadius: 12, padding: "12px 14px",
+          }}>
+            <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+              Histórico (últimos {marketHistory.length} días)
+            </div>
+            <CandlestickChart days={marketHistory} />
+          </div>
+        )}
+
+        {/* ── Eventos de hoy del fondo ── */}
+        {fundEvents.length > 0 && (
+          <div style={{
+            background: "rgba(13,13,20,0.7)", border: "1px solid #1e1e2e",
+            borderRadius: 10, padding: "10px 14px",
+          }}>
+            <div style={{ fontSize: 10, color: "#444", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+              Rendimiento aplicado
+            </div>
+            {fundEvents.map((e, i) => {
+              const col = e.state === "crisis" ? "#ef4444" : e.state === "growth" ? "#22c55e" : "#fbbf24";
+              return (
+                <div key={i} style={{ fontSize: 12, color: col, marginBottom: 3 }}>
+                  {e.date} · {e.state} {e.finalPct > 0 ? "+" : ""}{e.finalPct}%
+                  {" "}→ {e.returns >= 0 ? "+" : ""}${e.returns.toLocaleString()}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Fondo activo ── */}
+        {fund && (
+          <div style={{
+            background: "rgba(13,13,20,0.9)",
+            border: `1px solid ${fund.current_value >= fund.deposited ? "#22c55e44" : "#ef444444"}`,
+            borderRadius: 12, padding: "14px",
+          }}>
+            <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+              Inversión activa
+            </div>
+
+            {/* Barra de rendimiento */}
+            {(() => {
+              const gain   = fund.current_value - fund.deposited;
+              const gainPct = fund.deposited > 0
+                ? ((gain / fund.deposited) * 100).toFixed(2) : "0.00";
+              const isPos  = gain >= 0;
+              const tax    = Math.round(fund.current_value * 0.10);
+              const recv   = fund.current_value - tax;
+
+              return (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+                    {[
+                      ["Capital invertido",  `$${fund.deposited.toLocaleString()}`],
+                      ["Valor actual",       `$${fund.current_value.toLocaleString()}`],
+                      ["Ganancia/pérdida",   `${isPos ? "+" : ""}$${gain.toLocaleString()} (${gainPct}%)`],
+                      ["Abierto el",         fund.opened_at?.split("T")[0] || "—"],
+                      ["Impuesto salida (10%)", `$${tax.toLocaleString()}`],
+                      ["Recibirías",         `$${recv.toLocaleString()}`],
+                    ].map(([label, val], i) => (
+                      <div key={i} style={{ background: "#0d0d14", borderRadius: 8, padding: "8px 10px" }}>
+                        <div style={{ fontSize: 9, color: "#444", textTransform: "uppercase" }}>{label}</div>
+                        <div style={{
+                          fontSize: 12, fontWeight: 700, marginTop: 2,
+                          color: i === 2 ? (isPos ? "#22c55e" : "#ef4444")
+                               : i === 4 ? "#ff8888"
+                               : i === 5 ? "#00d4aa"
+                               : "#ddd",
+                        }}>{val}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bloqueo durante quiebra */}
+                  {loan?.status === "irrecoverable" && (
+                    <div style={{ fontSize: 11, color: "#ff6666", textAlign: "center", marginBottom: 10 }}>
+                      ⛓️ Retiro bloqueado en estado de quiebra
+                    </div>
+                  )}
+
+                  <button
+                    onClick={withdrawFund}
+                    disabled={paying || loan?.status === "irrecoverable"}
+                    style={{
+                      width: "100%", padding: "12px",
+                      background: (paying || loan?.status === "irrecoverable")
+                        ? "#1a1a26"
+                        : "linear-gradient(135deg, #f97316, #dc2626)",
+                      border: "none", borderRadius: 10, color: "#fff",
+                      fontWeight: 800, fontSize: 13, cursor: "pointer",
+                    }}
+                  >
+                    {paying ? "..." : `💸 Retirar inversión ($${recv.toLocaleString()})`}
+                  </button>
+                  <div style={{ fontSize: 10, color: "#333", textAlign: "center", marginTop: 6 }}>
+                    Se descuenta 10% del total retirado como impuesto de salida
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ── Formulario de depósito (sin fondo activo) ── */}
+        {!fund && (
+          <div style={{
+            background: "rgba(13,13,20,0.9)", border: "1px solid #2a2a3a",
+            borderRadius: 12, padding: "14px",
+          }}>
+            <div style={{ fontSize: 11, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+              Abrir nueva inversión
+            </div>
+            <input
+              type="number"
+              placeholder="Cantidad a invertir"
+              value={fundAmount}
+              onChange={e => setFundAmount(e.target.value)}
+              style={{
+                width: "100%", background: "#0d0d14", border: "1px solid #2a2a3a",
+                borderRadius: 8, padding: "10px 12px", color: "#fff",
+                fontSize: 15, boxSizing: "border-box", outline: "none", marginBottom: 8,
+              }}
+            />
+
+            {/* Atajos */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+              {[100_000, 500_000, 1_000_000, 5_000_000].map(v => (
+                <button key={v} onClick={() => setFundAmount(String(v))} style={{
+                  background: "#0d0d14", border: "1px solid #2a2a3a", borderRadius: 6,
+                  color: "#aaa", fontSize: 11, padding: "5px 10px", cursor: "pointer",
+                }}>
+                  ${v >= 1_000_000 ? `${v / 1_000_000}M` : `${v / 1_000}k`}
+                </button>
+              ))}
+              <button onClick={() => setFundAmount(String(balance))} style={{
+                background: "#0d0d14", border: "1px solid #fbbf2444", borderRadius: 6,
+                color: "#fbbf24", fontSize: 11, padding: "5px 10px", cursor: "pointer",
+              }}>
+                Todo
+              </button>
+            </div>
+
+            {/* Preview si hay monto */}
+            {parseInt(fundAmount) > 0 && (() => {
+              const amt    = parseInt(fundAmount);
+              const mktDay = marketHistory[marketHistory.length - 1];
+              const sc     = creditScore;
+              if (!mktDay) return null;
+              const scBonus  = sc * 0.0001;
+              const finalPct = (mktDay.pct / 100) + scBonus;
+              const est      = Math.round(amt * finalPct);
+              return (
+                <div style={{
+                  background: "rgba(139,92,246,0.06)", border: "1px solid #8b5cf622",
+                  borderRadius: 10, padding: "10px 12px", marginBottom: 10,
+                }}>
+                  <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", marginBottom: 6 }}>
+                    Estimado con el mercado de hoy
+                  </div>
+                  {[
+                    ["Inversión",    `$${amt.toLocaleString()}`],
+                    ["SC bonus",     `+${(scBonus * 100).toFixed(3)}%`],
+                    ["Rendimiento",  `${mktDay.pct > 0 ? "+" : ""}${mktDay.pct}% + SC`],
+                    ["Resultado est.", `${est >= 0 ? "+" : ""}$${est.toLocaleString()}`],
+                  ].map(([l, v], i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                      <span style={{ color: "#555" }}>{l}</span>
+                      <span style={{ color: i === 3 ? (est >= 0 ? "#22c55e" : "#ef4444") : "#aaa", fontWeight: 700 }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            <button
+              onClick={depositFund}
+              disabled={
+                requesting ||
+                !fundAmount ||
+                parseInt(fundAmount) <= 0 ||
+                parseInt(fundAmount) > balance ||
+                loan?.status === "irrecoverable"
+              }
+              style={{
+                width: "100%", padding: "12px",
+                background: (!requesting && fundAmount && parseInt(fundAmount) > 0 && parseInt(fundAmount) <= balance)
+                  ? "linear-gradient(135deg, #8b5cf6, #6d28d9)"
+                  : "#1a1a26",
+                border: "none", borderRadius: 10, color: "#fff",
+                fontWeight: 800, fontSize: 14, cursor: "pointer",
+              }}
+            >
+              {requesting ? "..." : "📈 Abrir inversión"}
+            </button>
+
+            <div style={{ fontSize: 10, color: "#333", textAlign: "center", marginTop: 8, lineHeight: 1.5 }}>
+              Capital congelado hasta retiro · 10% impuesto al retirar<br />
+              Rendimiento varía cada día según el mercado
+            </div>
+          </div>
+        )}
+      </>
+    )}
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </div>
   );
 }
@@ -1201,6 +1816,104 @@ function LoanPreview({ amount, bankLevel }) {
     </div>
   );
 }
+
+
+
+
+
+
+  function CandlestickChart({ days }) {
+  const W = 300, H = 130;
+  const candleW   = 26;
+  const maxRange  = 12;
+  const midY      = H * 0.52;
+  const scale     = (H * 0.42) / maxRange;
+  const spacing   = W / (days.length + 1);
+  const stateColors = { crisis: "#ef4444", stability: "#fbbf24", growth: "#22c55e" };
+
+  return (
+    <svg width={W} height={H} style={{ display: "block", width: "100%" }}
+         viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
+
+      {/* Grid */}
+      {[-10, -5, 0, 5, 10].map(p => (
+        <line key={p}
+          x1={0} y1={midY - p * scale} x2={W} y2={midY - p * scale}
+          stroke={p === 0 ? "#2a2a3a" : "#16161f"}
+          strokeWidth={p === 0 ? 1.5 : 1}
+          strokeDasharray={p !== 0 ? "3,4" : undefined}
+        />
+      ))}
+
+      {/* Y labels */}
+      {[-10, -5, 0, 5, 10].map(p => (
+        <text key={p} x={2} y={midY - p * scale + 3.5}
+          fill="#333" fontSize={8}>
+          {p > 0 ? "+" : ""}{p}%
+        </text>
+      ))}
+
+      {/* Candles */}
+      {days.map((day, i) => {
+        const pct   = parseFloat(day.pct);
+        const col   = stateColors[day.state] || "#aaa";
+        const x     = spacing * (i + 1) - candleW / 2;
+        // Simulate OHLC from single daily pct (seeded for consistency)
+        const rOpen = seededRandom(day.date + "_open");
+        const open  = pct * rOpen * 0.6;
+        const close = pct;
+        const wick  = Math.abs(pct) * 0.2 + 0.3;
+        const high  = Math.max(open, close) + wick;
+        const low   = Math.min(open, close) - wick;
+
+        const closeY = midY - close * scale;
+        const openY  = midY - open  * scale;
+        const highY  = midY - high  * scale;
+        const lowY   = midY - low   * scale;
+
+        const bodyTop = Math.min(openY, closeY);
+        const bodyH   = Math.max(2, Math.abs(closeY - openY));
+        const dayLabels = ["Antayer", "Ayer", "Hoy"];
+        const labelI = days.length === 3 ? i : days.length === 2 ? i + 1 : 2;
+
+        return (
+          <g key={i}>
+            {/* Wick */}
+            <line x1={x + candleW/2} y1={highY} x2={x + candleW/2} y2={lowY}
+              stroke={col} strokeWidth={1.5} />
+            {/* Body */}
+            <rect x={x} y={bodyTop} width={candleW} height={bodyH}
+              fill={col} opacity={0.85} rx={2} />
+            {/* Pct label (encima) */}
+            <text x={x + candleW/2} y={Math.min(highY - 5, midY - 14)}
+              textAnchor="middle" fill={col} fontSize={9} fontWeight="bold">
+              {pct > 0 ? "+" : ""}{pct.toFixed(1)}%
+            </text>
+            {/* Day label (debajo) */}
+            <text x={x + candleW/2} y={H - 1}
+              textAnchor="middle" fill="#444" fontSize={8}>
+              {dayLabels[labelI]}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─── Helpers de estilo ────────────────────────────────────────────────────────
 function alertStyle(color) {

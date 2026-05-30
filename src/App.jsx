@@ -142,6 +142,24 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
   const [depositLoading, setDepositLoading] = useState(false);
   const [showStats, setShowStats] = useState(false);   // ← nuevo
 
+
+
+
+
+  // En Lobby, junto a los otros useState:
+const [marketToday, setMarketToday] = useState(null);
+
+useEffect(() => {
+  const today = new Date().toISOString().split("T")[0];
+  supabase.from("market_daily").select("*").eq("date", today).single()
+    .then(({ data }) => setMarketToday(data));
+}, []);
+
+
+
+
+
+
   useEffect(() => {
   supabase.from("profiles").select("username, avatar, balance, total_deposited")
     .then(({ data }) => {
@@ -181,6 +199,49 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
     <div>
       <div style={styles.lobbyHeader}>
         <div>
+
+
+
+
+
+
+        {/* Justo antes de los botones del header */}
+{marketToday && (
+  <div style={{
+    background: marketToday.state === "crisis" ? "rgba(239,68,68,0.08)"
+              : marketToday.state === "growth"  ? "rgba(34,197,94,0.08)"
+              : "rgba(251,191,36,0.08)",
+    border: `1px solid ${marketToday.state === "crisis" ? "#ef444433"
+           : marketToday.state === "growth" ? "#22c55e33" : "#fbbf2433"}`,
+    borderRadius: 8, padding: "5px 12px",
+    fontSize: 11, color: "#aaa",
+    textAlign: "center", marginBottom: 12,
+  }}>
+    📊 Mercado hoy:{" "}
+    <strong style={{ color: marketToday.state === "crisis" ? "#ef4444" : marketToday.state === "growth" ? "#22c55e" : "#fbbf24" }}>
+      {marketToday.state === "crisis" ? "Crisis" : marketToday.state === "growth" ? "Crecimiento" : "Estabilidad"}{" "}
+      {marketToday.pct > 0 ? "+" : ""}{marketToday.pct}%
+    </strong>
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           <div style={{ fontSize: 13, color: "#555" }}>Bienvenido</div>
           <div style={{ fontSize: 22, fontWeight: 700 }}>{profile.avatar} {profile.username}</div>
           <div style={{ fontSize: 12, color: neto >= 0 ? "#00d4aa" : "#ff4444", marginTop: 2 }}>
@@ -195,6 +256,30 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
           <div style={styles.balancePill}>💰 {balance.toLocaleString()} fichas</div>
           <div style={{ display: "flex", gap: 8 }}>
+
+
+
+
+
+
+
+              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             <button onClick={() => setShowStats(s => !s)} style={styles.depositBtn}>
               📊 {showStats ? "Ocultar" : "Mis stats"}
             </button>
