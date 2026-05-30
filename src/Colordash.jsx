@@ -85,6 +85,7 @@ export default function ColorDash({ balance, setBalance, onBack }) {
   }
 
   // ── Spawn ───────────────────────────────────────────────────────────────────
+  /*
   function scheduleSpawn(s) {
     clearTimeout(spawnRef.current);
     spawnRef.current = setTimeout(() => {
@@ -97,25 +98,8 @@ export default function ColorDash({ balance, setBalance, onBack }) {
       scheduleSpawn(st);
     }, s.spawnInterval);
   }
+*/
 
-
-
-
-
-/*
-  // ANTES:
-function scheduleSpawn(s) {
-  clearTimeout(spawnRef.current);
-  spawnRef.current = setTimeout(() => {
-    const st = stateRef.current;
-    if (!st) return;
-    const colorIdx = Math.floor(Math.random() * 3);
-    const x = OBJ_R + 10 + Math.random() * (W - OBJ_R * 2 - 20);
-    st.objects.push({ x, y: -OBJ_R - 5, colorIdx, id: st.nextId++ });
-    st.spawnInterval = Math.max(SPAWN_INTERVAL_MIN, st.spawnInterval * SPAWN_DEC);
-    scheduleSpawn(st);
-  }, s.spawnInterval);
-}*/
 
 // DESPUÉS:
 function scheduleSpawn(s) {
