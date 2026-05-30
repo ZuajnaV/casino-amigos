@@ -4,6 +4,7 @@ import { ASSETS } from "./ShopPanel.jsx";
 
 // ─── MERCADO DIARIO ────────────────────────────────────────────────────────
 // Generación determinista: misma fecha → mismo resultado para todos los jugadores
+/*
 function seededRandom(seed) {
   const str = String(seed);
   let hash = 0;
@@ -48,6 +49,73 @@ async function getOrCreateMarketForDate(dateStr) {
   }
   return inserted;
 }
+
+*/
+
+
+
+
+
+
+
+// ─── MERCADO DIARIO ────────────────────────────────────────────────────────
+function generateMarketForDate() {
+  // Math.random() real — impredecible cada vez que se llama
+  const r1 = Math.random();
+  const r2 = Math.random();
+  let state, pct;
+
+  if (r1 < 0.25) {
+    state = "crisis";
+    pct = -(r2 * 5 + 5);           // -10% … -5%
+  } else if (r1 < 0.75) {
+    state = "stability";
+    pct = r2 * 2 - 1;              // -1% … +1%
+  } else {
+    state = "growth";
+    pct = r2 * 5 + 5;              // +5% … +10%
+  }
+  return { state, pct: Math.round(pct * 100) / 100 };
+}
+
+async function getOrCreateMarketForDate(dateStr) {
+  // 1. ¿Ya existe el mercado de hoy? → devolverlo sin tocar nada
+  const { data } = await supabase
+    .from("market_daily").select("*").eq("date", dateStr).single();
+  if (data) return data;
+
+  // 2. No existe → generarlo con dados reales
+  const { state, pct } = generateMarketForDate();   // ← sin parámetro
+  const { data: inserted, error } = await supabase
+    .from("market_daily").insert({ date: dateStr, state, pct }).select().single();
+
+  if (error) {
+    // Race condition: otro jugador lo creó milisegundos antes — releer
+    const { data: retry } = await supabase
+      .from("market_daily").select("*").eq("date", dateStr).single();
+    return retry || { date: dateStr, state, pct };
+  }
+  return inserted;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─── PROCESADOR DEL FONDO ────────────────────────────────────────────────────
 export async function processInvestmentFund(userId, creditScore) {
