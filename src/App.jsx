@@ -198,9 +198,7 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
             <button onClick={() => setShowStats(s => !s)} style={styles.depositBtn}>
               📊 {showStats ? "Ocultar" : "Mis stats"}
             </button>
-            <button onClick={() => setShowDeposit(!showDeposit)} style={styles.depositBtn}>
-              💵 Bolsillo
-            </button>
+            
           </div>
         </div>
 
