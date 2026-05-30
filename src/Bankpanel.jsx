@@ -193,12 +193,6 @@ async function handleGraceExpiry(userId, loanId, events) {
 export async function processCDT(userId, currentBalance, creditScore, bankLevel) {
   if (bankLevel < 1) return { newBalance: currentBalance, interest: 0 };
 
-
-
-
-
-
-
   // Sin CDT si hay deuda irrecuperable
   const { data: blockingLoan } = await supabase
     .from("loans")
@@ -210,16 +204,6 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel)
   if (blockingLoan && blockingLoan.length > 0) {
     return { newBalance: currentBalance, interest: 0 };
   }
-
-
-
-
-
-
-
-
-
-
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -540,17 +524,6 @@ async function handleSuicide() {
     balance:           STARTING_BALANCE,
     cdt_last_processed: todayStr(),
   }).eq("id", profile.id);
-/*
-  await supabase.from("loans")
-    .update({ status: "foreclosed" })
-    .eq("user_id", profile.id)
-    .in("status", ["active", "grace", "irrecoverable", "pending_mortgage"]);
-
-    
-  await supabase.from("player_assets")
-    .delete()
-    .eq("user_id", profile.id);
-*/
   setBalance(STARTING_BALANCE);
   if (onDeath) onDeath();
   setPaying(false);
@@ -924,10 +897,6 @@ const cuotaHoy = loan
     </div>
   </div>
 )}
-
-
-
-
 
 {/* ── Alerta de ejecución forzada ── */}
 {events.some(e => e.type === "foreclosure") && (

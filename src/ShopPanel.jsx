@@ -20,7 +20,13 @@ export const ASSETS = {
     key: "carro", label: "Carro Lujoso", icon: "🚗",
     img: "/Carro.png", category: "vehiculos",
     price: 6000000, sc: 2000, cdt: 10,
-    desc: "Símbolo de estatus — máximo score vehicular",
+    desc: "Símbolo de estatus",
+  },
+  jet: {
+    key: "jet", label: "Jet privado", icon: "✈️",
+    img: "/Jet.png", category: "vehiculos",
+    price: 10000000, sc: 6000, cdt: 15,
+    desc: "Lujos privados",
   },
   choza: {
     key: "choza", label: "Choza", icon: "🛖",
@@ -34,10 +40,16 @@ export const ASSETS = {
     price: 3000000, sc: 500, cdt: 7,
     desc: "Hogar propio — sólido historial crediticio",
   },
+    cabaña: {
+    key: "cabaña", label: "Cabaña", icon: "⛺",
+    img: "/Cabaña.png", category: "vivienda",
+    price: 6000000, sc: 2000, cdt: 10,
+    desc: "Lugar vacacional propio",
+  },
   mansion: {
     key: "mansion", label: "Mansión", icon: "🏰",
     img: "/Mansion.png", category: "vivienda",
-    price: 6000000, sc: 2000, cdt: 12,
+    price: 10000000, sc: 6000, cdt: 15,
     desc: "Propiedad de lujo — el pináculo del score",
   },
 };

@@ -319,13 +319,6 @@ useEffect(() => {
     .then(({ data }) => setIsInsolvent(data && data.length > 0));
 }, [profile.id, balance]);
 
-
-
-
-
-
-
-
   // Cargar activos del jugador al montar
   useEffect(() => {
     async function loadAssets() {
