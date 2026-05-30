@@ -15,7 +15,7 @@ const SPAWN_INTERVAL_INIT = 1500;   // intervalo inicial de spawn (ms)
 const SPAWN_INTERVAL_MIN  = 42;     // límite de spawn (máxima dificultad)
 const SPAWN_DEC = 0.95;            //0.984 factor de reducción del intervalo de spawn por cada objeto generado
 const HIT_RADIUS = TRI_R - 4;   // radio de colisión con la punta activa
-const PAGO_POR_OBJ = 2000;
+const PAGO_POR_OBJ = 1500;
 
 // Los 3 colores/puntas
 const COLORS = [
