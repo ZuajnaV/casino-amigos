@@ -27,15 +27,15 @@ function StatBlock({ icon, title, rows, color }) {
       borderRadius: 10,
       padding: "10px 14px",
     }}>
-      <div style={{ color, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>
+      <div style={{ color, fontWeight: 700, fontSize: 20, marginBottom: 8 }}>
         {icon} {title}
       </div>
       {rows.map(([label, val], i) => (
         <div key={i} style={{
           display: "flex", justifyContent: "space-between",
-          fontSize: 12, marginBottom: 3,
+          fontSize: 15, marginBottom: 3,
         }}>
-          <span style={{ color: "#777" }}>{label}</span>
+          <span style={{ color: "#b2b2b2" }}>{label}</span>
           <span style={{ color: "#ddd", fontWeight: 600 }}>{val}</span>
         </div>
       ))}
@@ -52,10 +52,10 @@ function CrazyTimeBlock({ ct }) {
       border: "1px solid #ff6b0033",
       borderRadius: 10, padding: "10px 14px",
     }}>
-      <div style={{ color: "#ff6b00", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
+      <div style={{ color: "#ff6b00", fontWeight: 700, fontSize: 20, marginBottom: 4 }}>
         💥 Crazy Time
       </div>
-      <div style={{ color: "#444", fontSize: 12 }}>Sin giros registrados aún.</div>
+      <div style={{ color: "#444", fontSize: 15 }}>Sin giros registrados aún.</div>
     </div>
   );
 
@@ -69,17 +69,17 @@ function CrazyTimeBlock({ ct }) {
     }}>
       {/* Título */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ color: "#ff6b00", fontWeight: 700, fontSize: 13 }}>
+        <div style={{ color: "#ff6b00", fontWeight: 700, fontSize: 20 }}>
           💥 Crazy Time
         </div>
-        <div style={{ color: "#555", fontSize: 11 }}>
+        <div style={{ color: "#cbcbcb", fontSize: 14 }}>
           {ct.totalSpins} giro{ct.totalSpins !== 1 ? "s" : ""} registrado{ct.totalSpins !== 1 ? "s" : ""}
         </div>
       </div>
 
       {/* Proporciones */}
       <div>
-        <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
+        <div style={{ fontSize: 15, color: "#d9d9d9", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
           Proporción por segmento
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -93,9 +93,9 @@ function CrazyTimeBlock({ ct }) {
                 borderRadius: 6, padding: "2px 7px",
                 display: "flex", alignItems: "center", gap: 3,
               }}>
-                <span style={{ fontSize: 11 }}>{CT_EMOJIS[s]}</span>
-                <span style={{ color: CT_COLORS[s], fontWeight: 700, fontSize: 11 }}>{pct}%</span>
-                <span style={{ color: "#444", fontSize: 10 }}>({count})</span>
+                <span style={{ fontSize: 15 }}>{CT_EMOJIS[s]}</span>
+                <span style={{ color: CT_COLORS[s], fontWeight: 700, fontSize: 16 }}>{pct}%</span>
+                <span style={{ color: "#d4d4d4", fontSize: 14 }}>({count})</span>
               </div>
             );
           })}
@@ -104,7 +104,7 @@ function CrazyTimeBlock({ ct }) {
 
       {/* Spins since last hit */}
       <div>
-        <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
+        <div style={{ fontSize: 12, color: "#ffffff", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
           Giros desde última aparición
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -119,25 +119,25 @@ function CrazyTimeBlock({ ct }) {
                 borderRadius: 6, padding: "2px 8px",
                 display: "flex", alignItems: "center", gap: 4,
               }}>
-                <span style={{ fontSize: 11 }}>{CT_EMOJIS[s]}</span>
+                <span style={{ fontSize: 16 }}>{CT_EMOJIS[s]}</span>
                 <span style={{
                   color: isHot ? "#00d4aa" : isCold ? "#ff6666" : "#aaa",
-                  fontWeight: 700, fontSize: 11,
+                  fontWeight: 700, fontSize: 16,
                 }}>
-                  {since === -1 ? "—" : since === 0 ? "¡YA!" : `${since}`}
+                  {since === -1 ? "—" : since === 0 ? "Salió" : `${since}`}
                 </span>
               </div>
             );
           })}
         </div>
-        <div style={{ color: "#333", fontSize: 10, marginTop: 4 }}>
+        <div style={{ color: "#ffffff", fontSize: 14, marginTop: 4 }}>
           Verde = salió en el último giro · Rojo = &gt;10 giros sin aparecer · Número = giros desde la última vez
         </div>
       </div>
 
       {/* Max multiplicador por bonus */}
       <div>
-        <div style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
+        <div style={{ fontSize: 14, color: "#f5f5f5", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>
           Multiplicador máximo registrado por bonus
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -148,10 +148,10 @@ function CrazyTimeBlock({ ct }) {
               borderRadius: 6, padding: "4px 10px",
               display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
             }}>
-              <span style={{ color: CT_COLORS[b], fontWeight: 700, fontSize: 11 }}>
+              <span style={{ color: CT_COLORS[b], fontWeight: 700, fontSize: 16 }}>
                 {CT_EMOJIS[b]} {CT_LABELS[b]}
               </span>
-              <span style={{ color: "#fbbf24", fontWeight: 900, fontSize: 12 }}>
+              <span style={{ color: "#fbbf24", fontWeight: 900, fontSize: 16 }}>
                 {ct.maxMult[b] > 0 ? `${ct.maxMult[b]}x` : "—"}
               </span>
             </div>
@@ -242,7 +242,7 @@ export default function PlayerStats({ userId, layout = "grid" }) {
   }, [userId]);
 
   if (loading) return (
-    <div style={{ color: "#aaa", fontSize: 13, padding: 16, textAlign: "center" }}>
+    <div style={{ color: "#aaa", fontSize: 15, padding: 16, textAlign: "center" }}>
       Cargando estadísticas...
     </div>
   );
