@@ -195,11 +195,13 @@ const ASSET_POSITIONS = {
   bicicleta: { bottom: 100,  left: "calc(50% - 220px)", width: 160,  zIndex: 3 },
   moto:      { bottom: 150,  left: "calc(50% - 500px)", width: 160, zIndex: 3 },
   carro:     { bottom: 30,  left: "calc(50% - 450px)", width: 240, zIndex: 2 },
+  jet:       { bottom: 500,  left: "calc(50% - 450px)", width: 240, zIndex: 2 },
 
   // Vivienda — al fondo, más arriba
-  choza:     { bottom: 70, left: "calc(50% + 180px)", width: 150, zIndex: 1 },
+  choza:     { bottom: 30, left: "calc(50% + 50px)", width: 150, zIndex: 1 },
   casa:      { bottom: 30, left: "calc(50% + 450px)", width: 200, zIndex: 1 },
-  mansion:   { bottom: 250, left: "calc(50% + 260px)", width: 350, zIndex: 1 },
+  cabaña:   { bottom: 120, left: "calc(50% + 220px)", width: 200, zIndex: 1 },
+  mansion:   { bottom: 250, left: "calc(50% + 350px)", width: 350, zIndex: 1 },
 };
 
 function OwnedAssets({ ownedMap }) {

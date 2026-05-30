@@ -714,11 +714,11 @@ const cuotaHoy = loan
       ["Tasa base diaria", "0.5%"],
       ["Bonus por SC",      `+${(creditScore / 10_000).toFixed(4)}%`],
 ["Tasa efectiva hoy", `${((0.005 + creditScore / 1_000_000) * 100).toFixed(3)}%`],
-["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],
+["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 10_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],
 
 
-      ["Techo de ahorro", "$5.000.000"],
-      ["Base efectiva", `$${Math.min(balance, 5_000_000).toLocaleString()}`],
+      ["Techo de ahorro", "$10.000.000"],
+      ["Base efectiva", `$${Math.min(balance, 10_000_000).toLocaleString()}`],
      // ["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 10000)).toLocaleString()}`],
     ].map(([label, val], i) => (
       <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
@@ -727,7 +727,7 @@ const cuotaHoy = loan
       </div>
     ))}
     <div style={{ fontSize: 10, color: "#333", marginTop: 6 }}>
-      Se aplica automáticamente cada día al abrir el banco · Solo sobre los primeros $5M
+      Se aplica automáticamente cada día al abrir el banco · Solo sobre los primeros $10M
     </div>
   </div>
 )}
