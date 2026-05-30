@@ -78,32 +78,6 @@ export async function processInvestmentFund(userId, creditScore) {
   let currentValue = fund.current_value;
   const events = [];
 
-  // Procesar cada día pendiente (del más antiguo al más reciente)
-  /*
-  for (let d = daysPend - 1; d >= 0; d--) {
-    const dayDate = addDays(today, -d);
-    const mkt = await getOrCreateMarketForDate(dayDate);
-
-    // Fórmula: pct_base + SC*0.0001 + activos*0.5% (bonificación activos)
-    const scBonus     = creditScore * 0.0001;
-    const assetBonus  = totalAssets * 0.005;
-    const finalPct    = (mkt.pct / 100) + scBonus + assetBonus;
-    const returns     = Math.round(currentValue * finalPct);
-    currentValue      = Math.max(0, currentValue + returns);
-
-    events.push({
-      date:     dayDate,
-      state:    mkt.state,
-      pct:      mkt.pct,
-      finalPct: +(finalPct * 100).toFixed(2),
-      returns,
-    });
-  }*/
-
-
-
-
-
   for (let d = daysPend - 1; d >= 0; d--) {
   const dayDate = addDays(today, -d);
   const mkt = await getOrCreateMarketForDate(dayDate);
@@ -124,20 +98,6 @@ export async function processInvestmentFund(userId, creditScore) {
     returns,
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   await supabase.from("investment_fund").update({
     current_value:  currentValue,
