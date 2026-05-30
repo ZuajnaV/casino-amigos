@@ -2,55 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 import { ASSETS } from "./ShopPanel.jsx";
 
-// ─── MERCADO DIARIO ────────────────────────────────────────────────────────
-// Generación determinista: misma fecha → mismo resultado para todos los jugadores
-/*
-function seededRandom(seed) {
-  const str = String(seed);
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash = hash & hash;
-  }
-  return Math.abs(hash) / 2_147_483_647;
-}
 
-function generateMarketForDate(dateStr) {
-  const r1 = seededRandom(dateStr);
-  const r2 = seededRandom(dateStr + "_pct");
-  let state, pct;
-  if (r1 < 0.25) {
-    state = "crisis";
-    pct = -(r2 * 5 + 5);          // -10% … -5%
-  } else if (r1 < 0.75) {
-    state = "stability";
-    pct = r2 * 2 - 1;              // -1% … +1%
-  } else {
-    state = "growth";
-    pct = r2 * 5 + 5;              // +5% … +10%
-  }
-  return { state, pct: Math.round(pct * 100) / 100 };
-}
-window.generateMarketForDate = generateMarketForDate;
-async function getOrCreateMarketForDate(dateStr) {
-  const { data } = await supabase
-    .from("market_daily").select("*").eq("date", dateStr).single();
-  if (data) return data;
-
-  const { state, pct } = generateMarketForDate(dateStr);
-  const { data: inserted, error } = await supabase
-    .from("market_daily").insert({ date: dateStr, state, pct }).select().single();
-
-  if (error) {
-    // Race condition: otro jugador lo creó al mismo tiempo
-    const { data: retry } = await supabase
-      .from("market_daily").select("*").eq("date", dateStr).single();
-    return retry || { date: dateStr, state, pct };
-  }
-  return inserted;
-}
-
-*/
 
 
 
@@ -1714,14 +1666,18 @@ function LoanPreview({ amount, bankLevel }) {
 }
 
 
-  function CandlestickChart({ days }) {
+
+
+
+function CandlestickChart({ days }) {
   const W = 300, H = 130;
-  const candleW   = 26;
-  const maxRange  = 12;
-  const midY      = H * 0.52;
-  const scale     = (H * 0.42) / maxRange;
-  const spacing   = W / (days.length + 1);
+  const candleW = 26;
+  const maxRange = 12;
+  const midY = H * 0.52;
+  const scale = (H * 0.42) / maxRange;
+  const spacing = W / (days.length + 1);
   const stateColors = { crisis: "#ef4444", stability: "#fbbf24", growth: "#22c55e" };
+  const dayLabels = ["Antayer", "Ayer", "Hoy"];
 
   return (
     <svg width={W} height={H} style={{ display: "block", width: "100%" }}
@@ -1745,44 +1701,38 @@ function LoanPreview({ amount, bankLevel }) {
         </text>
       ))}
 
-      {/* Candles */}
+      {/* Barras simples (sin seededRandom) */}
       {days.map((day, i) => {
-        const pct   = parseFloat(day.pct);
-        const col   = stateColors[day.state] || "#aaa";
-        const x     = spacing * (i + 1) - candleW / 2;
-        // Simulate OHLC from single daily pct (seeded for consistency)
-        const rOpen = seededRandom(day.date + "_open");
-        const open  = pct * rOpen * 0.6;
-        const close = pct;
-        const wick  = Math.abs(pct) * 0.2 + 0.3;
-        const high  = Math.max(open, close) + wick;
-        const low   = Math.min(open, close) - wick;
-
-        const closeY = midY - close * scale;
-        const openY  = midY - open  * scale;
-        const highY  = midY - high  * scale;
-        const lowY   = midY - low   * scale;
-
-        const bodyTop = Math.min(openY, closeY);
-        const bodyH   = Math.max(2, Math.abs(closeY - openY));
-        const dayLabels = ["Antayer", "Ayer", "Hoy"];
+        const pct  = parseFloat(day.pct);
+        const col  = stateColors[day.state] || "#aaa";
+        const cx   = spacing * (i + 1);
+        const barH = Math.max(2, Math.abs(pct) * scale);
+        const barY = pct >= 0 ? midY - barH : midY;
         const labelI = days.length === 3 ? i : days.length === 2 ? i + 1 : 2;
 
         return (
           <g key={i}>
-            {/* Wick */}
-            <line x1={x + candleW/2} y1={highY} x2={x + candleW/2} y2={lowY}
-              stroke={col} strokeWidth={1.5} />
-            {/* Body */}
-            <rect x={x} y={bodyTop} width={candleW} height={bodyH}
-              fill={col} opacity={0.85} rx={2} />
-            {/* Pct label (encima) */}
-            <text x={x + candleW/2} y={Math.min(highY - 5, midY - 14)}
-              textAnchor="middle" fill={col} fontSize={9} fontWeight="bold">
+            {/* Línea central (eje 0) → tope de la barra */}
+            <line
+              x1={cx} y1={midY}
+              x2={cx} y2={pct >= 0 ? midY - barH : midY + barH}
+              stroke={col} strokeWidth={2}
+            />
+            {/* Barra */}
+            <rect
+              x={cx - candleW / 2} y={barY}
+              width={candleW} height={barH}
+              fill={col} opacity={0.85} rx={2}
+            />
+            {/* Pct label */}
+            <text
+              x={cx} y={pct >= 0 ? barY - 5 : barY + barH + 11}
+              textAnchor="middle" fill={col} fontSize={9} fontWeight="bold"
+            >
               {pct > 0 ? "+" : ""}{pct.toFixed(1)}%
             </text>
-            {/* Day label (debajo) */}
-            <text x={x + candleW/2} y={H - 1}
+            {/* Day label */}
+            <text x={cx} y={H - 1}
               textAnchor="middle" fill="#444" fontSize={8}>
               {dayLabels[labelI]}
             </text>
@@ -1792,6 +1742,31 @@ function LoanPreview({ amount, bankLevel }) {
     </svg>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─── Helpers de estilo ────────────────────────────────────────────────────────
 function alertStyle(color) {
