@@ -304,6 +304,28 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
   const [activeJob, setActiveJob] = useState(null);
   const [ownedAssets, setOwnedAssets] = useState({});   // { key: { quantity, mortgaged } }
 
+
+
+  const [isInsolvent, setIsInsolvent] = useState(false);
+
+// Cargar estado de insolvencia al montar y cuando cambia el balance
+useEffect(() => {
+  supabase
+    .from("loans")
+    .select("id")
+    .eq("user_id", profile.id)
+    .eq("status", "irrecoverable")
+    .limit(1)
+    .then(({ data }) => setIsInsolvent(data && data.length > 0));
+}, [profile.id, balance]);
+
+
+
+
+
+
+
+
   // Cargar activos del jugador al montar
   useEffect(() => {
     async function loadAssets() {
@@ -608,62 +630,85 @@ export default function PlayerSpace({ profile, balance, setBalance, deaths = 0, 
             </SidePanel>
           )}
 
+
+
           {/* ─ TRABAJO ─ */}
-          {panel === "work" && (
-            <SidePanel title="Trabajar" icon="💼" onClose={() => setPanel(null)}>
-              <div style={{ color: "#ffffff", fontSize: 14, marginBottom: 16 }}>
-                Juega y gana fichas reales. Cuanto mejor lo hagas, más cobras.
-              </div>
+          
 
-              {[
-                { id: "snake",        icon: "🐍", name: "Snake",         desc: "$1.000 por manzana",                   color: "#00d4aa" },
-                { id: "dino",         icon: "🦕", name: "Dinosaur Game", desc: "$2.000 por cada 100 puntos",           color: "#fbbf24" },
-                { id: "minesweeper",  icon: "💥", name: "Buscaminas",    desc: "Diferentes premios",                   color: "#ff6b35" },
-                { id: "colordash",    icon: "🔺", name: "Color Dash",    desc: "$5.000 por objeto superado",           color: "#c084fc" },
-                { id: "blockbreaker", icon: "🧱", name: "Block Breaker", desc: "$30.000 por nivel superado",           color: "#8b5cf6" },
-                { id: "geometrix",    icon: "📐", name: "Geometrix",     desc: "$1'385.000 por completar los niveles", color: "#fbbf24" },
-              ].map(job => (
-                <div
-                  key={job.id}
-                  onClick={() => { setPanel(null); setActiveJob(job.id); }}
-                  style={{
-                    background: `rgba(${job.color === "#00d4aa" ? "0,212,170" : job.color === "#fbbf24" ? "251,191,36" : job.color === "#ff6b35" ? "255,107,53" : job.color === "#c084fc" ? "192,132,252" : "139,92,246"},0.08)`,
-                    border: `1px solid ${job.color}44`,
-                    borderRadius: 10, padding: "12px 14px", marginBottom: 10,
-                    display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
-                  }}
-                >
-                  <span style={{ fontSize: 28 }}>{job.icon}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: job.color, fontWeight: 700, fontSize: 14 }}>{job.name}</div>
-                    <div style={{ color: "#555", fontSize: 12 }}>{job.desc}</div>
-                  </div>
-                  <div style={{
-                    background: job.color, borderRadius: 6, padding: "4px 10px",
-                    fontSize: 11, color: ["#fbbf24", "#00d4aa", "#c084fc"].includes(job.color) ? "#000" : "#fff",
-                    fontWeight: 700,
-                  }}>▶ Jugar</div>
-                </div>
-              ))}
+                {panel === "work" && (
+  <SidePanel title="Trabajar" icon="💼" onClose={() => setPanel(null)}>
 
-              {/* Próximamente */}
-              <div style={{
-                background: "rgba(13,13,20,0.8)", border: "1px solid #c084fc33",
-                borderRadius: 10, padding: "12px 14px", marginBottom: 10,
-                display: "flex", alignItems: "center", gap: 12,
-              }}>
-                <span style={{ fontSize: 28 }}>⭕</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: "#c084fc", fontWeight: 700, fontSize: 14 }}>Próximamente</div>
-                  <div style={{ color: "#555", fontSize: 12 }}>$$$</div>
-                </div>
-                <div style={{
-                  background: "#1a1a26", border: "1px solid #2a2a3a", borderRadius: 6,
-                  padding: "4px 10px", fontSize: 11, color: "#555", fontWeight: 600,
-                }}>Pronto</div>
-              </div>
-            </SidePanel>
-          )}
+    {/* Banner de bloqueo si está en quiebra irrecuperable */}
+    {isInsolvent && (
+      <div style={{
+        background: "rgba(127,0,0,0.15)",
+        border: "2px solid #ff000066",
+        borderRadius: 10, padding: "12px 14px", marginBottom: 16,
+        textAlign: "center",
+      }}>
+        <div style={{ fontSize: 22, marginBottom: 4 }}>☠️</div>
+        <div style={{ color: "#ff4444", fontWeight: 900, fontSize: 14, marginBottom: 4 }}>
+          QUIEBRA IRRECUPERABLE
+        </div>
+        <div style={{ color: "#ff8888", fontSize: 12, lineHeight: 1.5 }}>
+          No puedes generar ingresos en este estado.<br />
+          Ve al Banco y usa la opción "Colgarse".
+        </div>
+      </div>
+    )}
+
+    <div style={{ color: isInsolvent ? "#444" : "#ffffff", fontSize: 14, marginBottom: 16 }}>
+      Juega y gana fichas reales. Cuanto mejor lo hagas, más cobras.
+    </div>
+
+    {[
+      { id: "snake",        icon: "🐍", name: "Snake",         desc: "$1.000 por manzana",                   color: "#00d4aa" },
+      { id: "dino",         icon: "🦕", name: "Dinosaur Game", desc: "$2.000 por cada 100 puntos",           color: "#fbbf24" },
+      { id: "minesweeper",  icon: "💥", name: "Buscaminas",    desc: "Diferentes premios",                   color: "#ff6b35" },
+      { id: "colordash",    icon: "🔺", name: "Color Dash",    desc: "$5.000 por objeto superado",           color: "#c084fc" },
+      { id: "blockbreaker", icon: "🧱", name: "Block Breaker", desc: "$30.000 por nivel superado",           color: "#8b5cf6" },
+      { id: "geometrix",    icon: "📐", name: "Geometrix",     desc: "$1'385.000 por completar los niveles", color: "#fbbf24" },
+    ].map(job => (
+      <div
+        key={job.id}
+        onClick={() => {
+          if (isInsolvent) return;   // ← bloqueo
+          setPanel(null);
+          setActiveJob(job.id);
+        }}
+        style={{
+          background: isInsolvent
+            ? "rgba(13,13,20,0.5)"
+            : `rgba(${job.color === "#00d4aa" ? "0,212,170" : job.color === "#fbbf24" ? "251,191,36" : job.color === "#ff6b35" ? "255,107,53" : job.color === "#c084fc" ? "192,132,252" : "139,92,246"},0.08)`,
+          border: `1px solid ${isInsolvent ? "#2a2a3a" : job.color + "44"}`,
+          borderRadius: 10, padding: "12px 14px", marginBottom: 10,
+          display: "flex", alignItems: "center", gap: 12,
+          cursor: isInsolvent ? "not-allowed" : "pointer",
+          opacity: isInsolvent ? 0.4 : 1,
+        }}
+      >
+        <span style={{ fontSize: 28 }}>{job.icon}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ color: isInsolvent ? "#444" : job.color, fontWeight: 700, fontSize: 14 }}>{job.name}</div>
+          <div style={{ color: "#555", fontSize: 12 }}>{job.desc}</div>
+        </div>
+        <div style={{
+          background: isInsolvent ? "#1a1a26" : job.color,
+          border: isInsolvent ? "1px solid #2a2a3a" : "none",
+          borderRadius: 6, padding: "4px 10px",
+          fontSize: 11,
+          color: isInsolvent ? "#444" : ["#fbbf24", "#00d4aa", "#c084fc"].includes(job.color) ? "#000" : "#fff",
+          fontWeight: 700,
+        }}>
+          {isInsolvent ? "🔒" : "▶ Jugar"}
+        </div>
+      </div>
+    ))}
+  </SidePanel>
+)}
+
+
+
         </div>
       )}
 

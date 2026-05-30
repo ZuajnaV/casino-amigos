@@ -65,140 +65,6 @@ function bankLevelFor(sc) {
   return BANK_LEVELS[0];
 }
 
-/*
-// ─── PROCESADOR AUTOMÁTICO DE CUOTAS ─────────────────────────────────────────
-// Llámalo al montar el componente. Evalúa los días transcurridos desde
-// next_payment y aplica las cuotas/mora que correspondan.
-export async function processLoanPayments(userId, currentBalance) {
-  const { data: loans } = await supabase
-    .from("loans")
-    .select("*")
-    .eq("user_id", userId)
-    //.eq("status", "active");
-    .in("status", ["active", "pending_mortgage"])
-
-  if (!loans || loans.length === 0) return { newBalance: currentBalance, events: [] };
-
-  const today = todayStr();
-  let balance = currentBalance;
-  const events = [];
-
-  for (const loan of loans) {
-    const daysDue = daysBetween(loan.next_payment, today);
-    if (daysDue <= 0) continue;  // aún no vence
-
-    let { paid_amount, days_paid, mora_days, total_debt, daily_payment, next_payment } = loan;
-    const remainingDebt = total_debt - paid_amount;
-    if (remainingDebt <= 0) {
-      await supabase.from("loans").update({ status: "paid" }).eq("id", loan.id);
-      events.push({ type: "paid", loanId: loan.id });
-      continue;
-    }
-
-    let currentNextPayment = next_payment;
-
-    for (let d = 0; d < daysDue; d++) {
-      // Calcular cuota del día (con mora acumulada)
-      const moraMultiplier = 1 + loan.mora_days * 0.02; // +2% por cada día previo de mora
-      const cuota = Math.round(daily_payment * moraMultiplier);
-      const remDebt = total_debt - paid_amount;
-      const toPay = Math.min(cuota, remDebt);
-
-      if (balance >= toPay) {
-        balance -= toPay;
-        paid_amount += toPay;
-        days_paid += 1;
-        currentNextPayment = addDays(currentNextPayment, 1);
-        events.push({ type: "payment", amount: toPay, day: days_paid });
-      } else {
-        mora_days += 1;
-        currentNextPayment = addDays(currentNextPayment, 1);
-        events.push({ type: "mora", moraDays: mora_days });
-      }
-
-      if (paid_amount >= total_debt) {
-        // Préstamo saldado
-        await supabase.from("loans").update({
-          paid_amount, days_paid, mora_days,
-          status: "paid",
-          next_payment: currentNextPayment,
-        }).eq("id", loan.id);
-        // Actualizar balance en DB
-        await supabase.from("profiles").update({ balance }).eq("id", userId);
-        events.push({ type: "paid", loanId: loan.id });
-        break;
-      }
-
-      // Verificar hipoteca (mora >= 7)
-      if (mora_days >= 7) {
-        events.push({ type: "mortgage_trigger", loanId: loan.id, remainingDebt: total_debt - paid_amount });
-        await supabase.from("loans").update({
-          paid_amount, days_paid, mora_days,
-          next_payment: currentNextPayment,
-
-          status: "pending_mortgage",
-
-        }).eq("id", loan.id);
-        break;
-      }
-    }
-
-    // Actualizar préstamo si sigue activo
-    const stillActive = (await supabase.from("loans").select("status").eq("id", loan.id).single())?.data?.status;
-    if (stillActive === "active") {
-      await supabase.from("loans").update({
-        paid_amount, days_paid, mora_days,
-        next_payment: currentNextPayment,
-      }).eq("id", loan.id);
-    }
-  }
-
-  // Guardar balance actualizado
-  await supabase.from("profiles").update({ balance }).eq("id", userId);
-
-// ── Verificar préstamos en grace period vencido ──
-const { data: graceLoans } = await supabase
-  .from("loans")
-  .select("*")
-  .eq("user_id", userId)
-  .eq("status", "grace");
-
-for (const graceLoan of (graceLoans || [])) {
-  if (!graceLoan.grace_until) continue;
-  const daysOverdue = daysBetween(graceLoan.grace_until, today);
-  if (daysOverdue <= 0) continue;
-
-  // Ejecución forzada: eliminar todos los activos hipotecados
-  const { data: mortgagedAssets } = await supabase
-    .from("player_assets")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("mortgaged", true);
-
-  for (const asset of (mortgagedAssets || [])) {
-    await supabase.from("player_assets").delete().eq("id", asset.id);
-  }
-
-  // Marcar préstamo como ejecutado
-  await supabase.from("loans").update({
-    status: "foreclosed",
-    mora_days: 0,
-  }).eq("id", graceLoan.id);
-
-  events.push({ type: "foreclosure", loanId: graceLoan.id });
-}
-
-  return { newBalance: balance, events };
-}*/
-
-
-
-
-
-
-
-
-
   export async function processLoanPayments(userId, currentBalance) {
   const { data: loans } = await supabase
     .from("loans")
@@ -303,13 +169,6 @@ for (const graceLoan of (graceLoans || [])) {
 }
 
 
-
-
-
-
-
-
-
 async function handleGraceExpiry(userId, loanId, events) {
   // Eliminar activos hipotecados ("vendidos" por el banco)
   const { data: mortgagedAssets } = await supabase
@@ -330,29 +189,37 @@ async function handleGraceExpiry(userId, loanId, events) {
   events.push({ type: "irrecoverable", loanId });
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ─── PROCESADOR DE CDT (interés diario) ─────────────────────────────────────
 export async function processCDT(userId, currentBalance, creditScore, bankLevel) {
   if (bankLevel < 1) return { newBalance: currentBalance, interest: 0 };
+
+
+
+
+
+
+
+  // Sin CDT si hay deuda irrecuperable
+  const { data: blockingLoan } = await supabase
+    .from("loans")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "irrecoverable")
+    .limit(1);
+
+  if (blockingLoan && blockingLoan.length > 0) {
+    return { newBalance: currentBalance, interest: 0 };
+  }
+
+
+
+
+
+
+
+
+
+
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -624,30 +491,6 @@ export default function BankPanel({ profile, balance, setBalance, onScChange, on
     await load();
     setPaying(false);
   }
-/*
-  // ── Pago total anticipado (sin penalización si < 7 días) ──────────────────
-  async function payAll() {
-    if (!loan || paying) return;
-    const remaining = loan.total_debt - loan.paid_amount;
-    if (balance < remaining) return;
-    setPaying(true);
-
-    const newBalance = balance - remaining;
-    await supabase.from("loans").update({
-      paid_amount: loan.total_debt,
-      status: "paid",
-      mora_days: 0,
-    }).eq("id", loan.id);
-    await supabase.from("profiles").update({ balance: newBalance }).eq("id", profile.id);
-    setBalance(newBalance);
-    await load();
-    setPaying(false);
-  }
-*/
-
-
-
-
 
   async function payAll() {
   if (!loan || paying) return;
@@ -676,34 +519,42 @@ async function handleSuicide() {
   setPaying(true);
   const STARTING_BALANCE = 100_000;
 
+  // Borrar TODOS los activos (hipotecados o no)
+  const { error: assetError, count } = await supabase
+    .from("player_assets")
+    .delete({ count: "exact" })
+    .eq("user_id", profile.id);
+
+    if (assetError) console.error("❌ Error borrando activos:", assetError);
+  else console.log(`✅ Activos eliminados: ${count}`);
+
+   await supabase.from("loans")
+    .update({ status: "foreclosed" })
+    .eq("user_id", profile.id)
+    .in("status", ["active", "grace", "irrecoverable", "pending_mortgage"]);
+
+
   await supabase.from("profiles").update({
     deaths:            (profile.deaths || 0) + 1,
     credit_score:      0,
     balance:           STARTING_BALANCE,
     cdt_last_processed: todayStr(),
   }).eq("id", profile.id);
-
+/*
   await supabase.from("loans")
     .update({ status: "foreclosed" })
     .eq("user_id", profile.id)
     .in("status", ["active", "grace", "irrecoverable", "pending_mortgage"]);
 
+    
   await supabase.from("player_assets")
     .delete()
     .eq("user_id", profile.id);
-
+*/
   setBalance(STARTING_BALANCE);
   if (onDeath) onDeath();
   setPaying(false);
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -737,17 +588,6 @@ async function handleSuicide() {
     </div>
   );
 
-  /*const isInMora = loan && loan.mora_days > 0;
-  const remaining = loan ? loan.total_debt - loan.paid_amount : 0;
-  const progress = loan ? (loan.paid_amount / loan.total_debt) * 100 : 0;
-  const cuotaHoy = loan
-    ? Math.min(
-        Math.ceil(loan.daily_payment * (1 + loan.mora_days * 0.02)),
-        remaining
-      )
-    : 0;
-    */
-
   const isInMora       = loan && loan.mora_days > 0 && loan.status !== "grace";
 const remaining      = loan ? loan.total_debt - loan.paid_amount : 0;
 const moraMultiplier = loan?.mora_days > 0 ? (1 + loan.mora_days * 0.02) : 1;
@@ -756,10 +596,6 @@ const progress = loan ? (loan.paid_amount / loan.total_debt) * 100 : 0;
 const cuotaHoy = loan
   ? Math.min(Math.ceil(loan.daily_payment * moraMultiplier), remaining)
   : 0;
-
-
-
-
 
 
   const mortgagedAssets = ownedAssets.filter(a => a.mortgaged);
@@ -903,10 +739,6 @@ const cuotaHoy = loan
     {[
       
       ["Tasa base diaria", "0.5%"],
-      /*
-      ["Bonus por SC", `+${(creditScore / 10000).toFixed(4)}%`],
-      ["Tasa efectiva hoy", `${((0.005 + creditScore / 10000) * 100).toFixed(3)}%`],
-        */
       ["Bonus por SC",      `+${(creditScore / 10_000).toFixed(4)}%`],
 ["Tasa efectiva hoy", `${((0.005 + creditScore / 1_000_000) * 100).toFixed(3)}%`],
 ["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],

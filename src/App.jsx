@@ -215,12 +215,6 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
   🏠 Mi Espacio
 </button>
 
-
-
-
-
-
-
       </div>
 
       {/* Panel de stats del jugador */}
@@ -413,10 +407,6 @@ export default function App() {
     if (data) { setProfile(data); setBalanceState(data.balance); }
     setLoading(false);
   }
-/*
-  function setBalance(newBalance) {
-    setBalanceState(newBalance);
-  }*/
 
   function setBalance(newBalance) {
   setBalanceState(newBalance);
