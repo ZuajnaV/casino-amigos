@@ -2,11 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 import { ASSETS } from "./ShopPanel.jsx";
 
-
-
-
-
-
 // ─── MERCADO DIARIO ────────────────────────────────────────────────────────
 // Generación determinista: misma fecha → mismo resultado para todos los jugadores
 function seededRandom(seed) {
@@ -84,6 +79,7 @@ export async function processInvestmentFund(userId, creditScore) {
   const events = [];
 
   // Procesar cada día pendiente (del más antiguo al más reciente)
+  /*
   for (let d = daysPend - 1; d >= 0; d--) {
     const dayDate = addDays(today, -d);
     const mkt = await getOrCreateMarketForDate(dayDate);
@@ -102,14 +98,31 @@ export async function processInvestmentFund(userId, creditScore) {
       finalPct: +(finalPct * 100).toFixed(2),
       returns,
     });
-  }
+  }*/
 
-  await supabase.from("investment_fund").update({
-    current_value:  currentValue,
-    last_processed: today,
-  }).eq("id", fund.id);
 
-  return { processed: true, fund: { ...fund, current_value: currentValue }, events };
+
+
+
+  for (let d = daysPend - 1; d >= 0; d--) {
+  const dayDate = addDays(today, -d);
+  const mkt = await getOrCreateMarketForDate(dayDate);
+
+  // Todo en puntos porcentuales (pp), luego convertir UNA SOLA vez
+  const scBonusPp    = creditScore * 0.0001;  // pp: 6000 SC → +0.6pp, 17500 SC → +1.75pp
+  const assetBonusPp = totalAssets * 0.5;     // pp: 2 activos → +1pp
+  const totalPp      = mkt.pct + scBonusPp + assetBonusPp; // todo en %
+  const multiplier   = totalPp / 100;          // convertir a multiplicador decimal
+  const returns      = Math.round(currentValue * multiplier);
+  currentValue       = Math.max(0, currentValue + returns);
+
+  events.push({
+    date:     dayDate,
+    state:    mkt.state,
+    pct:      mkt.pct,
+    finalPct: +totalPp.toFixed(2),   // muestra el % total aplicado
+    returns,
+  });
 }
 
 
@@ -126,11 +139,13 @@ export async function processInvestmentFund(userId, creditScore) {
 
 
 
+  await supabase.from("investment_fund").update({
+    current_value:  currentValue,
+    last_processed: today,
+  }).eq("id", fund.id);
 
-
-
-
-
+  return { processed: true, fund: { ...fund, current_value: currentValue }, events };
+}
 
 // ─── CONFIGURACIÓN DEL BANCO ─────────────────────────────────────────────────
 export const BANK_LEVELS = [
@@ -178,11 +193,6 @@ function daysBetween(dateA, dateB) {
   const b = new Date(dateB); b.setHours(0, 0, 0, 0);
   return Math.floor((b - a) / msPerDay);
 }
-/*
-function todayStr() {
-  return new Date().toISOString().split("T")[0];
-}
-*/
 
 function todayStr() {
   const now = new Date();
@@ -190,8 +200,6 @@ function todayStr() {
   const adjustedDate = new Date(now.getTime() - 43200000);
   return adjustedDate.toISOString().split("T")[0];
 }
-
-
 
 function addDays(dateStr, n) {
   const d = new Date(dateStr);
@@ -501,43 +509,7 @@ const [marketHistory, setMarketHistory] = useState([]);
 const [fundAmount,   setFundAmount]   = useState("");
 const [fundEvents,   setFundEvents]   = useState([]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const bankLevel = bankLevelFor(creditScore);
-
-  // ── Cargar préstamo activo + activos ───────────────────────────────────────
-  /*
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [loanRes, assetsRes, profileRes] = await Promise.all([
-      supabase.from("loans").select("*").eq("user_id", profile.id).in("status", ["active", "grace", "irrecoverable"]).order("created_at", { ascending: false }).limit(1),
-      supabase.from("player_assets").select("*").eq("user_id", profile.id),
-      supabase.from("profiles").select("credit_score").eq("id", profile.id).single(),
-    ]);
-
-    setLoan(loanRes.data?.[0] || null);
-    setOwnedAssets(assetsRes.data || []);
-    if (profileRes.data) setCreditScore(profileRes.data.credit_score || 0);
-    setLoading(false);
-  }, [profile.id]);
-*/
-
-
-
-
-
   const load = useCallback(async () => {
   setLoading(true);
   const [loanRes, assetsRes, profileRes, fundRes, marketRes] = await Promise.all([
@@ -559,19 +531,6 @@ const [fundEvents,   setFundEvents]   = useState([]);
   setMarketHistory((marketRes.data || []).reverse());                  // ← nuevo (cronológico)
   setLoading(false);
 }, [profile.id]);
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   useEffect(() => {
   async function init() {
@@ -615,16 +574,6 @@ if (fundResult.processed) {
     .order("date", { ascending: false }).limit(3);
   if (mkt) setMarketHistory([...mkt].reverse());
 }
-
-
-
-
-
-
-
-
-
-
 
   }
   init();
@@ -720,13 +669,6 @@ if (fundResult.processed) {
   setPaying(false);
 }
 
-
-
-
-
-
-
-
 async function depositFund() {
   const amount = parseInt(String(fundAmount));
   if (!amount || amount <= 0 || amount > balance) return;
@@ -772,55 +714,6 @@ async function withdrawFund() {
   setPaying(false);
 }
 
-
-
-
-
-
-
-
-
-/*
-async function handleSuicide() {
-  if (paying) return;
-  setPaying(true);
-  const STARTING_BALANCE = 100_000;
-
-  // Borrar TODOS los activos (hipotecados o no)
-  const { error: assetError, count } = await supabase
-    .from("player_assets")
-    .delete({ count: "exact" })
-    .eq("user_id", profile.id);
-
-    if (assetError) console.error("❌ Error borrando activos:", assetError);
-  else console.log(`✅ Activos eliminados: ${count}`);
-
-   await supabase.from("loans")
-    .update({ status: "foreclosed" })
-    .eq("user_id", profile.id)
-    .in("status", ["active", "grace", "irrecoverable", "pending_mortgage"]);
-
-
-  await supabase.from("profiles").update({
-    deaths:            (profile.deaths || 0) + 1,
-    credit_score:      0,
-    balance:           STARTING_BALANCE,
-    cdt_last_processed: todayStr(),
-  }).eq("id", profile.id);
-  setBalance(STARTING_BALANCE);
-  if (onDeath) onDeath();
-  setPaying(false);
-}
-*/
-
-
-
-
-
-
-
-
-
   async function handleSuicide() {
   if (paying) return;
   setPaying(true);
@@ -853,17 +746,6 @@ async function handleSuicide() {
   if (onDeath) onDeath();
   setPaying(false);
 }
-
-
-
-
-
-
-
-
-
-
-
 
   // ── Deshipotecar (paga deuda + 10% penalización) ──────────────────────────
   async function unmortgage(assetEntry) {
@@ -1505,13 +1387,6 @@ const cuotaHoy = loan
         </div>
       )}
 
-
-
-
-
-
-
-
       {/* ══════════════ TAB: FONDO DE INVERSIÓN ══════════════ */}
 {tab === "fondo" && (
   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1772,23 +1647,6 @@ const cuotaHoy = loan
     )}
   </div>
 )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     </div>
   );
 }
@@ -1826,10 +1684,6 @@ function LoanPreview({ amount, bankLevel }) {
     </div>
   );
 }
-
-
-
-
 
 
   function CandlestickChart({ days }) {
@@ -1910,20 +1764,6 @@ function LoanPreview({ amount, bankLevel }) {
     </svg>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ─── Helpers de estilo ────────────────────────────────────────────────────────
 function alertStyle(color) {
