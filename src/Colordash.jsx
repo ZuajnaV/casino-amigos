@@ -13,9 +13,9 @@ const OBJ_SPEED_MAX  = 8.5;
 const OBJ_SPEED_INC  = 0.0015;      // aceleración gradual de los objetos
 const SPAWN_INTERVAL_INIT = 1600;   // intervalo inicial de spawn (ms)
 const SPAWN_INTERVAL_MIN  = 650;     // límite de spawn (máxima dificultad)
-const SPAWN_DEC = 0.993;            //0.984 factor de reducción del intervalo de spawn por cada objeto generado
+const SPAWN_DEC = 0.984;            //0.984 factor de reducción del intervalo de spawn por cada objeto generado
 const HIT_RADIUS = TRI_R - 4;   // radio de colisión con la punta activa
-const MAX_ON_SCREEN = 400;
+const MAX_ON_SCREEN = 700;    //500
 const PAGO_POR_OBJ = 1500;
 
 // Los 3 colores/puntas
@@ -336,8 +336,8 @@ function scheduleSpawn(s) {
     ctx.stroke();
 
     // Score
-    ctx.fillStyle = "#ffffff22";
-    ctx.font = "bold 26px 'Courier New', monospace";
+    ctx.fillStyle = "#afafaf73";
+    ctx.font = "bold 35px 'Courier New', monospace";
     ctx.textAlign = "center";
     ctx.fillText(String(s.score).padStart(3, "0"), W/2, 38);
     ctx.textAlign = "left";
@@ -451,7 +451,7 @@ function scheduleSpawn(s) {
     const s = initState();
     draw(ctx, s, false);
     ctx.fillStyle = "#e9e9e9";
-    ctx.font = "bold 20px 'Courier New', monospace";
+    ctx.font = "bold 25px 'Courier New', monospace";
     ctx.textAlign = "center";
     ctx.fillText("TAP PARA INICIAR", W/2, H/2 - 14);
     ctx.font = "20px 'Courier New', monospace";
@@ -504,7 +504,7 @@ function scheduleSpawn(s) {
         position: "relative", width: maxW, height: H * sc,
         borderRadius: 14, overflow: "hidden",
         border: "2px solid #1e1e2e",
-        boxShadow: flashCol ? `0 0 40px ${flashCol}88` : "0 0 20px rgba(139,92,246,0.2)",
+        boxShadow: flashCol ? `0 0 400px ${flashCol}88` : "0 0 20px rgba(139,92,246,0.2)",
         transition: "box-shadow 0.1s",
       }}
         onClick={() => { if (phase === "idle" || phase === "dead") startGame(); }}
