@@ -367,7 +367,7 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
 
   // ── Sin activos → período de gracia 7 días ──
   if (!playerAssets || playerAssets.length === 0) {
-    const graceUntil = addDays(today, 7);
+    const graceUntil = addDays(today, 1);     //7
     await supabase.from("loans").update({
       status: "grace",
       grace_until: graceUntil,
@@ -424,7 +424,7 @@ export async function executeMortgage(userId, loanId, remainingDebt) {
   }
 
   // ── Activos no alcanzan → se abona lo que cubrieron y queda deuda pendiente ──
-  const graceUntil = addDays(today, 7);
+  const graceUntil = addDays(today, 1);   //7
   await supabase.from("loans").update({
     paid_amount:  currentPaid + covered,  // se abona el valor de los activos
     mora_days:    0,
