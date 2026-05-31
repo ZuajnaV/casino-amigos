@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabase";
+import CrazyTimeDoor from "./CrazyTimeDoor.jsx";
+
 
 // ─── WHEEL CONFIGURATION ────────────────────────────────────────────────────
 // 54 segments in order matching the real Crazy Time wheel
@@ -1179,6 +1181,11 @@ export default function CrazyTimeGame({ balance, setBalance, onBack }) {
   const [pendingBets, setPendingBets] = useState({});
 
 
+
+
+  const [showIntro, setShowIntro] = useState(true);
+
+
   // Cargar últimos 20 registros globales para el historial visual
 useEffect(() => {
   supabase.from("crazytime_history")
@@ -1318,21 +1325,6 @@ setMessage(winnings > 0
 const newEntry = { type: landed.type, win: winnings > 0, amount: winnings };
 setHistory(h => [newEntry, ...h.slice(0, 19)]);
 
-/*
-supabase.auth.getSession().then(async ({ data: { session } }) => {
-  if (!session) return;
-  await supabase.rpc("insert_crazytime_and_trim", {
-    p_user_id: session.user.id,
-    p_segment: landed.type,
-    p_won: winnings > 0,
-    p_payout: winnings,
-  });
-});*/
-
-
-
-
-
   supabase.auth.getSession().then(async ({ data: { session } }) => {
   await supabase.rpc("insert_crazytime_and_trim", {
   p_user_id:    session.user.id,
@@ -1342,17 +1334,6 @@ supabase.auth.getSession().then(async ({ data: { session } }) => {
   p_multiplier: winnings > 0 ? parseInt(landed.type) : 0,
 });
 });
-
-
-
-
-
-
-
-
-
-
-
 
 setBets({});
 setPhase("result");
@@ -1371,22 +1352,6 @@ function handleBonusComplete(payout, mult, ...args) {
   setBalance(prev => prev + payout + (bets[bonus.type] || 0));
   const newEntry = { type: bonus.type, win: payout > 0, amount: payout };
   setHistory(h => [newEntry, ...h.slice(0, 19)]);
-
-  // ← NUEVO: guardar en Supabase
-  /*
-  supabase.auth.getSession().then(async ({ data: { session } }) => {
-    if (!session) return;
-    await supabase.rpc("insert_crazytime_and_trim", {
-      p_user_id: session.user.id,
-      p_segment: bonus.type,
-      p_won: payout > 0,
-      p_payout: payout + (bets[bonus.type] || 0),
-    });
-  });
-*/
-
-
-
   supabase.auth.getSession().then(async ({ data: { session } }) => {
 
   await supabase.rpc("insert_crazytime_and_trim", {
@@ -1400,18 +1365,6 @@ function handleBonusComplete(payout, mult, ...args) {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
   setBonus(null);
   setBets({});
   setPhase("result");
@@ -1423,6 +1376,23 @@ function handleBonusComplete(payout, mult, ...args) {
 }
 
   return (
+
+
+<>
+    {showIntro && <CrazyTimeDoor onComplete={() => setShowIntro(false)} />}
+
+
+
+
+
+
+
+
+
+
+
+
+
     <div style={styles.wrap}>
       <style>{`
         @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
@@ -1710,12 +1680,21 @@ function handleBonusComplete(payout, mult, ...args) {
     </div>
   </div>
 )}
-      {/* RTP info */}
-      <div style={{ color: "#333", fontSize: 11, textAlign: "center", marginTop: 16 }}>
-        RTP teórico: 95.41% · Juega responsablemente 🎰
-      </div>
-    </div>
-  );
+        {/* RTP info */}
+        <div style={{ color: "#333", fontSize: 11, textAlign: "center", marginTop: 16 }}>
+          RTP teórico: 95.41% · Juega responsablemente 🎰
+        </div>
+
+
+  </div>
+    </>
+    );
+
+
+
+
+
+
 }
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
