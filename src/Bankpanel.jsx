@@ -1142,6 +1142,58 @@ const cuotaHoy = loan
               ))}
             </div>
           )}
+
+
+
+
+
+
+
+
+          {/* ── Reinicio voluntario (siempre disponible) ── */}
+<details style={{ marginTop: 8 }}>
+  <summary style={{
+    cursor: "pointer", fontSize: 13, color: "#ff0000",
+    listStyle: "none", textAlign: "center",
+  }}>
+    ··· opciones avanzadas
+  </summary>
+  <div style={{
+    background: "rgba(80,80,80,0.08)",
+    border: "1px solid #33333366",
+    borderRadius: 12, padding: "14px", marginTop: 8,
+    textAlign: "center",
+  }}>
+    <div style={{ fontSize: 20, color: "#bc0000", marginBottom: 10, lineHeight: 1.6 }}>
+      ¿Quieres empezar de cero? Perderás todo tu progreso y se sumará una muerte.
+    </div>
+    <button
+      onClick={handleSuicide}
+      disabled={paying}
+      style={{
+        width: "100%", padding: "10px",
+        background: "transparent",
+        border: "1px solid #55555566",
+        borderRadius: 8, color: "#b9b9b9",
+        fontSize: 20, fontWeight: 700,
+        cursor: paying ? "not-allowed" : "pointer",
+      }}
+    >
+      {paying ? "..." : "💀 Reiniciar personaje"}
+    </button>
+  </div>
+</details>
+
+
+
+
+
+
+
+
+
+
+
         </div>
       )}
 
@@ -1466,7 +1518,6 @@ const cuotaHoy = loan
                       ⛓️ Retiro bloqueado en estado de quiebra
                     </div>
                   )}
-
                   <button
                     onClick={withdrawFund}
                     disabled={paying || loan?.status === "irrecoverable"}
