@@ -267,7 +267,7 @@ async function cobrarYGuardar(manzanas, ganancia) {
     // Fondo de cuadrícula
     for (let x = 0; x < GRID; x++) {
       for (let y = 0; y < GRID; y++) {
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#0d0d14" : "#0f0f18";
+        ctx.fillStyle = (x + y) % 2 === 0 ? "#1a1a2f" : "#0f0f18";
         ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
       }
     }
@@ -423,12 +423,12 @@ async function cobrarYGuardar(manzanas, ganancia) {
       {/* ── Tablero ── */}
       <div style={{
         position: "relative",
-        border: `2px solid ${state.alive ? "#1e2e1e" : "#3a1e1e"}`,
+        border: `2px solid ${state.alive ? "#00f500" : "#3a1e1e"}`,
         borderRadius: 8,
         overflow: "hidden",
         boxShadow: state.alive
-          ? "0 0 30px rgba(0,255,100,0.06), 0 0 0 1px #0f1f0f"
-          : "0 0 30px rgba(255,50,50,0.12)",
+          ? "0 0 30px #00ff66, 0 0 0 1px #0026ff"
+          : "0 0 30px #ff0000",
         transition: "border-color 0.3s, box-shadow 0.3s",
       }}>
         <canvas
@@ -483,9 +483,9 @@ async function cobrarYGuardar(manzanas, ganancia) {
       </div>
 
       {/* ── Controles táctiles ── */}
-      <div style={{ marginTop: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <div style={{ marginTop: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
         <button onPointerDown={() => handleDir(DIR.UP)} style={dpadBtn}>▲</button>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 35 }}>
           <button onPointerDown={() => handleDir(DIR.LEFT)} style={dpadBtn}>◀</button>
           <div style={{ width: 44 }} />
           <button onPointerDown={() => handleDir(DIR.RIGHT)} style={dpadBtn}>▶</button>
@@ -554,12 +554,12 @@ const startBtnStyle = {
 };
 
 const dpadBtn = {
-  width: 44, height: 44,
+  width: 100, height: 100,
   background: "#0d0d18",
   border: "1px solid #2a2a3a",
   borderRadius: 8,
-  color: "#555",
-  fontSize: 18,
+  color: "#818181",
+  fontSize: 30,
   cursor: "pointer",
   display: "flex", alignItems: "center", justifyContent: "center",
   userSelect: "none",
