@@ -7,58 +7,7 @@ import CrazyTimeDoor from "./CrazyTimeDoor.jsx";
 // 54 segments in order matching the real Crazy Time wheel
 const WHEEL_SEGMENTS = [
   { type: "crazy_time", label: "CRAZY\nTIME", color: "#ff6b00", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "cash_hunt", label: "CASH\nHUNT", color: "#f5a623", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "cash_hunt", label: "CASH\nHUNT", color: "#f5a623", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+
   ];
 
 const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 15, 20, 25, 40, 50];
@@ -1183,7 +1132,8 @@ export default function CrazyTimeGame({ balance, setBalance, onBack }) {
 
 
 
-  const [showIntro, setShowIntro] = useState(true);
+  //const [showIntro, setShowIntro] = useState(true);
+  const [showCrazyTimeDoor, setShowCrazyTimeDoor] = useState(false);
 
 
   // Cargar últimos 20 registros globales para el historial visual
@@ -1303,11 +1253,24 @@ function spin() {
 
     const userBetOnLanded = activeBetsRef.current[landed.type] || 0;
     const isBonus = ["coin_flip","cash_hunt","pachinko","crazy_time"].includes(landed.type);
-
+/*
     if (isBonus && userBetOnLanded > 0) {
       setPhase("bonus");
       setBonus({ type: landed.type, bet: userBetOnLanded });
-    } else {
+    } 
+    
+    */
+    
+    
+    if (isBonus && userBetOnLanded > 0) {
+  if (landed.type === "crazy_time") {
+    // Mostrar la animación de puerta ANTES de abrir el minijuego
+    setShowCrazyTimeDoor(true);
+  } else {
+    setPhase("bonus");
+    setBonus({ type: landed.type, bet: userBetOnLanded });
+  }   //el else { de abajo iba acompañando al componente comentado arriba
+} else {
       let winnings = 0;
       const numValue = parseInt(landed.type);
       if (!isNaN(numValue) && userBetOnLanded > 0) {
@@ -1379,9 +1342,15 @@ function handleBonusComplete(payout, mult, ...args) {
 
 
 <>
-    {showIntro && <CrazyTimeDoor onComplete={() => setShowIntro(false)} />}
+    {/*{showIntro && <CrazyTimeDoor onComplete={() => setShowIntro(false)} />}{*/}
 
-
+    {showCrazyTimeDoor && (
+      <CrazyTimeDoor onComplete={() => {
+        setShowCrazyTimeDoor(false);
+        setPhase("bonus");
+        setBonus({ type: "crazy_time", bet: activeBetsRef.current["crazy_time"] || 0 });
+      }} />
+    )}
 
 
 
