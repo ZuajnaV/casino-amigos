@@ -35,7 +35,6 @@ function isBlackjack(hand) {
 
 // ─── CSS de animaciones ───────────────────────────────────────────────────────
 const CARD_ANIMATION_CSS = `
-  /* ── Repartición: nace arriba-derecha, vuela en arco, aterriza con rebote ── */
   @keyframes dealCard {
     0% {
       transform: translate(290px, -210px) scale(0.60) rotate(22deg);
@@ -43,24 +42,20 @@ const CARD_ANIMATION_CSS = `
       filter: blur(3px);
       box-shadow: 0 40px 80px rgba(0,0,0,0.95);
     }
-    /* Llega ligeramente pasado (overshoot) */
     58% {
       transform: translate(-16px, 9px) scale(1.07) rotate(-1.8deg);
       opacity: 1;
       filter: blur(0);
       box-shadow: 0 16px 32px rgba(0,0,0,0.55);
     }
-    /* Primer bamboleo */
     70% {
       transform: translate(6px, 1px) scale(1.01) rotate(-4deg);
       box-shadow: 0 8px 16px rgba(0,0,0,0.42);
     }
-    /* Segundo bamboleo */
     81% {
       transform: translate(-4px, 0) scale(1) rotate(2.8deg);
       box-shadow: 0 5px 10px rgba(0,0,0,0.38);
     }
-    /* Casi quieta */
     91% {
       transform: translate(1px, 0) scale(1) rotate(-0.9deg);
       box-shadow: 0 3px 7px rgba(0,0,0,0.36);
@@ -71,31 +66,24 @@ const CARD_ANIMATION_CSS = `
     }
   }
 
-  /* ── Volteo 3D para revelar la carta oculta del crupier ── */
   @keyframes flipReveal {
     0%   { transform: rotateY(180deg) translateZ(0);   box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
-    /* Sube (sombra grande = lejos de la mesa) */
     38%  { transform: rotateY(90deg)  translateZ(32px); box-shadow: 0 32px 64px rgba(0,0,0,0.88); }
-    /* Punto muerto: aquí se cambia la cara */
     62%  { transform: rotateY(90deg)  translateZ(32px); box-shadow: 0 32px 64px rgba(0,0,0,0.88); }
-    /* Cae con mini-rebote */
     88%  { transform: rotateY(-7deg)  translateZ(4px);  box-shadow: 0 6px 14px rgba(0,0,0,0.45); }
     94%  { transform: rotateY(3deg)   translateZ(1px); }
     100% { transform: rotateY(0deg)   translateZ(0);   box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
   }
 `;
 
-// ─── Carta visual (con animación de repartición + volteo 3D) ─────────────────
+// ─── Carta visual ─────────────────────────────────────────────────────────────
 function Card({ card, hidden = false, highlight = false, dealDelay = 0 }) {
-  // revealState: "back" | "flipping" | "front"
   const [revealState, setRevealState] = useState(hidden ? "back" : "front");
   const prevHiddenRef = useRef(hidden);
 
-  // Detectar el momento en que hidden pasa de true → false
   useEffect(() => {
     if (prevHiddenRef.current === true && hidden === false) {
       setRevealState("flipping");
-      // Después de la animación, fijar en "front"
       const t = setTimeout(() => setRevealState("front"), 780);
       return () => clearTimeout(t);
     }
@@ -113,23 +101,18 @@ function Card({ card, hidden = false, highlight = false, dealDelay = 0 }) {
       width: 125, height: 165,
       flexShrink: 0,
       perspective: "900px",
-      // Animación de repartición — sale del mazo (arriba-derecha) y vuela en arco
       animation: `dealCard 0.60s cubic-bezier(0.22, 0.61, 0.36, 1) ${dealDelay}ms both`,
     }}>
-      {/* Contenedor 3D — maneja el volteo */}
       <div style={{
         width: "100%", height: "100%",
         position: "relative",
         transformStyle: "preserve-3d",
-        // Si está boca abajo y no está volteando: mantener la cara trasera visible
         transform: isBack ? "rotateY(180deg)" : undefined,
-        // Animación de volteo cuando hidden cambia a false
         animation: isFlipping
           ? "flipReveal 0.78s cubic-bezier(0.4, 0, 0.2, 1) forwards"
           : "none",
       }}>
-
-        {/* ── CARA FRONTAL (valor de la carta) ── */}
+        {/* Cara frontal */}
         <div style={{
           position: "absolute", inset: 0,
           borderRadius: 8,
@@ -144,16 +127,12 @@ function Card({ card, hidden = false, highlight = false, dealDelay = 0 }) {
           userSelect: "none",
           boxShadow: highlight ? "0 0 10px #fbbf2488" : "0 2px 6px rgba(0,0,0,0.4)",
         }}>
-          <div style={{ fontSize: 40, alignSelf: "flex-start", paddingLeft: 5, lineHeight: 1 }}>
-            {card.r}
-          </div>
+          <div style={{ fontSize: 40, alignSelf: "flex-start", paddingLeft: 5, lineHeight: 1 }}>{card.r}</div>
           <div style={{ fontSize: 60, lineHeight: 1.1 }}>{card.s}</div>
-          <div style={{ fontSize: 40, alignSelf: "flex-end", paddingRight: 5, lineHeight: 1, transform: "rotate(180deg)" }}>
-            {card.r}
-          </div>
+          <div style={{ fontSize: 40, alignSelf: "flex-end", paddingRight: 5, lineHeight: 1, transform: "rotate(180deg)" }}>{card.r}</div>
         </div>
 
-        {/* ── CARA TRASERA (boca abajo) ── */}
+        {/* Cara trasera */}
         <div style={{
           position: "absolute", inset: 0,
           borderRadius: 8,
@@ -162,14 +141,10 @@ function Card({ card, hidden = false, highlight = false, dealDelay = 0 }) {
           display: "flex", alignItems: "center", justifyContent: "center",
           backfaceVisibility: "hidden",
           WebkitBackfaceVisibility: "hidden",
-          // La cara trasera siempre está rotada 180° en el contenedor 3D,
-          // así que cuando el contenedor está en 0° (normal), esta cara queda oculta.
-          // Cuando el contenedor está en 180°, esta cara queda visible.
           transform: "rotateY(180deg)",
           userSelect: "none",
           boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
         }}>
-          {/* Patrón decorativo */}
           <div style={{
             width: "80%", height: "80%",
             border: "2px solid #4a7ab5",
@@ -180,7 +155,6 @@ function Card({ card, hidden = false, highlight = false, dealDelay = 0 }) {
             <span style={{ fontSize: 36, opacity: 0.6 }}>🂠</span>
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -202,9 +176,9 @@ function BetPanel({ balance, onStart, lastBet }) {
   }
 
   function confirm() {
-    if (bet < MIN_BET)        { setErr(`Apuesta mínima: $${MIN_BET.toLocaleString()}`); return; }
-    if (bet % 1000 !== 0)     { setErr("La apuesta debe ser múltiplo de $1.000"); return; }
-    if (bet > balance)        { setErr("Saldo insuficiente"); return; }
+    if (bet < MIN_BET)      { setErr(`Apuesta mínima: $${MIN_BET.toLocaleString()}`); return; }
+    if (bet % 1000 !== 0)   { setErr("La apuesta debe ser múltiplo de $1.000"); return; }
+    if (bet > balance)      { setErr("Saldo insuficiente"); return; }
     onStart(bet);
   }
 
@@ -320,6 +294,13 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
   const [resultMsg, setResultMsg] = useState("");
   const [stats, setStats]         = useState({ wins: 0, losses: 0, ties: 0, bj: 0 });
 
+  const [hands, setHands]                 = useState([]);
+  const [activeHandIdx, setActiveHandIdx] = useState(0);
+
+  // ── Mirror deck in a ref so setTimeout closures never see stale state ──────
+  const deckRef = useRef([]);
+  useEffect(() => { deckRef.current = deck; }, [deck]);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
@@ -328,9 +309,6 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
       if (data) setStats({ wins: data.wins, losses: data.losses, ties: data.ties, bj: data.blackjacks });
     });
   }, []);
-
-  const [hands, setHands]                 = useState([]);
-  const [activeHandIdx, setActiveHandIdx] = useState(0);
 
   const activeHand   = hands[activeHandIdx];
   const currentCards = activeHand?.cards ?? [];
@@ -347,22 +325,21 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
     hands.length === 1;
 
   // ─── Iniciar partida ─────────────────────────────────────────────────────
-  // Repartición interleaved: P1 → D1 → P2 → D2 (150ms entre cartas)
   function startGame(betAmount) {
     const newDeck = buildShuffledDeck();
     let idx = 0;
 
-    // Timing: P1=0ms, D1=200ms, P2=400ms, D2=600ms
     const playerHand = [
-      { ...newDeck[idx++], dealDelay: 0   },   // P1 — primera
-      { ...newDeck[idx++], dealDelay: 400 },   // P2 — tercera
+      { ...newDeck[idx++], dealDelay: 0   },
+      { ...newDeck[idx++], dealDelay: 400 },
     ];
     const dealerHand = [
-      { ...newDeck[idx++], dealDelay: 200 },   // D1 — segunda
-      { ...newDeck[idx++], dealDelay: 600 },   // D2 — cuarta (boca abajo)
+      { ...newDeck[idx++], dealDelay: 200 },
+      { ...newDeck[idx++], dealDelay: 600 },
     ];
 
     setDeck(newDeck);
+    deckRef.current = newDeck;   // sync ref immediately
     setDeckIdx(idx);
     setDealer(dealerHand);
     setBet(betAmount);
@@ -392,9 +369,9 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
 
   // ─── Hit ─────────────────────────────────────────────────────────────────
   function hit() {
-    const newCard = { ...deck[deckIdx], dealDelay: 0 };
+    const newCard  = { ...deck[deckIdx], dealDelay: 0 };
     const newCards = [...currentCards, newCard];
-    const newIdx = deckIdx + 1;
+    const newIdx   = deckIdx + 1;
     setDeckIdx(newIdx);
 
     const newHands = hands.map((h, i) =>
@@ -455,6 +432,11 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
   }
 
   // ─── Avanzar o terminar ───────────────────────────────────────────────────
+  // Cuando todas las manos del jugador terminan, arranca el turno del dealer:
+  //   1. Cambia a phase "dealer_turn" → hideSecond pasa a false → animación de volteo
+  //   2. Espera 900ms para que termine la animación del volteo
+  //   3. Reparte cartas adicionales una por una cada 750ms
+  //   4. Cuando el dealer llega a 17+, llama a resolveAll
   function advanceOrFinish(currentHands, idx, currentIdx) {
     const updatedHands = currentHands.map((h, i) =>
       i === currentIdx ? { ...h, done: true } : h
@@ -463,18 +445,39 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
     const nextIdx = updatedHands.findIndex((h, i) => i > currentIdx && !h.done);
 
     if (nextIdx !== -1) {
+      // Todavía hay manos del jugador pendientes
       setHands(updatedHands);
       setActiveHandIdx(nextIdx);
-    } else {
-      let dealerHand = [...dealer];
-      let dIdx = idx;
-      while (handTotal(dealerHand) < 17) {
-        dealerHand.push({ ...deck[dIdx++], dealDelay: 0 });
-      }
-      setDealer(dealerHand);
-      setDeckIdx(dIdx);
-      resolveAll(updatedHands, dealerHand, false);
+      return;
     }
+
+    // Todas las manos terminaron → turno del dealer
+    setHands(updatedHands);
+    setPhase("dealer_turn"); // hace que hideSecond = false → flip animation
+
+    // Snapshot del dealer actual (pasado por parámetro implícito, usamos dealer state)
+    const initialDealerHand = [...dealer];
+
+    // Función recursiva: comprueba si el dealer necesita otra carta y la reparte
+    const drawNext = (dealerHand, cardIdx) => {
+      if (handTotal(dealerHand) >= 17) {
+        // Dealer plantado: actualizar deckIdx y resolver
+        setDeckIdx(cardIdx);
+        resolveAll(updatedHands, dealerHand, false);
+        return;
+      }
+
+      // Repartir una carta nueva al dealer con animación de deal
+      const newCard   = { ...deckRef.current[cardIdx], dealDelay: 0 };
+      const newHand   = [...dealerHand, newCard];
+      setDealer(newHand);
+
+      // Esperar a que la animación de la carta aterrice (~700ms) y seguir
+      setTimeout(() => drawNext(newHand, cardIdx + 1), 750);
+    };
+
+    // 900ms = duración de flipReveal para la carta oculta del dealer
+    setTimeout(() => drawNext(initialDealerHand, idx), 900);
   }
 
   // ─── Resolver todas las manos ─────────────────────────────────────────────
@@ -560,7 +563,6 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", fontFamily: "Georgia, serif" }}>
-      {/* Inyectar CSS de animaciones */}
       <style>{CARD_ANIMATION_CSS}</style>
 
       <button onClick={onBack} style={{ background:"transparent", border:"none", color:"#555", fontSize:14, cursor:"pointer", marginBottom:10, padding:0 }}>
@@ -584,10 +586,8 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
 
       <div style={{ background:"#16161f", border:"1px solid #1e1e2e", borderRadius:14, padding:20 }}>
 
-        {/* Pantalla de apuesta */}
         {phase === "bet" && <BetPanel balance={balance} onStart={startGame} lastBet={lastBet} />}
 
-        {/* Seguro */}
         {phase === "insurance" && (
           <div style={{ textAlign:"center", padding:20 }}>
             <div style={{ fontSize:44, marginBottom:10 }}>🛡️</div>
@@ -607,16 +607,18 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
           </div>
         )}
 
-        {/* Mesa de juego */}
-        {(phase === "play" || phase === "result") && (
+        {(phase === "play" || phase === "dealer_turn" || phase === "result") && (
           <div>
-            {/* Banca */}
+            {/* ── Mano de la banca ──
+                hideSecond: solo durante "play" e "insurance" (carta boca abajo)
+                Al pasar a "dealer_turn" hideSecond = false → dispara flipReveal en Card
+                score: visible en dealer_turn (se actualiza carta a carta) y en result */}
             <HandDisplay
               hand={dealer}
               label="BANCA"
-              score={isResult ? dv : null}
+              score={phase === "dealer_turn" || isResult ? dv : null}
               isActive={false}
-              hideSecond={!isResult}
+              hideSecond={phase === "play" || phase === "insurance"}
             />
 
             <div style={{ borderTop:"1px solid #1e1e2e", margin:"12px 0" }}/>
@@ -656,7 +658,7 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
               </div>
             )}
 
-            {/* Botones de acción */}
+            {/* Botones de acción — solo en fase "play" */}
             {phase === "play" && (
               <div style={{ display:"flex", gap:8, marginTop:14, flexWrap:"wrap" }}>
                 <button onClick={hit} style={{ flex:1, border:"none", borderRadius:8, padding:12, color:"#fff", fontSize:20, fontWeight:700, cursor:"pointer", background:"#ff6b35" }}>
@@ -678,7 +680,13 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
               </div>
             )}
 
-            {/* Botón resultado */}
+            {/* Indicador visual mientras el dealer juega */}
+            {phase === "dealer_turn" && (
+              <div style={{ textAlign:"center", color:"#aaa", fontSize:14, marginTop:12 }}>
+                🎴 La banca está jugando...
+              </div>
+            )}
+
             {phase === "result" && (
               <div style={{ display:"flex", gap:8, marginTop:14 }}>
                 <button onClick={newHand} style={{ flex:1, border:"none", borderRadius:8, padding:13, color:"#fff", fontSize:25, fontWeight:700, cursor:"pointer", background:"#00d4aa" }}>
