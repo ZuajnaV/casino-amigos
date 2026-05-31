@@ -248,7 +248,7 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
           <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, fontSize: 20 }}>
             <span style={{ color: i===0?"#fbbf24":i===1?"#aaa":i===2?"#cd7f32":"#666" }}>
               {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} {u.avatar} {u.username}
-              <span style={{ color: "#666", fontSize: 14, marginLeft: 6 }}>
+              <span style={{ color: "#bdbdbd", fontSize: 14, marginLeft: 6 }}>
     💀 {u.deaths || 0}
     </span>
             </span>
