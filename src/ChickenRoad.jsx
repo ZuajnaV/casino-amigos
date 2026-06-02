@@ -123,7 +123,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
     if (realLevel === currentCfg.totalLevels) return `x${currentCfg.finalMult.toLocaleString()}`;
     let pAcum = 1;
     for (let k = 0; k < realLevel; k++) pAcum *= pArr[k];
-    return `x${(currentCfg.rtp / pAcum).toFixed(2)}`;
+    return `x${(currentCfg.rtp / pAcum).toFixed(0)}`;
   }
 
   // ─── BUILD LANES FROM SCRATCH ───────────────────────────────
@@ -152,7 +152,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
   // ─── NUEVA PARTIDA ───────────────────────────────────────────
   function handleNewGame() {
     if (bet <= 0) { setStatusMsg({ text: "La apuesta debe ser mayor a 0", color: "#f87171" }); return; }
-    if (bet > bal) { setStatusMsg({ text: `Saldo insuficiente ($${bal.toFixed(2)})`, color: "#f87171" }); return; }
+    if (bet > bal) { setStatusMsg({ text: `Saldo insuficiente ($${bal.toFixed(0)})`, color: "#f87171" }); return; }
 
     const currentCfg = DIFFICULTY_CONFIG[diff];
     const pArr = buildProbArray(currentCfg);
@@ -171,7 +171,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
     setChickenPos(-1);
     setLanes(buildLanes(0, 0, currentCfg, pArr));
     setStatusMsg({
-      text: `$${bet.toFixed(2)} apostados | ${diff} (${(currentCfg.prob * 100).toFixed(0)}% por carril) | Pulsa GO para avanzar!`,
+      text: `$${bet.toFixed(0)} apostados | ${diff} (${(currentCfg.prob * 100).toFixed(0)}% por carril) | Pulsa GO para avanzar!`,
       color: "#4ade80",
     });
   }
@@ -205,18 +205,18 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
 
         if (nextLevel === cfg.totalLevels) {
           // Full win — cash out automatically
-          const win = parseFloat((bet * newMult).toFixed(2));
+          const win = parseFloat((bet * newMult).toFixed(0));
           const newBal = bal - bet + win; // bet was already deducted
           // actually bal already had bet deducted
-          const finalBal = parseFloat((bal + win).toFixed(2));
+          const finalBal = parseFloat((bal + win).toFixed(0));
           setBal(finalBal);
           onBalanceChange?.(finalBal);
-          setHist(h => parseFloat((h + win).toFixed(2)));
+          setHist(h => parseFloat((h + win).toFixed(0)));
           setGameState("won");
-          setStatusMsg({ text: `🏆 TABLERO COMPLETO! Ganaste $${win.toFixed(2)} (x${newMult.toFixed(2)})`, color: "#fbbf24" });
+          setStatusMsg({ text: `🏆 TABLERO COMPLETO! Ganaste $${win.toFixed(0)} (x${newMult.toFixed(0)})`, color: "#fbbf24" });
         } else {
           setStatusMsg({
-            text: `Carril ${nextLevel} cruzado! x${newMult.toFixed(2)} | Pot: $${(bet * newMult).toFixed(2)} | GO o CASH OUT`,
+            text: `Carril ${nextLevel} cruzado! x${newMult.toFixed(0)} | Pot: $${(bet * newMult).toFixed(0)} | GO o CASH OUT`,
             color: "#4ade80",
           });
         }
@@ -226,7 +226,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
         setChickenPos(-99); // dead
         const newLanes = buildLanes(visualOffset, level, cfg, probArray, nextLevel);
         setLanes(newLanes);
-        setStatusMsg({ text: `💥 ATROPELLADO en carril ${nextLevel}! Perdiste $${bet.toFixed(2)}`, color: "#ef4444" });
+        setStatusMsg({ text: `💥 ATROPELLADO en carril ${nextLevel}! Perdiste $${bet.toFixed(0)}`, color: "#ef4444" });
       }
       setIsAnimating(false);
     }, 350);
@@ -237,11 +237,11 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
     if (gameState !== "playing") return;
     if (level === 0) { setStatusMsg({ text: "Supera al menos 1 carril antes de cobrar.", color: "#f87171" }); return; }
 
-    const win = parseFloat((bet * mult).toFixed(2));
-    const finalBal = parseFloat((bal + win).toFixed(2));
+    const win = parseFloat((bet * mult).toFixed(0));
+    const finalBal = parseFloat((bal + win).toFixed(0));
     setBal(finalBal);
     onBalanceChange?.(finalBal);
-    setHist(h => parseFloat((h + win).toFixed(2)));
+    setHist(h => parseFloat((h + win).toFixed(0)));
     setGameState("idle");
 
     const newLanes = lanes.map((ln, vi) => {
@@ -250,7 +250,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
       return ln;
     });
     setLanes(newLanes);
-    setStatusMsg({ text: `💰 COBRADO en carril ${level}: $${win.toFixed(2)} (x${mult.toFixed(2)})`, color: "#fbbf24" });
+    setStatusMsg({ text: `💰 COBRADO en carril ${level}: $${win.toFixed(0)} (x${mult.toFixed(0)})`, color: "#fbbf24" });
   }
 
   // ─── CHICKEN POSITION ─────────────────────────────────────────
@@ -367,7 +367,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
 
             <div style={styles.fieldRow}>
               <label style={styles.fieldLabel}>Saldo ($)</label>
-              <div style={{ ...styles.fieldVal, color: "#38bdf8" }}>${bal.toFixed(2)}</div>
+              <div style={{ ...styles.fieldVal, color: "#38bdf8" }}>${bal.toFixed(0)}</div>
             </div>
 
             <div style={styles.fieldRow}>
@@ -419,16 +419,16 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
 
             <div style={styles.statGrid}>
               <StatRow label="Carril" value={`${level} / ${cfg.totalLevels}`} color="#fff" />
-              <StatRow label="Multiplicador" value={`${mult.toFixed(2)}x`} color="#facc15" />
-              <StatRow label="Gan. potencial" value={`$${(bet * mult).toFixed(2)}`} color="#4ade80" />
+              <StatRow label="Multiplicador" value={`${mult.toFixed(0)}x`} color="#facc15" />
+              <StatRow label="Gan. potencial" value={`$${(bet * mult).toFixed(0)}`} color="#4ade80" />
               <StatRow
                 label="P. éxito sig."
-                value={currentProb ? `${(currentProb * 100).toFixed(1)}%` : "-"}
+                value={currentProb ? `${(currentProb * 100).toFixed(0)}%` : "-"}
                 color="#a78bfa"
               />
               <StatRow
                 label="Histórico neto"
-                value={`$${hist.toFixed(2)}`}
+                value={`$${hist.toFixed(0)}`}
                 color={hist >= 0 ? "#4ade80" : "#f87171"}
               />
             </div>
