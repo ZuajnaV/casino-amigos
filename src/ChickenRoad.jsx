@@ -123,7 +123,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
     if (realLevel === currentCfg.totalLevels) return `x${currentCfg.finalMult.toLocaleString()}`;
     let pAcum = 1;
     for (let k = 0; k < realLevel; k++) pAcum *= pArr[k];
-    return `x${(currentCfg.rtp / pAcum).toFixed(0)}`;
+    return `x${(currentCfg.rtp / pAcum).toFixed(2)}`;
   }
 
   // ─── BUILD LANES FROM SCRATCH ───────────────────────────────
@@ -171,7 +171,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
     setChickenPos(-1);
     setLanes(buildLanes(0, 0, currentCfg, pArr));
     setStatusMsg({
-      text: `$${bet.toFixed(0)} apostados | ${diff} (${(currentCfg.prob * 100).toFixed(0)}% por carril) | Pulsa GO para avanzar!`,
+      text: `$${bet.toFixed(0)} apostados | ${diff} (${(currentCfg.prob * 100).toFixed(2)}% por carril) | Pulsa GO para avanzar!`,
       color: "#4ade80",
     });
   }
@@ -213,10 +213,10 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
           onBalanceChange?.(finalBal);
           setHist(h => parseFloat((h + win).toFixed(0)));
           setGameState("won");
-          setStatusMsg({ text: `🏆 TABLERO COMPLETO! Ganaste $${win.toFixed(0)} (x${newMult.toFixed(0)})`, color: "#fbbf24" });
+          setStatusMsg({ text: `🏆 TABLERO COMPLETO! Ganaste $${win.toFixed(2)} (x${newMult.toFixed(2)})`, color: "#fbbf24" });
         } else {
           setStatusMsg({
-            text: `Carril ${nextLevel} cruzado! x${newMult.toFixed(0)} | Pot: $${(bet * newMult).toFixed(0)} | GO o CASH OUT`,
+            text: `Carril ${nextLevel} cruzado! x${newMult.toFixed(2)} | Pot: $${(bet * newMult).toFixed(2)} | GO o CASH OUT`,
             color: "#4ade80",
           });
         }
@@ -250,7 +250,7 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
       return ln;
     });
     setLanes(newLanes);
-    setStatusMsg({ text: `💰 COBRADO en carril ${level}: $${win.toFixed(0)} (x${mult.toFixed(0)})`, color: "#fbbf24" });
+    setStatusMsg({ text: `💰 COBRADO en carril ${level}: $${win.toFixed(2)} (x${mult.toFixed(2)})`, color: "#fbbf24" });
   }
 
   // ─── CHICKEN POSITION ─────────────────────────────────────────
@@ -403,8 +403,8 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
                 {diff}
               </span>
               <span style={{ color: "#b3b3b3", fontSize: 15 }}>
-                {(DIFFICULTY_CONFIG[diff].prob * 100).toFixed(0)}% inicio →{" "}
-                {(DIFFICULTY_CONFIG[diff].finalProb * 100).toFixed(0)}% fin ·{" "}
+                {(DIFFICULTY_CONFIG[diff].prob * 100).toFixed(2)}% inicio →{" "}
+                {(DIFFICULTY_CONFIG[diff].finalProb * 100).toFixed(2)}% fin ·{" "}
                 {DIFFICULTY_CONFIG[diff].totalLevels} niveles
               </span>
             </div>
@@ -419,11 +419,11 @@ export default function ChickenRoad({ balance = 0, onBalanceChange, onBack }) {
 
             <div style={styles.statGrid}>
               <StatRow label="Carril" value={`${level} / ${cfg.totalLevels}`} color="#fff" />
-              <StatRow label="Multiplicador" value={`${mult.toFixed(0)}x`} color="#facc15" />
-              <StatRow label="Gan. potencial" value={`$${(bet * mult).toFixed(0)}`} color="#4ade80" />
+              <StatRow label="Multiplicador" value={`${mult.toFixed(2)}x`} color="#facc15" />
+              <StatRow label="Gan. potencial" value={`$${(bet * mult).toFixed(2)}`} color="#4ade80" />
               <StatRow
                 label="P. éxito sig."
-                value={currentProb ? `${(currentProb * 100).toFixed(0)}%` : "-"}
+                value={currentProb ? `${(currentProb * 100).toFixed(2)}%` : "-"}
                 color="#a78bfa"
               />
               <StatRow
