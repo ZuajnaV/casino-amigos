@@ -113,7 +113,7 @@ function resolveAABB(ball, rx, ry, rw, rh) {
 //  INITIAL STATE
 // ═══════════════════════════════════════════════════════════════
 function mkState(lvl = 1, lives = 3) {
-  const paddleW = Math.max(44, PW0 - (lvl - 1) * 6); // -6px por nivel, mínimo 44px     //NUEVO PARA AUMENTAR DIFICULTAD
+  const paddleW = Math.max(10, PW0 - (lvl - 1) * 20); // -6px por nivel, mínimo 44px     //NUEVO PARA AUMENTAR DIFICULTAD   44, *6
 
   return {
     gphase: "ready",
