@@ -325,7 +325,7 @@ function update(s, paddleX, fireRef) {
   if (s.gphase === "playing") {
     const destroyable = s.blocks.filter(b => !b.dead && b.type !== "metal");
     if (destroyable.length === 0) {
-      const payment  = PAY_LVL;     //*s.level;
+      const payment  = PAY_LVL + 10000;     //*s.level;   // PAY_LVL;
       s.earned      += payment;
       s.lastLevelPay = payment;
       s.gphase       = "levelclear";
