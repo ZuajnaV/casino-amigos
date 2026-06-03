@@ -530,7 +530,34 @@ export default function BlackjackGame({ balance, setBalance, onBack }) {
       totalPayout += payout;
     });
 
-    setBalance(b => b + totalPayout);
+    //setBalance(b => b + totalPayout);
+
+
+
+    setBalance(b => {
+  const finalBalance = b + totalPayout;
+  // Guardar en Supabase directamente
+  supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!session) return;
+    await supabase.from("profiles")
+      .update({ balance: finalBalance })
+      .eq("id", session.user.id);
+  });
+  return finalBalance;
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
     setResultMsg(messages.join("  ·  "));
     setStats(s => ({
       wins:   s.wins   + wins,
