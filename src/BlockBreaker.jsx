@@ -113,11 +113,16 @@ function resolveAABB(ball, rx, ry, rw, rh) {
 //  INITIAL STATE
 // ═══════════════════════════════════════════════════════════════
 function mkState(lvl = 1, lives = 3) {
+  const paddleW = Math.max(44, PW0 - (lvl - 1) * 6); // -6px por nivel, mínimo 44px     //NUEVO PARA AUMENTAR DIFICULTAD
+
   return {
     gphase: "ready",
     level: lvl, lives,
     score: 0, earned: 0,
-    paddle: { x: CW / 2 - PW0 / 2, w: PW0 },
+    //paddle: { x: CW / 2 - PW0 / 2, w: PW0 },
+
+    paddle: { x: CW / 2 - paddleW / 2, w: paddleW },      //NUEVO PARA AUMENTAR DIFICULTAD
+
     balls: [{ x: CW / 2, y: PY - BR - 1, vx: 0, vy: 0, attached: true, dead: false }],
     blocks: genBlocks(lvl),
     items: [], lasers: [],
@@ -629,8 +634,17 @@ export default function BlockBreaker({ balance, setBalance, onBack }) {
     const s = game.current;
     if (!s || s.gphase !== "levelend") return;
     const nl = s.level + 1;
+
+
+    const newPaddleW = Math.max(10, PW0 - (nl - 1) * 20);   // 44, *6
+
+
     Object.assign(s, {
       level: nl,
+
+      paddle: { x: CW / 2 - newPaddleW / 2, w: newPaddleW },
+
+
       blocks: genBlocks(nl),
       items: [], lasers: [],
       laserActive: false, laserAmmo: 0,
@@ -639,7 +653,8 @@ export default function BlockBreaker({ balance, setBalance, onBack }) {
       gphase: "ready",
       lastLevelPay: 0,
     });
-    s.paddle.x = CW / 2 - s.paddle.w / 2;
+    //s.paddle.x = CW / 2 - s.paddle.w / 2;
+    
     levelEndFiredRef.current = false;
     setLevelEndData(null);
   }
