@@ -16,7 +16,7 @@ const SPD0 = 5.4;
 const SPD_MAX = 10.5;
 const ITEM_V  = 2.4;
 const LASER_V = 9;
-const PAY_LVL = 45000;
+const PAY_LVL = 35000;
 const EFF_DUR = 480;
 
 const ITEM_TYPES = ["expand","shrink","multi","laser","slow","fast","life"];
@@ -325,7 +325,7 @@ function update(s, paddleX, fireRef) {
   if (s.gphase === "playing") {
     const destroyable = s.blocks.filter(b => !b.dead && b.type !== "metal");
     if (destroyable.length === 0) {
-      const payment  = PAY_LVL + 10000;     //*s.level;   // PAY_LVL;
+      const payment  = PAY_LVL + s.level*10000;     //*s.level;   // PAY_LVL;
       s.earned      += payment;
       s.lastLevelPay = payment;
       s.gphase       = "levelclear";
