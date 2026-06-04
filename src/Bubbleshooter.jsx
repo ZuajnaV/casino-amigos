@@ -4,7 +4,7 @@ import { supabase } from "./supabase";
 // ═══════════════════════════════════════════════════════════════
 //  CONSTANTS
 // ═══════════════════════════════════════════════════════════════
-const CW = 4200, CH = 5800;
+const CW = 4200, CH = 5800;         // 420, 580 con escala 10x para alta resolución
 const ROWS = 11, COLS = 10;
 const R = 20;           // radio de burbuja
 const DIAM = R * 2;
