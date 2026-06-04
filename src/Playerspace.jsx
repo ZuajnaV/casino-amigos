@@ -9,7 +9,7 @@ import Geometrix from "./Geometrix.jsx";
 import ShopPanel, { ASSETS } from "./ShopPanel.jsx";
 import BankPanel, { processLoanPayments } from "./Bankpanel.jsx";
 import PlayerStats from "./PlayerStats.jsx";
-import BubbleShooter from "./BubbleShooter.jsx";
+import BubbleShooter from "./Bubbleshooter.jsx";
 
 //Se agregó el nuevo juego
 
