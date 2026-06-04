@@ -5,7 +5,7 @@ import { supabase } from "./supabase";
 //  CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 const CW = 600, CH = 660;         // 420, 580 con escala 10x para alta resolución
-const ROWS = 11, COLS = 12;   // filas y columnas del tablero
+const ROWS = 11, COLS = 14;   // filas y columnas del tablero
 const R = 20;           // radio de burbuja
 const DIAM = R * 2;
 
