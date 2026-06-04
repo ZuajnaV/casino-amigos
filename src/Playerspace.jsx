@@ -9,6 +9,9 @@ import Geometrix from "./Geometrix.jsx";
 import ShopPanel, { ASSETS } from "./ShopPanel.jsx";
 import BankPanel, { processLoanPayments } from "./Bankpanel.jsx";
 import PlayerStats from "./PlayerStats.jsx";
+import BubbleShooter from "./BubbleShooter.jsx";
+
+
 
 
 // ─── Sub-componente: Stats del jugador ───────────────────────────────────────
@@ -551,6 +554,7 @@ useEffect(() => {
       { id: "colordash",    icon: "🔺", name: "Color Dash",    desc: "$5.000 por objeto superado",           color: "#c084fc" },
       { id: "blockbreaker", icon: "🧱", name: "Block Breaker", desc: "$30.000 por nivel superado",           color: "#8b5cf6" },
       { id: "geometrix",    icon: "📐", name: "Geometrix",     desc: "$1'385.000 por completar los niveles", color: "#fbbf24" },
+      { id: "bubbleshooter", icon: "🫧", name: "Bubble Shooter", desc: "Pop: $500 · Drop: $1.500 · Clear: $30.000", color: "#60a5fa" },
     ].map(job => (
       <div
         key={job.id}
@@ -623,6 +627,12 @@ useEffect(() => {
           <Geometrix balance={balance} setBalance={setBalance} onBack={() => setActiveJob(null)} />
         </div>
       )}
+      {activeJob === "bubbleshooter" && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "#07070f", overflowY: "auto" }}>
+          <BubbleShooter balance={balance} setBalance={setBalance} onBack={() => setActiveJob(null)} />
+        </div>
+      )}
+
     </div>
   );
 }

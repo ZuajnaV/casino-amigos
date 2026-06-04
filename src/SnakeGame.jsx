@@ -71,27 +71,6 @@ useEffect(() => {
   return () => window.removeEventListener("keydown", preventScroll);
 }, []);
 
-// ── Guardar balance en Supabase al cobrar ──
-/*
-async function cobrarYGuardar(manzanas, ganancia) {
-  setSaving(true);
-  const newBal = balanceRef.current + ganancia;
-  setBalance(newBal);
-  balanceRef.current = newBal;
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await supabase.from("profiles").update({ balance: newBal }).eq("id", session.user.id);
-      // Registrar en historial de trabajo (tabla snake_history si existe, sino ignorar)
-      await saveMinigameRecord("snake", manzanas, ganancia);
-    }
-    setSaving(false);
-  }
-  
-*/
-
-
-
-
   async function cobrarYGuardar(manzanas, ganancia) {
   setSaving(true);
   const newBal = balanceRef.current + ganancia;
@@ -112,14 +91,6 @@ async function cobrarYGuardar(manzanas, ganancia) {
     setSaving(false);  // ← siempre se ejecuta, pase lo que pase
   }
 }
-
-
-
-
-
-
-
-
 
 
   // ── Loop del juego ──
