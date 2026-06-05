@@ -405,7 +405,7 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     ctx.setLineDash([]);
     ctx.restore();
 
-    ctx.fillStyle = "#ff444400";
+    ctx.fillStyle = "#ff444444";
     ctx.font = "bold 14px monospace";
     ctx.textAlign = "right";
     ctx.fillStyle = "#ff4444aa";
@@ -605,7 +605,7 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "30px monospace";
     ctx.textAlign = "right";
-    ctx.fillText("SIGUIENTE", CW - 12, 16);
+    ctx.fillText("SIGUIENTE", CW - 25, 30);   // CW - 12, 16 para dejar espacio a la burbuja
     drawBubble(ctx, CW - 28, 34, 14, s.nextColor);
 
     // Fondo inferior
