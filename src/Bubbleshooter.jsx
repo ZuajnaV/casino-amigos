@@ -596,7 +596,7 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     ctx.fillText("Tiros sin match:", 10, 36);
     for (let i = 0; i < s.maxMisses; i++) {
       ctx.beginPath();
-      ctx.arc(200 + i * 16, 31, 6, 0, Math.PI * 2);   //140+i*16 para dejar espacio al texto
+      ctx.arc(160 + i * 16, 31, 6, 0, Math.PI * 2);   //140+i*16 para dejar espacio al texto
       ctx.fillStyle = i < missLeft ? "#fbbf24" : "#2a2a3a";
       ctx.fill();
     }
