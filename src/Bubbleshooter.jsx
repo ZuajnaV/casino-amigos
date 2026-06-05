@@ -591,7 +591,7 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     // Fallos restantes
     const missLeft = s.maxMisses - s.misses;
     ctx.fillStyle = "#ffffff";
-    ctx.font = "30px monospace";
+    ctx.font = "20px monospace";
     ctx.textAlign = "left";
     ctx.fillText("Tiros sin match:", 10, 36);
     for (let i = 0; i < s.maxMisses; i++) {
@@ -605,7 +605,7 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "30px monospace";
     ctx.textAlign = "right";
-    ctx.fillText("SIGUIENTE", CW - 25, 30);   // CW - 12, 16 para dejar espacio a la burbuja
+    ctx.fillText("SIGUIENTE", CW - 50, 36);   // CW - 12, 16 para dejar espacio a la burbuja
     drawBubble(ctx, CW - 28, 34, 14, s.nextColor);
 
     // Fondo inferior
