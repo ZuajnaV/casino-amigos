@@ -310,16 +310,16 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
 
 
           {profiles.map((u, i) => (
-  <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, fontSize: 16 }}>
-    <span style={{ color: i===0?"#fbbf24":i===1?"#aaa":i===2?"#cd7f32":"#666" }}>
+  <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, fontSize: 20 }}>
+    <span style={{ color: i===0?"#fbbf24":i===1?"#c7c7c7":i===2?"#cd7f32":"#cfcfcf" }}>
       {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} {u.avatar} {u.username}
-      <span style={{ color: "#666", fontSize: 12, marginLeft: 6 }}>💀{u.deaths}</span>
+      <span style={{ color: "#ffffff", fontSize: 16, marginLeft: 6 }}>💀{u.deaths}</span>
     </span>
     <div style={{ textAlign: "right" }}>
-      <div style={{ color: "#fbbf24", fontSize: 16, fontWeight: 700 }}>
+      <div style={{ color: "#fbbf24", fontSize: 20, fontWeight: 700 }}>
         ⭐ {u.sc.toLocaleString()} SC
       </div>
-      <div style={{ color: "#555", fontSize: 12 }}>
+      <div style={{ color: "#b1b1b1", fontSize: 15 }}>
         patrimonio: {u.patrimonio >= 0 ? "+" : ""}{u.patrimonio.toLocaleString()}
       </div>
     </div>
