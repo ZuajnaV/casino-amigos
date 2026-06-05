@@ -568,7 +568,7 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     ctx.fill();
 
     // Brillo
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fillStyle = "rgb(255, 255, 255)";
     ctx.beginPath();
     ctx.roundRect(-3, -38, 5, 30, 2);
     ctx.fill();
