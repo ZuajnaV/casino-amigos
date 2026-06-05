@@ -25,7 +25,7 @@ const CANNON_X    = CW / 2;
 
 // Pagos
 const PAY_POP  =   1000;   // por burbuja explotada
-const PAY_DROP = 3_000;   // por burbuja caída
+const PAY_DROP = 2_800;   // por burbuja caída
 const PAY_CLEAR = 100_000; // tablero limpio
 
 // Fallos antes de que el techo baje
