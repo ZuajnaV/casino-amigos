@@ -24,7 +24,7 @@ const CANNON_Y    = CH - 55;
 const CANNON_X    = CW / 2;
 
 // Pagos
-const PAY_POP  =   7000;   // por burbuja explotada
+const PAY_POP  =   700;   // por burbuja explotada
 const PAY_DROP = 2_000;   // por burbuja caída
 const PAY_CLEAR = 100_000; // tablero limpio
 
