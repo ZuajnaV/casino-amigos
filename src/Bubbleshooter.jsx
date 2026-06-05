@@ -568,7 +568,7 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     ctx.fill();
 
     // Brillo
-    ctx.fillStyle = "rgb(255, 255, 255)";
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
     ctx.beginPath();
     ctx.roundRect(-3, -38, 5, 30, 2);
     ctx.fill();
@@ -609,8 +609,8 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     drawBubble(ctx, CW - 28, 34, 14, s.nextColor);
 
     // Fondo inferior
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(0, CH - 80, CW, 80);
+    //ctx.fillStyle = "rgba(0,0,0,0.5)";
+    //ctx.fillRect(0, CH - 80, CW, 80);
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "15px monospace";
