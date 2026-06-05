@@ -3,9 +3,9 @@ import { saveMinigameRecord } from "./minigameRecords";
 
 // ── Configuración de dificultades ─────────────────────────────────────────────
 const DIFFICULTIES = {
-  easy:   { label: "Fácil",   rows: 9,  cols: 9,  mines: 10, color: "#00d4aa", pago: 90000},
-  medium: { label: "Medio",   rows: 16, cols: 16, mines: 40, color: "#fbbf24", pago: 500000 },
-  hard:   { label: "Difícil", rows: 16, cols: 30, mines: 99, color: "#ff4444", pago: 10000000 },
+  easy:   { label: "Fácil",   rows: 9,  cols: 9,  mines: 10, color: "#00d4aa", pago: 15000},
+  medium: { label: "Medio",   rows: 16, cols: 16, mines: 40, color: "#fbbf24", pago: 84000 },
+  hard:   { label: "Difícil", rows: 16, cols: 30, mines: 99, color: "#ff4444", pago: 200000 },
 };
 
 // ── Utilidades ────────────────────────────────────────────────────────────────

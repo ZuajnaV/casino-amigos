@@ -9,7 +9,7 @@ const GRID = 20;          // celdas por lado
 const CELL = 30;          //18 px por celda
 const BOARD = GRID * CELL; // 360px
 const TICK_MS = 130;       // velocidad inicial
-const PAGO_POR_MANZANA = 2000;    //1000=4000 pago inicial, luego revisar si es estable
+const PAGO_POR_MANZANA = 400;    //2000 // 1000=4000 pago inicial, luego revisar si es estable
 const MAX_MANZANAS_PAGO = 100; // máximo de manzanas que generan pago por sesión
 
 const DIR = {

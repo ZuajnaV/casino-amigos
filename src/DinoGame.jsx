@@ -16,7 +16,7 @@ const MAX_SPEED = 13;
 const SPEED_INC = 0.001;       //0.0006 es bueno para que el juego dure un rato sin volverse imposible, pero se puede ajustar para hacerlo más fácil o difícil
 
 // Pago: $2.000 por cada 100 puntos
-const PAGO_POR_100 = 2000;
+const PAGO_POR_100 = 366;    //2000
 
 // ── Tipos de obstáculos ───────────────────────────────────────────────────────
 const OBS_TYPES = [

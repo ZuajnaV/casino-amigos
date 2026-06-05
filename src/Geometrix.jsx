@@ -26,16 +26,16 @@ function getTimeLimit(lvl) {
 
 // ── NIVELES ───────────────────────────────────────────────────────────────────
 const LEVELS = [
-  { lvl:1,  shape:"line",     goal:"longitud",   prize:5000,   threshold:0.08, color:"#00d4aa", label:"Línea",            unit:"px"  },
-  { lvl:2,  shape:"rect",     goal:"área",        prize:10000,  threshold:0.08, color:"#3b82f6", label:"Rectángulo",       unit:"px²" },
-  { lvl:3,  shape:"triangle", goal:"área",        prize:20000,  threshold:0.1, color:"#f59e0b", label:"Triángulo",        unit:"px²" },
-  { lvl:4,  shape:"circle",   goal:"radio",       prize:30000,  threshold:0.08, color:"#ec4899", label:"Círculo",          unit:"px"  },
-  { lvl:5,  shape:"rect",     goal:"perímetro",   prize:50000,  threshold:0.08, color:"#8b5cf6", label:"Rectángulo",       unit:"px"  },
-  { lvl:6,  shape:"circle",   goal:"área",        prize:70000,  threshold:0.05, color:"#06b6d4", label:"Círculo",          unit:"px²" },
-  { lvl:7,  shape:"triangle", goal:"perímetro",   prize:120000, threshold:0.05, color:"#84cc16", label:"Triángulo",        unit:"px"  },
-  { lvl:8,  shape:"polygon",  goal:"área",        prize:280000, threshold:0.15, color:"#f97316", label:"Polígono",         unit:"px²" },
-  { lvl:9,  shape:"ellipse",  goal:"radio mayor", prize:300000, threshold:0.05, color:"#e879f9", label:"Elipse",           unit:"px"  },
-  { lvl:10, shape:"compound", goal:"área total",  prize:500000, threshold:0.1, color:"#fbbf24", label:"Figura Compuesta", unit:"px²" },
+  { lvl:1,  shape:"line",     goal:"longitud",   prize:100,   threshold:0.08, color:"#00d4aa", label:"Línea",            unit:"px"  }, //5000, 10000, 20000, 30000, 50000, 70000, 120000, 280000, 300000, 500000
+  { lvl:2,  shape:"rect",     goal:"área",        prize:1000,  threshold:0.08, color:"#3b82f6", label:"Rectángulo",       unit:"px²" },
+  { lvl:3,  shape:"triangle", goal:"área",        prize:4000,  threshold:0.1, color:"#f59e0b", label:"Triángulo",        unit:"px²" },
+  { lvl:4,  shape:"circle",   goal:"radio",       prize:6000,  threshold:0.08, color:"#ec4899", label:"Círculo",          unit:"px"  },
+  { lvl:5,  shape:"rect",     goal:"perímetro",   prize:10000,  threshold:0.08, color:"#8b5cf6", label:"Rectángulo",       unit:"px"  },
+  { lvl:6,  shape:"circle",   goal:"área",        prize:15000,  threshold:0.05, color:"#06b6d4", label:"Círculo",          unit:"px²" },
+  { lvl:7,  shape:"triangle", goal:"perímetro",   prize:30000, threshold:0.05, color:"#84cc16", label:"Triángulo",        unit:"px"  },
+  { lvl:8,  shape:"polygon",  goal:"área",        prize:56000, threshold:0.15, color:"#f97316", label:"Polígono",         unit:"px²" },
+  { lvl:9,  shape:"ellipse",  goal:"radio mayor", prize:60000, threshold:0.05, color:"#e879f9", label:"Elipse",           unit:"px"  },
+  { lvl:10, shape:"compound", goal:"área total",  prize:120000, threshold:0.1, color:"#fbbf24", label:"Figura Compuesta", unit:"px²" },
 ];
 
 // ── GENERADOR DE FIGURAS ──────────────────────────────────────────────────────
