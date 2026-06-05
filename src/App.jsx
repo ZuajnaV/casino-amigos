@@ -50,10 +50,11 @@ useEffect(() => {
 
 
 
-
+/* Antes, el useEffect para cargar el ranking era así:
 
   useEffect(() => {
-  supabase.from("profiles").select("username, avatar, balance, total_deposited, deaths")
+  //supabase.from("profiles").select("username, avatar, balance, total_deposited, deaths")
+  supabase.from("profiles").select("username, avatar, balance, total_deposited, deaths, credit_score")
     .then(({ data }) => {
       if (data) {
         const BONUS = 100000;
@@ -70,6 +71,67 @@ useEffect(() => {
       }
     });
 }, [balance]);
+
+
+*/  
+
+
+
+
+
+  useEffect(() => {
+  async function loadRanking() {
+    const [{ data: profiles }, { data: assets }, { data: loans }] = await Promise.all([
+      supabase.from("profiles").select("id, username, avatar, balance, deaths, credit_score"),
+      supabase.from("player_assets").select("user_id, asset_key, quantity, mortgaged"),
+      supabase.from("loans").select("user_id, total_debt, paid_amount").eq("status", "active"),
+    ]);
+
+    if (!profiles) return;
+
+    // Precios de activos (mismos que en ShopPanel)
+    const ASSET_PRICES = {
+      bicicleta: 160000, moto: 1200000, carro: 4800000,
+      choza: 240000, casa: 1200000, mansion: 32000000,
+    };
+
+    const sorted = profiles.map(u => {
+      // Valor de activos no hipotecados
+      const userAssets = (assets || []).filter(a => a.user_id === u.id && !a.mortgaged);
+      const assetValue = userAssets.reduce((sum, a) => sum + (ASSET_PRICES[a.asset_key] || 0) * a.quantity, 0);
+
+      // Deuda activa
+      const userLoan = (loans || []).find(l => l.user_id === u.id);
+      const deuda = userLoan ? userLoan.total_debt - userLoan.paid_amount : 0;
+
+      const patrimonio = u.balance + assetValue - deuda;
+      const sc = u.credit_score || 0;
+      const deaths = u.deaths || 0;
+
+      return { ...u, sc, deaths, patrimonio };
+    }).sort((a, b) => {
+      if (b.sc !== a.sc) return b.sc - a.sc;           // 1er criterio: más SC
+      if (a.deaths !== b.deaths) return a.deaths - b.deaths;  // 2do: menos muertes
+      return b.patrimonio - a.patrimonio;               // 3er: más patrimonio
+    });
+
+    setProfiles(sorted);
+  }
+  loadRanking();
+}, [balance]);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   async function handleDeposit() {
     const amount = parseInt(depositAmount);
@@ -239,29 +301,40 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
 
       <div style={styles.rankingBox}>
         <div style={{ color: "#ffffff", fontSize: 20, marginBottom: 8, letterSpacing: 2 }}>
-          RANKING — ROI% <span style={{ color: "#959595", fontWeight: 400 }}>(sobre bono + depósitos)</span>
+          RANKING — SC <span style={{ color: "#959595", fontWeight: 400 }}>(Score crediticio. Muertes. Patrimonio)</span>
         </div>
         {profiles.length === 0 && (
           <div style={{ color: "#333", fontSize: 12 }}>Nadie califica aún</div>
         )}
-        {profiles.map((u, i) => (
-          <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, fontSize: 20 }}>
-            <span style={{ color: i===0?"#fbbf24":i===1?"#aaa":i===2?"#cd7f32":"#666" }}>
-              {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} {u.avatar} {u.username}
-              <span style={{ color: "#bdbdbd", fontSize: 14, marginLeft: 6 }}>
-    💀 {u.deaths || 0}
+
+
+
+          {profiles.map((u, i) => (
+  <div key={u.username} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, fontSize: 16 }}>
+    <span style={{ color: i===0?"#fbbf24":i===1?"#aaa":i===2?"#cd7f32":"#666" }}>
+      {i===0?"🥇":i===1?"🥈":i===2?"🥉":"  "} {u.avatar} {u.username}
+      <span style={{ color: "#666", fontSize: 12, marginLeft: 6 }}>💀{u.deaths}</span>
     </span>
-            </span>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ color: u.roi >= 0 ? "#00d4aa" : "#ff4444", fontSize: 20, fontWeight: 700 }}>
-                {u.roi >= 0 ? "+" : ""}{u.roi.toFixed(1)}% ROI
-              </div>
-              <div style={{ color: "#e1e1e1", fontSize: 15 }}>
-                {u.neto >= 0 ? "+" : ""}{u.neto.toLocaleString()} neto
-              </div>
-            </div>
-          </div>
-        ))}
+    <div style={{ textAlign: "right" }}>
+      <div style={{ color: "#fbbf24", fontSize: 16, fontWeight: 700 }}>
+        ⭐ {u.sc.toLocaleString()} SC
+      </div>
+      <div style={{ color: "#555", fontSize: 12 }}>
+        patrimonio: {u.patrimonio >= 0 ? "+" : ""}{u.patrimonio.toLocaleString()}
+      </div>
+    </div>
+  </div>
+))}
+
+
+
+
+
+
+
+
+
+
       </div>
     </div>
   );
