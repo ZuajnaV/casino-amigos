@@ -405,8 +405,8 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     ctx.setLineDash([]);
     ctx.restore();
 
-    ctx.fillStyle = "#ff444444";
-    ctx.font = "bold 10px monospace";
+    ctx.fillStyle = "#ff444400";
+    ctx.font = "bold 14px monospace";
     ctx.textAlign = "right";
     ctx.fillStyle = "#ff4444aa";
     ctx.fillText("DEAD LINE", CW - 8, DEAD_LINE_Y - 4);
@@ -590,8 +590,8 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
 
     // Fallos restantes
     const missLeft = s.maxMisses - s.misses;
-    ctx.fillStyle = "#555";
-    ctx.font = "11px monospace";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "30px monospace";
     ctx.textAlign = "left";
     ctx.fillText("Tiros sin match:", 10, 36);
     for (let i = 0; i < s.maxMisses; i++) {
@@ -602,8 +602,8 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     }
 
     // Burbuja siguiente (derecha)
-    ctx.fillStyle = "#444";
-    ctx.font = "10px monospace";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "30px monospace";
     ctx.textAlign = "right";
     ctx.fillText("SIGUIENTE", CW - 12, 16);
     drawBubble(ctx, CW - 28, 34, 14, s.nextColor);
@@ -612,8 +612,8 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
     ctx.fillStyle = "rgba(0,0,0,0.5)";
     ctx.fillRect(0, CH - 80, CW, 80);
 
-    ctx.fillStyle = "#333";
-    ctx.font = "10px monospace";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "15px monospace";
     ctx.textAlign = "center";
     ctx.fillText("Click / Tap — Disparar  ·  Mueve el ratón para apuntar", CW / 2, CH - 8);
   }
@@ -737,27 +737,27 @@ export default function BubbleShooter({ balance, setBalance, onBack }) {
             alignItems: "center", justifyContent: "center",
             background: "rgba(7,7,15,0.88)", borderRadius: 12,
           }}>
-            <div style={{ fontSize: 56, marginBottom: 10 }}>🫧</div>
-            <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 6, color: "#60a5fa", letterSpacing: 2 }}>
+            <div style={{ fontSize: 60, marginBottom: 10 }}>🫧</div>
+            <div style={{ fontSize: 35, fontWeight: 900, marginBottom: 6, color: "#60a5fa", letterSpacing: 2 }}>
               BUBBLE SHOOTER
             </div>
-            <div style={{ fontSize: 12, color: "#555", textAlign: "center", lineHeight: 1.8, marginBottom: 8 }}>
+            <div style={{ fontSize: 15, color: "#afafaf", textAlign: "center", lineHeight: 1.8, marginBottom: 8 }}>
               Agrupa 3 o más burbujas del mismo color para hacerlas estallar.<br/>
               Las burbujas que queden flotando caen y dan más puntos.<br/>
               Si las burbujas cruzan la línea roja — Game Over.
             </div>
             <div style={{
               background: "rgba(96,165,250,0.08)", border: "1px solid #60a5fa33",
-              borderRadius: 10, padding: "10px 20px", marginBottom: 20, fontSize: 12,
+              borderRadius: 10, padding: "10px 20px", marginBottom: 20, fontSize: 15,
               display: "flex", flexDirection: "column", gap: 4, textAlign: "center",
             }}>
-              <span style={{ color: "#ef4444" }}>💥 Pop (×3+) → <span style={{ color: "#fff", fontWeight: 700 }}>$500</span> por burbuja</span>
-              <span style={{ color: "#60a5fa" }}>⬇ Drop (colateral) → <span style={{ color: "#fff", fontWeight: 700 }}>$1.500</span> por burbuja</span>
+              <span style={{ color: "#ef4444" }}>💥 Pop (×3+) → <span style={{ color: "#fff", fontWeight: 700 }}>$120</span> por burbuja</span>
+              <span style={{ color: "#60a5fa" }}>⬇ Drop (colateral) → <span style={{ color: "#fff", fontWeight: 700 }}>$360</span> por burbuja</span>
               <span style={{ color: "#fbbf24" }}>✨ Tablero limpio → <span style={{ color: "#fff", fontWeight: 700 }}>$30.000</span> bonus</span>
             </div>
             <button onClick={startGame} style={{
               background: "#60a5fa", border: "none", borderRadius: 10,
-              padding: "12px 40px", fontSize: 16, fontWeight: 900,
+              padding: "12px 40px", fontSize: 20, fontWeight: 900,
               cursor: "pointer", color: "#000", letterSpacing: 1,
             }}>▶ JUGAR</button>
           </div>
