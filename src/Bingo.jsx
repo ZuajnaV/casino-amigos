@@ -16,7 +16,7 @@ const COL_RANGES    = [[1,15],[16,30],[31,45],[46,60],[61,75]];
 
 // Patrones de victoria: línea horizontal, vertical, diagonal y cartón lleno
 const WIN_PATTERNS = {
-  "Línea H1": [[0,0],[0,1],[0,2],[0,3],[0,4]],
+  /*"Línea H1": [[0,0],[0,1],[0,2],[0,3],[0,4]],
   "Línea H2": [[1,0],[1,1],[1,2],[1,3],[1,4]],
   "Línea H3": [[2,0],[2,1],[2,2],[2,3],[2,4]],
   "Línea H4": [[3,0],[3,1],[3,2],[3,3],[3,4]],
@@ -27,7 +27,7 @@ const WIN_PATTERNS = {
   "Línea V4": [[0,3],[1,3],[2,3],[3,3],[4,3]],
   "Línea V5": [[0,4],[1,4],[2,4],[3,4],[4,4]],
   "Diagonal ↘": [[0,0],[1,1],[2,2],[3,3],[4,4]],
-  "Diagonal ↙": [[0,4],[1,3],[2,2],[3,1],[4,0]],
+  "Diagonal ↙": [[0,4],[1,3],[2,2],[3,1],[4,0]],    */
   "Cartón lleno": Array.from({length:5},(_,r)=>Array.from({length:5},(_,c)=>[r,c])).flat(),
 };
 
@@ -75,7 +75,8 @@ function BingoCard({ card, markedNumbers, isWinner, cardIndex, justCalled }) {
       overflow: "hidden",
       boxShadow: isWinner ? "0 0 24px #fbbf2444" : "none",
       transition: "all 0.3s",
-      minWidth: 180,
+      //minWidth: 180,
+      width: 400,
     }}>
       {/* Header BINGO */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
@@ -83,7 +84,7 @@ function BingoCard({ card, markedNumbers, isWinner, cardIndex, justCalled }) {
           <div key={l} style={{
             background: ["#ef4444","#3b82f6","#22c55e","#f59e0b","#a855f7"][i],
             textAlign: "center", padding: "6px 0",
-            fontWeight: 900, fontSize: 14, color: "#fff",
+            fontWeight: 900, fontSize: 18, color: "#fff",
             letterSpacing: 1,
           }}>{l}</div>
         ))}
@@ -107,7 +108,7 @@ function BingoCard({ card, markedNumbers, isWinner, cardIndex, justCalled }) {
                            : isMarked ? "#1e3a2e"
                            : "#0d0d18",
                 border: isNew ? "2px solid #00d4aa" : isMarked ? "1px solid #00d4aa55" : "1px solid #1e1e2e",
-                fontSize: 11, fontWeight: isMarked ? 800 : 400,
+                fontSize: 15, fontWeight: isMarked ? 800 : 400,     //CAMBIAR TAMAÑO NUMEROS
                 color: isFree    ? "#fbbf24"
                      : isNew    ? "#000"
                      : isMarked ? "#00d4aa"
@@ -182,7 +183,7 @@ function RoomLobby({ room, myCards, onBuyCard, onReady, balance, loading }) {
         <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
           Mis cartones ({myCount}/{MAX_CARDS})
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", flexDirection: "column" }}>
           {myCards.map((card, i) => (
             <BingoCard key={i} card={card} markedNumbers={new Set()} isWinner={false} cardIndex={i} justCalled={null} />
           ))}
@@ -593,7 +594,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
           }
         }
       }
-    }, 2000); // Bola cada 2 segundos
+    }, 5000); //2000 Bola cada 2 segundos
   }
 
   // ── Salir de sala ─────────────────────────────────────────
