@@ -11,7 +11,8 @@ import BankPanel, { processLoanPayments } from "./Bankpanel.jsx";
 import PlayerStats from "./PlayerStats.jsx";
 import BubbleShooter from "./Bubbleshooter.jsx";
 
-//Se agregó el nuevo juego
+
+
 
 
 // ─── Sub-componente: Stats del jugador ───────────────────────────────────────
