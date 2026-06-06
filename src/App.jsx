@@ -10,6 +10,7 @@ import SlotsGame from "./Slots.jsx";
 import CrazyTimeGame from "./CrazyTime.jsx";
 import PlayerSpace from "./Playerspace.jsx";
 import PlayerStats from "./PlayerStats.jsx";
+import BingoGame from "./Bingo.jsx";
 
 
 const GAMES = [
@@ -21,6 +22,7 @@ const GAMES = [
   { id: "chickenroad", name: "Chicken Road",  icon: "🐔", desc: "Corre por la carretera y evita los obstáculos",  color: "#f59e0b" },
   { id: "horses",      name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",              color: "#ef4444" },
   { id: "crazytime",   name: "Crazy Time",    icon: "💥🎆🎡🎆💥", desc: "¡El juego más loco del casino!",                color: "#f97316" },
+  { id: "bingo", icon: "🎱", name: "Bingo", desc: "¡Haz bingo y gana grandes premios!", color: "#fbbf24" },
 ];
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈","🗿","🚨","🗽","🛸","🛰️"];
@@ -46,36 +48,6 @@ useEffect(() => {
   supabase.from("market_daily").select("*").eq("date", today).single()
     .then(({ data }) => setMarketToday(data));
 }, []);
-
-
-
-
-/* Antes, el useEffect para cargar el ranking era así:
-
-  useEffect(() => {
-  //supabase.from("profiles").select("username, avatar, balance, total_deposited, deaths")
-  supabase.from("profiles").select("username, avatar, balance, total_deposited, deaths, credit_score")
-    .then(({ data }) => {
-      if (data) {
-        const BONUS = 100000;
-        const sorted = data
-          .map(u => {
-            const dep = u.total_deposited || 0;
-            const capitalBase = dep + BONUS;
-            const neto = u.balance - capitalBase;
-            const roi = (neto / capitalBase) * 100;
-            return { ...u, neto, roi, dep };
-          })
-          .sort((a, b) => b.roi - a.roi); // sin .filter() — todos aparecen
-        setProfiles(sorted);
-      }
-    });
-}, [balance]);
-
-
-*/  
-
-
 
 
 
@@ -121,18 +93,6 @@ useEffect(() => {
 }, [balance]);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
   async function handleDeposit() {
     const amount = parseInt(depositAmount);
     if (!amount || amount <= 0) return;
@@ -153,11 +113,6 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
     <div>
       <div style={styles.lobbyHeader}>
         <div>
-
-
-
-
-
 
         {/* Justo antes de los botones del header */}
 {marketToday && (
@@ -180,22 +135,6 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
 )}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
           <div style={{ fontSize: 13, color: "#555" }}>Bienvenido</div>
           <div style={{ fontSize: 22, fontWeight: 700 }}>{profile.avatar} {profile.username}</div>
           <div style={{ fontSize: 12, color: neto >= 0 ? "#00d4aa" : "#ff4444", marginTop: 2 }}>
@@ -210,28 +149,6 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
         <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
           <div style={styles.balancePill}>💰 {balance.toLocaleString()} fichas</div>
           <div style={{ display: "flex", gap: 8 }}>
-
-
-
-
-
-
-
-              
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             <button onClick={() => setShowStats(s => !s)} style={styles.depositBtn}>
@@ -325,15 +242,6 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
     </div>
   </div>
 ))}
-
-
-
-
-
-
-
-
-
 
       </div>
     </div>
@@ -521,7 +429,20 @@ export default function App() {
           <button onClick={handleLogout} style={styles.logoutBtn}>Salir</button>
         </div>
       </div>
-      <div style={{ padding: "20px 16px" }}>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style={{ padding: "20px 16px" }}>
         {!game && <Lobby profile={profile} balance={balance} setGame={setGame} onDeposit={handleDeposit} />}
         {game === "slots"       && <SlotsGame       balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "blackjack"   && <BlackjackGame   balance={balance} setBalance={setBalance} onBack={handleBack} />}
@@ -531,18 +452,52 @@ export default function App() {
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={handleBack} />}
         {game === "horses"      && <HorseRace       balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "crazytime"   && <CrazyTimeGame   balance={balance} setBalance={setBalance} onBack={handleBack} />}
-        {game === "space" && (<PlayerSpace profile={profile} balance={balance} setBalance={setBalance}   // ← añadir esto
-    deaths={profile.deaths || 0}
-    onBack={handleBack}
-    onDeath={async () => {
-      // loadProfile recarga desde DB (ya tiene deaths+1 y balance reseteado)
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) await loadProfile(session.user.id);
-      setGame(null);
-    }}
-  />
-)}
+        {game === "space" && (
+          <PlayerSpace
+            profile={profile}
+            balance={balance}
+            setBalance={setBalance}
+            deaths={profile.deaths || 0}
+            onBack={handleBack}
+            onDeath={async () => {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session) await loadProfile(session.user.id);
+              setGame(null);
+            }}
+          />
+        )}
+        {game === "bingo" && (
+          <BingoGame
+            profile={profile}
+            balance={balance}
+            setBalance={setBalance}
+            onBack={handleBack}
+          />
+        )}
       </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </div>
   );
 }
