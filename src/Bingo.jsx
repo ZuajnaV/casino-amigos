@@ -76,15 +76,15 @@ function BingoCard({ card, markedNumbers, isWinner, cardIndex, justCalled }) {
       boxShadow: isWinner ? "0 0 24px #fbbf2444" : "none",
       transition: "all 0.3s",
       //minWidth: 180,
-      width: 400,
+      width: "100%",       //400
     }}>
       {/* Header BINGO */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
         {BINGO_LETTERS.map((l, i) => (
           <div key={l} style={{
             background: ["#ef4444","#3b82f6","#22c55e","#f59e0b","#a855f7"][i],
-            textAlign: "center", padding: "6px 0",
-            fontWeight: 900, fontSize: 18, color: "#fff",
+            textAlign: "center", padding: "10px 0",
+            fontWeight: 900, fontSize: 30, color: "#fff",
             letterSpacing: 1,
           }}>{l}</div>
         ))}
@@ -108,7 +108,7 @@ function BingoCard({ card, markedNumbers, isWinner, cardIndex, justCalled }) {
                            : isMarked ? "#1e3a2e"
                            : "#0d0d18",
                 border: isNew ? "2px solid #00d4aa" : isMarked ? "1px solid #00d4aa55" : "1px solid #1e1e2e",
-                fontSize: 15, fontWeight: isMarked ? 800 : 400,     //CAMBIAR TAMAÑO NUMEROS
+                fontSize: 30, fontWeight: isMarked ? 800 : 400,     //CAMBIAR TAMAÑO NUMEROS
                 color: isFree    ? "#fbbf24"
                      : isNew    ? "#000"
                      : isMarked ? "#00d4aa"
@@ -183,7 +183,7 @@ function RoomLobby({ room, myCards, onBuyCard, onReady, balance, loading }) {
         <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
           Mis cartones ({myCount}/{MAX_CARDS})
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", flexDirection: "column" }}>
+        <div style={{ display: "flex", gap: 8, flexDirection: "row" }}>
           {myCards.map((card, i) => (
             <BingoCard key={i} card={card} markedNumbers={new Set()} isWinner={false} cardIndex={i} justCalled={null} />
           ))}
@@ -653,7 +653,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
         <div style={{ color: "#fbbf24", fontWeight: 700 }}>💰 {balance.toLocaleString()}</div>
       </div>
 
-      <div style={{ padding: "0 16px", maxWidth: 500, margin: "0 auto" }}>
+      <div style={{ padding: "0 16px", maxWidth: "100%", margin: "0 auto" }}>
         {/* Crear sala */}
         <button
           onClick={createRoom}
@@ -763,7 +763,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
         <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 13 }}>💰 {balance.toLocaleString()}</div>
       </div>
 
-      <div style={{ padding: "0 16px", maxWidth: 500, margin: "0 auto" }}>
+      <div style={{ padding: "0 16px", maxWidth: "100%", margin: "0 auto" }}>
         {room && (
           <RoomLobby
             room={room}
@@ -803,7 +803,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
         <div style={{ color: "#fbbf24", fontSize: 13 }}>💰 {balance.toLocaleString()}</div>
       </div>
 
-      <div style={{ padding: "12px 12px", maxWidth: 540, margin: "0 auto" }}>
+      <div style={{ padding: "12px 12px", maxWidth: "100%", margin: "0 auto" }}>
 
         {/* Última bola cantada */}
         <div style={{ textAlign: "center", marginBottom: 16 }}>
@@ -859,7 +859,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
         <div style={{ fontSize: 11, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
           Mis cartones
         </div>
-        <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8 }}>
+        <div style={{ display: "flex", flexDirection: "row", gap: 8, paddingBottom: 8 }}>
           {myCards.map((card, i) => (
             <BingoCard
               key={i}
@@ -906,7 +906,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       padding: 24,
     }}>
-      <div style={{ textAlign: "center", maxWidth: 380 }}>
+      <div style={{ textAlign: "center", maxWidth: "100%" }}>
         <div style={{ fontSize: 64, marginBottom: 12 }}>
           {winner?.username === profile.username ? "🏆" : "🎱"}
         </div>
