@@ -10,7 +10,7 @@ const MAX_PLAYERS   = 10;
 const RAKE_PCT      = 0.05;
 const BINGO_LETTERS = ["B", "I", "N", "G", "O"];
 const COL_RANGES    = [[1,15],[16,30],[31,45],[46,60],[61,75]];
-const BALL_INTERVAL = 5000;
+const BALL_INTERVAL = 12000;
 
 const WIN_PATTERNS = {
   "Cartón lleno": Array.from({length:5},(_,r)=>Array.from({length:5},(_,c)=>[r,c])).flat(),
@@ -114,7 +114,7 @@ function BingoCard({ card, calledNumbers, playerMarked, onMarkNumber, isWinner }
       </div>
 
       {isWinner && (
-        <div style={{ background: "#fbbf24", color: "#000", textAlign: "center", padding: "4px", fontWeight: 900, fontSize: 12, letterSpacing: 2 }}>
+        <div style={{ background: "#fbbf24", color: "#000", textAlign: "center", padding: "4px", fontWeight: 900, fontSize: 20, letterSpacing: 2 }}>
           🎉 ¡BINGO!
         </div>
       )}
@@ -154,26 +154,26 @@ function RoomLobby({ room, myCards, onBuyCard, onReady, balance, loading }) {
       <div style={{ background: "rgba(13,13,20,0.9)", border: "1px solid #2a2a3a", borderRadius: 12, padding: "14px 16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
           <div>
-            <div style={{ fontSize: 11, color: "#444", letterSpacing: 1, textTransform: "uppercase" }}>Sala</div>
+            <div style={{ fontSize: 15, color: "#ffffff", letterSpacing: 1, textTransform: "uppercase" }}>Sala</div>
             <div style={{ fontWeight: 800, fontSize: 18, color: "#fbbf24" }}>#{room.id?.slice(-6)}</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: "#444", textTransform: "uppercase" }}>Premio actual</div>
+            <div style={{ fontSize: 15, color: "#ffffff", textTransform: "uppercase" }}>Premio actual</div>
             <div style={{ fontWeight: 800, fontSize: 20, color: "#00d4aa" }}>${Prize(gross).toLocaleString()}</div>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           {[["👥 Jugadores",`${totalPlayers}/${MAX_PLAYERS}`],["🎴 Cartones",`${totalCards}/30`],["💰 Pozo bruto",`$${gross.toLocaleString()}`]].map(([label, val]) => (
             <div key={label} style={{ background: "#0d0d14", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
-              <div style={{ fontSize: 10, color: "#555" }}>{label}</div>
-              <div style={{ fontWeight: 700, color: "#ddd", fontSize: 13, marginTop: 2 }}>{val}</div>
+              <div style={{ fontSize: 20, color: "#ffffff" }}>{label}</div>
+              <div style={{ fontWeight: 700, color: "#ddd", fontSize: 18, marginTop: 2 }}>{val}</div>
             </div>
           ))}
         </div>
       </div>
 
       <div>
-        <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Mis cartones ({myCount}/{MAX_CARDS})</div>
+        <div style={{ fontSize: 15, color: "#ffffff", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Mis cartones ({myCount}/{MAX_CARDS})</div>
         <div style={{ display: "flex", gap: 8 }}>
           {myCards.map((card, i) => (
             <BingoCard key={i} card={card} calledNumbers={new Set()} playerMarked={new Set()} isWinner={false} justCalled={null} />
@@ -181,7 +181,7 @@ function RoomLobby({ room, myCards, onBuyCard, onReady, balance, loading }) {
         </div>
         <button onClick={onBuyCard} disabled={!canBuy || loading} style={{
           marginTop: 10, background: canBuy ? "#fbbf24" : "#1a1a26",
-          border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 800,
+          border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 18, fontWeight: 800,
           cursor: canBuy ? "pointer" : "not-allowed", color: canBuy ? "#000" : "#444",
         }}>
           {loading ? "..." : `🎴 Comprar cartón ($${CARD_PRICE.toLocaleString()})`}
@@ -190,14 +190,14 @@ function RoomLobby({ room, myCards, onBuyCard, onReady, balance, loading }) {
       </div>
 
       <div style={{ background: "rgba(13,13,20,0.9)", border: "1px solid #1e1e2e", borderRadius: 12, padding: "12px 14px" }}>
-        <div style={{ fontSize: 11, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Jugadores en sala</div>
+        <div style={{ fontSize: 15, color: "#ffffff", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Jugadores en sala</div>
         {(room.players || []).map(p => (
           <div key={p.user_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid #1e1e2e" }}>
-            <span style={{ color: "#bbb", fontSize: 13 }}>{p.avatar} {p.username}</span>
+            <span style={{ color: "#bbb", fontSize: 20 }}>{p.avatar} {p.username}</span>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <span style={{ color: "#555", fontSize: 12 }}>🎴 ×{p.card_count}</span>
-              {p.ready ? <span style={{ color: "#00d4aa", fontSize: 11, fontWeight: 700 }}>✓ Listo</span>
-                       : <span style={{ color: "#444", fontSize: 11 }}>Esperando</span>}
+              <span style={{ color: "#ffffff", fontSize: 15 }}>🎴 ×{p.card_count}</span>
+              {p.ready ? <span style={{ color: "#00d4aa", fontSize: 20, fontWeight: 700 }}>✓ Listo</span>
+                       : <span style={{ color: "#e1ff00", fontSize: 14 }}>Esperando</span>}
             </div>
           </div>
         ))}
@@ -212,7 +212,7 @@ function RoomLobby({ room, myCards, onBuyCard, onReady, balance, loading }) {
           {isReady ? "✓ Esperando a los demás..." : "✅ ¡Estoy listo!"}
         </button>
       )}
-      <div style={{ fontSize: 11, color: "#333", textAlign: "center" }}>La partida inicia cuando todos los jugadores confirmen · Mín. 2 jugadores</div>
+      <div style={{ fontSize: 15, color: "#a1a1a1", textAlign: "center" }}>La partida inicia cuando todos los jugadores confirmen · Mín. 2 jugadores</div>
     </div>
   );
 }
@@ -564,7 +564,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
         <button onClick={onBack} style={{ background:"rgba(10,10,18,0.75)", border:"1px solid #2a2a3a", borderRadius:8, color:"#aaa", fontSize:13, padding:"6px 14px", cursor:"pointer" }}>← Volver</button>
         <div style={{ textAlign:"center" }}>
           <div style={{ color:"#fbbf24", fontWeight:900, fontSize:22 }}>🎱 Bingo</div>
-          <div style={{ color:"#555", fontSize:11 }}>Multijugador P2P · $20.000/cartón</div>
+          <div style={{ color:"#b7b7b7", fontSize:14 }}>Multijugador P2P · $20.000/cartón</div>
         </div>
         <div style={{ color:"#fbbf24", fontWeight:700 }}>💰 {balance.toLocaleString()}</div>
       </div>
@@ -578,18 +578,18 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
           {loading ? "Creando..." : "🎱 Crear nueva sala"}
         </button>
         <div style={{ background:"rgba(251,191,36,0.06)", border:"1px solid #fbbf2422", borderRadius:12, padding:"12px 16px", marginBottom:20 }}>
-          <div style={{ fontSize:11, color:"#555", textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Economía de la mesa</div>
+          <div style={{ fontSize:20, color:"#ccff00", textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Economía de la mesa</div>
           {[["💰 Costo/cartón","$20.000"],["🎴 Máx. cartones","3/jugador"],["👥 Máx. jugadores","10/sala"],["🏆 Premio máximo","$570.000"],["🏦 Comisión","5%"]].map(([l,v]) => (
-            <div key={l} style={{ display:"flex", justifyContent:"space-between", fontSize:13, marginBottom:5 }}>
-              <span style={{ color:"#666" }}>{l}</span><span style={{ color:"#ddd", fontWeight:700 }}>{v}</span>
+            <div key={l} style={{ display:"flex", justifyContent:"space-between", fontSize:18, marginBottom:5 }}>
+              <span style={{ color:"#ffffff" }}>{l}</span><span style={{ color:"#ddd", fontWeight:700 }}>{v}</span>
             </div>
           ))}
         </div>
-        <div style={{ fontSize:12, color:"#555", textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Salas abiertas ({rooms.length})</div>
+        <div style={{ fontSize:15, color:"#0400ff", textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Salas abiertas ({rooms.length})</div>
         {rooms.length === 0 ? (
           <div style={{ background:"rgba(13,13,20,0.8)", border:"1px solid #1e1e2e", borderRadius:12, padding:"32px", textAlign:"center" }}>
-            <div style={{ fontSize:36, marginBottom:8 }}>🎱</div>
-            <div style={{ color:"#555" }}>No hay salas activas · Crea una nueva</div>
+            <div style={{ fontSize:40, marginBottom:8 }}>🎱</div>
+            <div style={{ color:"#ffffff" }}>No hay salas activas · Crea una nueva</div>
           </div>
         ) : rooms.map(r => {
           const pc = r.bingo_players?.[0]?.count || 0;
@@ -597,7 +597,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
             <div key={r.id} style={{ background:"rgba(13,13,20,0.9)", border:"1px solid #2a2a3a", borderRadius:12, padding:"12px 14px", display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
               <div>
                 <div style={{ fontWeight:700, color:"#fbbf24" }}>Sala #{r.id?.slice(-6)}</div>
-                <div style={{ fontSize:12, color:"#555", marginTop:2 }}>{pc}/{MAX_PLAYERS} jugadores</div>
+                <div style={{ fontSize:15, color:"#ffffff", marginTop:2 }}>{pc}/{MAX_PLAYERS} jugadores</div>
               </div>
               <button onClick={() => joinRoom(r.id)} disabled={loading} style={{ background:"#fbbf24", border:"none", borderRadius:8, padding:"8px 16px", fontSize:13, fontWeight:800, cursor:"pointer", color:"#000" }}>Unirse →</button>
             </div>
@@ -615,8 +615,8 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
       <style>{globalCss}</style>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 16px", background:"rgba(0,0,0,0.4)", borderBottom:"1px solid #1e1e2e", marginBottom:20 }}>
         <button onClick={leaveRoom} style={{ background:"rgba(10,10,18,0.75)", border:"1px solid #2a2a3a", borderRadius:8, color:"#aaa", fontSize:13, padding:"6px 14px", cursor:"pointer" }}>← Salir</button>
-        <div style={{ color:"#fbbf24", fontWeight:900, fontSize:18 }}>🎱 Sala de espera</div>
-        <div style={{ color:"#fbbf24", fontWeight:700, fontSize:13 }}>💰 {balance.toLocaleString()}</div>
+        <div style={{ color:"#fbbf24", fontWeight:900, fontSize:20 }}>🎱 Sala de espera</div>
+        <div style={{ color:"#fbbf24", fontWeight:700, fontSize:18 }}>💰 {balance.toLocaleString()}</div>
       </div>
       <div style={{ padding:"0 16px" }}>
         {room && <RoomLobby room={room} myCards={myCards} onBuyCard={buyCard} onReady={markReady} balance={balance} loading={loading} />}
@@ -636,7 +636,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
 
         {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 16px", background:"rgba(0,0,0,0.5)", borderBottom:"1px solid #1e1e2e", position:"sticky", top:0, zIndex:10 }}>
-          <div style={{ color:"#fbbf24", fontWeight:900, fontSize:16 }}>🎱 BINGO EN VIVO</div>
+          <div style={{ color:"#fbbf24", fontWeight:900, fontSize:20 }}>🎱 BINGO EN VIVO</div>
           <div style={{ background:"rgba(0,212,170,0.1)", border:"1px solid #00d4aa44", borderRadius:8, padding:"4px 12px", color:"#00d4aa", fontWeight:800, fontSize:14 }}>
             🏆 ${(room?.prize || 0).toLocaleString()}
           </div>
@@ -658,7 +658,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
                     : `${colColor(lastBall)}22`,
                   border: justCalled ? "none" : `2px solid ${colColor(lastBall)}55`,
                   borderRadius:"50%", width:80, height:80,
-                  fontSize:28, fontWeight:900,
+                  fontSize:40, fontWeight:900,
                   color: justCalled ? "#fff" : colColor(lastBall),
                   boxShadow: justCalled ? `0 0 40px ${colColor(lastBall)}88` : "none",
                   transition:"all 0.4s",
@@ -667,13 +667,13 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
               ) : (
                 <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", background:"#1e1e2e", borderRadius:"50%", width:80, height:80, fontSize:14, color:"#444" }}>...</div>
               )}
-              <div style={{ marginTop:6, fontSize:12, color:"#555" }}>{calledBalls.length}/75 bolas</div>
+              <div style={{ marginTop:6, fontSize:15, color:"#c3c3c3" }}>{calledBalls.length}/75 bolas</div>
             </div>
 
             {/* Letra de columna */}
             {lastBall && (
               <div style={{
-                fontSize:52, fontWeight:900, lineHeight:1,
+                fontSize:60, fontWeight:900, lineHeight:1,
                 color: colColor(lastBall),
                 background: colColor(lastBall) + "18",
                 border: `3px solid ${colColor(lastBall)}55`,
@@ -687,7 +687,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
 
             {/* Temporizador */}
             <div style={{ textAlign:"center" }}>
-              <div style={{ fontSize:10, color:"#444", letterSpacing:1, textTransform:"uppercase", marginBottom:4 }}>Próxima</div>
+              <div style={{ fontSize:20, color:"#ffffff", letterSpacing:1, textTransform:"uppercase", marginBottom:4 }}>Próxima</div>
               <svg width={68} height={68} style={{ display:"block", margin:"0 auto" }}>
                 <circle cx={34} cy={34} r={28} fill="none" stroke="#1e1e2e" strokeWidth={6} />
                 <circle cx={34} cy={34} r={28} fill="none" stroke={timerColor} strokeWidth={6} strokeLinecap="round"
@@ -696,7 +696,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
                   transform="rotate(-90 34 34)"
                   style={{ transition:"stroke-dashoffset 0.9s linear, stroke 0.3s" }} />
                 <text x={34} y={34} textAnchor="middle" dominantBaseline="central"
-                  fill={timerColor} fontSize={22} fontWeight={900}>{countdown}</text>
+                  fill={timerColor} fontSize={30} fontWeight={900}>{countdown}</text>
               </svg>
             </div>
           </div>
@@ -708,7 +708,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
                 width:28, height:28, borderRadius:"50%",
                 background: colColor(n) + "33", border:`1px solid ${colColor(n)}66`,
                 display:"flex", alignItems:"center", justifyContent:"center",
-                fontSize:10, fontWeight:700, color:colColor(n),
+                fontSize:15, fontWeight:700, color:colColor(n),
               }}>{n}</div>
             ))}
           </div>
@@ -721,7 +721,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
     disabled={!canClaimBingo || claiming}
     style={{
       padding: "14px 48px",
-      fontSize: 28, fontWeight: 900, letterSpacing: 3,
+      fontSize: 35, fontWeight: 900, letterSpacing: 3,
       border: "none", borderRadius: 14, cursor: canClaimBingo ? "pointer" : "not-allowed",
       background: canClaimBingo
         ? "linear-gradient(135deg, #fbbf24, #f97316)"
@@ -735,7 +735,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
     {claiming ? "Verificando..." : "🎱 BINGO"}
   </button>
   {!canClaimBingo && (
-    <div style={{ fontSize: 11, color: "#444", marginTop: 6 }}>
+    <div style={{ fontSize: 15, color: "#b4b4b4", marginTop: 6 }}>
       Marca todos los números de un cartón para activar el botón
     </div>
   )}
@@ -757,19 +757,12 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
   ))}
 </div> 
 
-          {/* Leyenda mínima */}
-          <div style={{ display:"flex", gap:12, fontSize:11, color:"#555", marginTop:8, flexWrap:"wrap" }}>
-            <span>🟢 Verde = marcado por ti</span>
-            <span>💚 Destello = recién cantado</span>
-            <span>📋 Usa el historial para saber qué marcar</span>
-          </div>
-
           {/* Jugadores */}
           <div style={{ marginTop:16, background:"rgba(13,13,20,0.8)", border:"1px solid #1e1e2e", borderRadius:10, padding:"10px 14px" }}>
-            <div style={{ fontSize:10, color:"#555", letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Jugadores ({room?.players?.length || 0})</div>
+            <div style={{ fontSize:20, color:"#e1ff00", letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Jugadores ({room?.players?.length || 0})</div>
             <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
               {(room?.players || []).map(p => (
-                <div key={p.user_id} style={{ background:"#0d0d14", borderRadius:8, padding:"5px 10px", fontSize:12, color:"#aaa" }}>
+                <div key={p.user_id} style={{ background:"#0d0d14", borderRadius:8, padding:"5px 10px", fontSize:20, color:"#c5c5c5" }}>
                   {p.avatar} {p.username} · 🎴×{p.card_count}
                 </div>
               ))}
@@ -805,17 +798,17 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
           }}>
             <span style={{ fontSize:32 }}>{winner?.avatar}</span>
             <div style={{ textAlign:"left" }}>
-              <div style={{ fontSize:11, color:"#555", textTransform:"uppercase", letterSpacing:1 }}>{iWon ? "¡Tú ganaste!" : "Ganador"}</div>
+              <div style={{ fontSize:15, color:"#ffffff", textTransform:"uppercase", letterSpacing:1 }}>{iWon ? "¡Tú ganaste!" : "Ganador"}</div>
               <div style={{ fontWeight:900, fontSize:20, color: iWon ? "#fbbf24" : "#ddd" }}>{winner?.username}</div>
             </div>
           </div>
-          <div style={{ fontSize:13, color:"#555", marginBottom:12 }}>
+          <div style={{ fontSize:18, color:"#b6b6b6", marginBottom:12 }}>
             Patrón: <span style={{ color:"#aaa", fontWeight:700 }}>{winner?.pattern}</span>
           </div>
           <div style={{ fontSize:40, fontWeight:900, color: iWon ? "#00d4aa" : "#666", marginBottom:8 }}>
             {iWon ? "+" : ""} ${(winner?.prize || 0).toLocaleString()}
           </div>
-          <div style={{ fontSize:13, color:"#444", marginBottom:28 }}>
+          <div style={{ fontSize:18, color:"#919191", marginBottom:28 }}>
             {iWon ? "🎉 ¡Felicidades! El premio ya está en tu saldo." : "Mejor suerte en la próxima partida."}
           </div>
           <div style={{ display:"flex", gap:12, justifyContent:"center" }}>
