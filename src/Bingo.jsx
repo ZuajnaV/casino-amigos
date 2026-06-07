@@ -10,7 +10,7 @@ const MAX_PLAYERS   = 10;
 const RAKE_PCT      = 0.05;
 const BINGO_LETTERS = ["B", "I", "N", "G", "O"];
 const COL_RANGES    = [[1,15],[16,30],[31,45],[46,60],[61,75]];
-const BALL_INTERVAL = 12000;
+const BALL_INTERVAL = 8000;
 
 const WIN_PATTERNS = {
   "Cartón lleno": Array.from({length:5},(_,r)=>Array.from({length:5},(_,c)=>[r,c])).flat(),
