@@ -55,6 +55,12 @@ function colLetter(n) {
 //  CAMBIO 2: sin indicador ámbar para números cantados no marcados
 //  El jugador usa el historial de bolas para saber qué marcar.
 // ═══════════════════════════════════════════════════════════════
+
+
+//AQUI IBA EL ANTERIOR CODIGO DEL BINGOCARD
+
+
+
 function BingoCard({ card, calledNumbers, playerMarked, onMarkNumber, isWinner }) {
   return (
     <div style={{
@@ -64,7 +70,6 @@ function BingoCard({ card, calledNumbers, playerMarked, onMarkNumber, isWinner }
       boxShadow: isWinner ? "0 0 24px #fbbf2444" : "none",
       transition: "all 0.3s", width: "100%",
     }}>
-      {/* Header BINGO */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)" }}>
         {BINGO_LETTERS.map((l, i) => (
           <div key={l} style={{
@@ -75,48 +80,32 @@ function BingoCard({ card, calledNumbers, playerMarked, onMarkNumber, isWinner }
         ))}
       </div>
 
-      {/* Cuadrícula */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 2, padding: 4 }}>
         {Array.from({length: 5}, (_, row) =>
           Array.from({length: 5}, (_, col) => {
-            const num    = card[col][row];
-            const isFree = num === "FREE";
-            const isCalled  = isFree || calledNumbers.has(num);
-            const isMarked  = isFree || playerMarked.has(num);
-            // CAMBIO 2: "recién cantado" destella verde; marcado = verde suave;
-            // todo lo demás (incluyendo cantado-no-marcado) = oscuro sin pista
-            const isNew = justCalled === num;
-
-            let bg, border, color;
-            if (isFree) {
-              bg = "#fbbf2433"; border = "1px solid #fbbf2444"; color = "#fbbf24";
-            } else if (isNew) {
-              bg = "#00d4aa";   border = "2px solid #00d4aa";   color = "#000";
-            } else if (isMarked) {
-              bg = "#1e3a2e";   border = "1px solid #00d4aa55"; color = "#00d4aa";
-            } else {
-              // Oscuro sin distinción entre cantado y no cantado
-              bg = "#0d0d18";   border = "1px solid #1e1e2e";   color = "#444";
-            }
+            const num     = card[col][row];
+            const isFree  = num === "FREE";
+            const isCalled = isFree || calledNumbers.has(num);
+            const isMarked = isFree || playerMarked.has(num);
 
             return (
               <div
-      key={`${row}-${col}`}
-      onClick={() => { if (isCalled && !isFree && onMarkNumber) onMarkNumber(num); }}
-      style={{
-        aspectRatio: "1",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        borderRadius: 6,
-        background: isFree    ? "#fbbf2433"
-                   : isMarked ? "#1e3a2e"
-                   : "#0d0d18",
-        border: isMarked ? "1px solid #00d4aa55" : "1px solid #1e1e2e",
-        fontSize: 30, fontWeight: isMarked ? 800 : 400,
-        color: isFree ? "#fbbf24" : isMarked ? "#00d4aa" : "#444",
-        cursor: isCalled && !isFree ? "pointer" : "default",
-        transition: "all 0.2s",
-      }}
-    >
+                key={`${row}-${col}`}
+                onClick={() => { if (isCalled && !isFree && onMarkNumber) onMarkNumber(num); }}
+                style={{
+                  aspectRatio: "1",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  borderRadius: 6,
+                  background: isFree    ? "#fbbf2433"
+                             : isMarked ? "#1e3a2e"
+                             : "#0d0d18",
+                  border: isMarked ? "1px solid #00d4aa55" : "1px solid #1e1e2e",
+                  fontSize: 30, fontWeight: isMarked ? 800 : 400,
+                  color: isFree ? "#fbbf24" : isMarked ? "#00d4aa" : "#444",
+                  cursor: isCalled && !isFree ? "pointer" : "default",
+                  transition: "all 0.2s",
+                }}
+              >
                 {isFree ? "★" : num}
               </div>
             );
@@ -132,6 +121,22 @@ function BingoCard({ card, calledNumbers, playerMarked, onMarkNumber, isWinner }
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ═══════════════════════════════════════════════════════════════
 //  LOBBY DE SALA
