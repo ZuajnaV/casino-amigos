@@ -55,7 +55,7 @@ function colLetter(n) {
 //  CAMBIO 2: sin indicador ámbar para números cantados no marcados
 //  El jugador usa el historial de bolas para saber qué marcar.
 // ═══════════════════════════════════════════════════════════════
-function BingoCard({ card, calledNumbers, playerMarked, onMarkNumber, isWinner, justCalled }) {
+function BingoCard({ card, calledNumbers, playerMarked, onMarkNumber, isWinner }) {
   return (
     <div style={{
       background: isWinner ? "rgba(251,191,36,0.12)" : "rgba(13,13,20,0.9)",
@@ -101,20 +101,22 @@ function BingoCard({ card, calledNumbers, playerMarked, onMarkNumber, isWinner, 
 
             return (
               <div
-                key={`${row}-${col}`}
-                onClick={() => {
-                  if (isCalled && !isFree && onMarkNumber) onMarkNumber(num);
-                }}
-                style={{
-                  aspectRatio: "1",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  borderRadius: 6, background: bg, border,
-                  fontSize: 30, fontWeight: isMarked ? 800 : 400, color,
-                  cursor: isCalled && !isFree ? "pointer" : "default",
-                  transition: "all 0.2s",
-                  transform: isNew ? "scale(1.08)" : "scale(1)",
-                }}
-              >
+      key={`${row}-${col}`}
+      onClick={() => { if (isCalled && !isFree && onMarkNumber) onMarkNumber(num); }}
+      style={{
+        aspectRatio: "1",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        borderRadius: 6,
+        background: isFree    ? "#fbbf2433"
+                   : isMarked ? "#1e3a2e"
+                   : "#0d0d18",
+        border: isMarked ? "1px solid #00d4aa55" : "1px solid #1e1e2e",
+        fontSize: 30, fontWeight: isMarked ? 800 : 400,
+        color: isFree ? "#fbbf24" : isMarked ? "#00d4aa" : "#444",
+        cursor: isCalled && !isFree ? "pointer" : "default",
+        transition: "all 0.2s",
+      }}
+    >
                 {isFree ? "★" : num}
               </div>
             );
@@ -236,6 +238,59 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
   const countdownRef   = useRef(null);
   // CAMBIO 3: debounce para guardar marked_numbers en DB
   const saveMarkedRef  = useRef(null);
+
+  const [claiming, setClaiming] = useState(false);
+  const canClaimBingo = myCards.some(card => checkWin(card, playerMarked) !== null);
+
+
+
+  async function claimBingo() {
+  if (!canClaimBingo || claiming) return;
+  setClaiming(true);
+
+  // Verificación server-side: leer estado actual de DB
+  const { data: roomData } = await supabase
+    .from("bingo_rooms").select("prize, status, called_balls").eq("id", room.id).single();
+
+  if (roomData?.status !== "playing") { setClaiming(false); return; }
+
+  const calledSet = new Set(roomData.called_balls || []);
+
+  // Solo se valida si los números marcados realmente fueron cantados
+  const validMarked = new Set([...playerMarked].filter(n => calledSet.has(n)));
+
+  let winPattern = null;
+  for (const card of myCards) {
+    winPattern = checkWin(card, validMarked);
+    if (winPattern) break;
+  }
+
+  if (!winPattern) {
+    // Reclamo inválido (marcó números no cantados)
+    setClaiming(false);
+    return;
+  }
+
+  // Declarar ganador
+  await supabase.from("bingo_rooms").update({
+    status: "finished",
+    winner_id: profile.id,
+    win_pattern: winPattern,
+  }).eq("id", room.id);
+
+  // Pagar al ganador
+  const newBal = balRef.current + roomData.prize;
+  await supabase.from("profiles").update({ balance: newBal }).eq("id", profile.id);
+  setBalance(newBal);
+  balRef.current = newBal;
+
+  setClaiming(false);
+}
+
+
+
+
+
 
   useEffect(() => { balRef.current  = balance; }, [balance]);
   useEffect(() => { roomRef.current = room;    }, [room]);
@@ -419,7 +474,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
   // El servidor lee player.marked_numbers (lo que cada jugador marcó manualmente)
   // en lugar de usar el set de todas las bolas cantadas.
   // Así, si un jugador no marcó un número que le daría la victoria, no gana.
-  function startBallExtraction(roomId, balls) {
+  /*function startBallExtraction(roomId, balls) {
     let index = 0;
     const called = [];
     const interval = setInterval(async () => {
@@ -450,7 +505,23 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
         }
       }
     }, BALL_INTERVAL);
-  }
+  }*/
+
+
+    function startBallExtraction(roomId, balls) {
+  let index = 0;
+  const called = [];
+  const interval = setInterval(async () => {
+    if (index >= balls.length) { clearInterval(interval); return; }
+    called.push(balls[index++]);
+    await supabase.from("bingo_rooms")
+      .update({ called_balls: [...called] })
+      .eq("id", roomId);
+  }, BALL_INTERVAL);
+}
+
+
+
 
   async function leaveRoom() {
     if (channelRef.current) supabase.removeChannel(channelRef.current);
@@ -638,21 +709,48 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
           </div>
 
           {/* Cartones — sin guía ámbar (CAMBIO 2) */}
-          <div style={{ fontSize:11, color:"#555", textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>
-            Mis cartones · <span style={{ color:"#aaa" }}>Toca los números para marcarlos</span>
-          </div>
-          <div style={{ display:"flex", gap:8, paddingBottom:8 }}>
-            {myCards.map((card, i) => (
-              <BingoCard
-                key={i} card={card}
-                calledNumbers={calledNumbers}
-                playerMarked={playerMarked}
-                onMarkNumber={toggleMark}
-                isWinner={!!myWin}
-                justCalled={justCalled}
-              />
-            ))}
-          </div>
+           {/* Botón BINGO */}
+<div style={{ textAlign: "center", margin: "12px 0" }}>
+  <button
+    onClick={claimBingo}
+    disabled={!canClaimBingo || claiming}
+    style={{
+      padding: "14px 48px",
+      fontSize: 28, fontWeight: 900, letterSpacing: 3,
+      border: "none", borderRadius: 14, cursor: canClaimBingo ? "pointer" : "not-allowed",
+      background: canClaimBingo
+        ? "linear-gradient(135deg, #fbbf24, #f97316)"
+        : "#1a1a26",
+      color: canClaimBingo ? "#000" : "#333",
+      boxShadow: canClaimBingo ? "0 0 30px #fbbf2488" : "none",
+      transition: "all 0.3s",
+      animation: canClaimBingo ? "winGlow 1s ease-in-out infinite" : "none",
+    }}
+  >
+    {claiming ? "Verificando..." : "🎱 BINGO"}
+  </button>
+  {!canClaimBingo && (
+    <div style={{ fontSize: 11, color: "#444", marginTop: 6 }}>
+      Marca todos los números de un cartón para activar el botón
+    </div>
+  )}
+</div>
+
+{/* Cartones — sin justCalled */}
+<div style={{ display: "flex", gap: 8, paddingBottom: 8 }}>
+  {myCards.map((card, i) => (
+    <div key={i} style={{ flex: 1, minWidth: 0 }}>
+      <BingoCard
+        card={card}
+        calledNumbers={calledNumbers}
+        playerMarked={playerMarked}
+        onMarkNumber={toggleMark}
+        isWinner={!!myWin}
+        // ← ya no pasas justCalled
+      />
+    </div>
+  ))}
+</div> 
 
           {/* Leyenda mínima */}
           <div style={{ display:"flex", gap:12, fontSize:11, color:"#555", marginTop:8, flexWrap:"wrap" }}>
