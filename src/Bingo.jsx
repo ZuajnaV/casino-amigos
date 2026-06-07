@@ -579,7 +579,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
         </button>
         <div style={{ background:"rgba(251,191,36,0.06)", border:"1px solid #fbbf2422", borderRadius:12, padding:"12px 16px", marginBottom:20 }}>
           <div style={{ fontSize:20, color:"#ccff00", textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>Economía de la mesa</div>
-          {[["💰 Costo/cartón","$20.000"],["🎴 Máx. cartones","3/jugador"],["👥 Máx. jugadores","10/sala"],["🏆 Premio máximo","$570.000"],["🏦 Comisión","5%"]].map(([l,v]) => (
+          {[["💰 Costo/cartón","$20.000"],["🎴 Máx. cartones","4/jugador"],["👥 Máx. jugadores","10/sala"],["🏆 Premio máximo","$760.000"],["🏦 Comisión","5%"]].map(([l,v]) => (
             <div key={l} style={{ display:"flex", justifyContent:"space-between", fontSize:18, marginBottom:5 }}>
               <span style={{ color:"#ffffff" }}>{l}</span><span style={{ color:"#ddd", fontWeight:700 }}>{v}</span>
             </div>
