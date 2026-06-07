@@ -355,7 +355,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
             setCalledNumbers(new Set(balls));
             setTimeout(() => setJustCalled(null), 1500);
           }
-          if (newRoom.status === "finished" && newRoom.winner_id) {
+          /*if (newRoom.status === "finished" && newRoom.winner_id) {
             const wp = newRoom.players?.find(p => p.user_id === newRoom.winner_id);
             setWinner({ username: wp?.username || "Alguien", avatar: wp?.avatar || "🎲",
                         pattern: newRoom.win_pattern, prize: newRoom.prize,
@@ -363,6 +363,41 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
             if (newRoom.winner_id === profile.id) { setMyWin(newRoom.win_pattern); saveWin(newRoom.prize); }
             setPhase("finished");
           }
+            */
+
+
+
+
+
+
+            if (newRoom.status === "finished" && newRoom.winner_id) {
+  const wp = newRoom.players?.find(p => p.user_id === newRoom.winner_id);
+  setWinner({
+    username: wp?.username || "Alguien",
+    avatar:   wp?.avatar   || "🎲",
+    pattern:  newRoom.win_pattern,
+    prize:    newRoom.prize,
+    isMe:     newRoom.winner_id === profile.id,
+  });
+  if (newRoom.winner_id === profile.id) {
+    setMyWin(newRoom.win_pattern);
+    // ← ELIMINA la llamada a saveWin aquí
+    // saveWin ya no va aquí porque claimBingo ya pagó
+  }
+  setPhase("finished");
+}
+
+
+
+
+
+
+
+
+
+
+
+
           if (newRoom.status === "playing" && phase !== "playing") setPhase("playing");
         })
       .on("postgres_changes", { event: "*", schema: "public", table: "bingo_players", filter: `room_id=eq.${roomId}` },
