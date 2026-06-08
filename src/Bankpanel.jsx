@@ -321,21 +321,54 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel)
   const daysPending = daysBetween(lastProcessed, today);
 
   if (daysPending <= 0) return { newBalance: currentBalance, interest: 0 };
-
+/*
   const TASA_BASE = 0.005;          // 0.5% diario
-  const TECHO_AHORRO = 5_000_000;   // solo genera sobre los primeros 5M
+  const TECHO_AHORRO = 20_000_000;   // solo genera sobre los primeros 20M
 
   let balance = currentBalance;
   let totalInterest = 0;
 
   for (let d = 0; d < daysPending; d++) {
     const baseEfectiva = Math.min(balance, TECHO_AHORRO);
-    //const tasa = TASA_BASE + (creditScore / 10000);
     const tasa = TASA_BASE + (creditScore / 1_000_000);
     const rendimiento = Math.floor(baseEfectiva * tasa);
     balance += rendimiento;
     totalInterest += rendimiento;
   }
+*/
+
+
+
+
+  // Bonus CDT de activos no hipotecados
+  const { data: playerAssets } = await supabase
+    .from("player_assets")
+    .select("asset_key, quantity, mortgaged")
+    .eq("user_id", userId);
+
+  const cdtBonusPct = (playerAssets || [])
+    .filter(a => !a.mortgaged)
+    .reduce((sum, a) => {
+      const assetData = ASSETS[a.asset_key];
+      return sum + (assetData ? assetData.cdt * a.quantity : 0);
+    }, 0);
+
+  const TASA_BASE = 0.005;          // 0.5% diario
+  const TECHO_AHORRO = 5_000_000;
+
+  let balance = currentBalance;
+  let totalInterest = 0;
+
+  for (let d = 0; d < daysPending; d++) {
+    const baseEfectiva = Math.min(balance, TECHO_AHORRO);
+    const tasa = TASA_BASE + (creditScore / 1_000_000) + (cdtBonusPct / 100);
+    const rendimiento = Math.floor(baseEfectiva * tasa);
+    balance += rendimiento;
+    totalInterest += rendimiento;
+  }
+
+
+
 
   // Guardar nuevo balance y fecha
   await supabase.from("profiles").update({
@@ -353,7 +386,7 @@ await supabase.from("profiles").update({
   cdt_last_processed: today,
 }).eq("id", userId);
   return { newBalance: balance, interest: totalInterest, daysPending };
-
+  return { newBalance: balance, interest: totalInterest, daysPending, cdtBonusPct };    //AÑADÍ ESTO PARA SUMAR TAMBIÉN EL BONUS % DE CDT POR ASSETS
 }
 
 export async function executeMortgage(userId, loanId, remainingDebt) {
@@ -454,7 +487,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange, on
   const [creditScore, setCreditScore] = useState(profile.credit_score || 0);
   const [ownedAssets, setOwnedAssets] = useState([]);
   const [mortgageEvents, setMortgageEvents] = useState([]);
-
+  const [cdtAssetBonus, setCdtAssetBonus] = useState(0);
 
     const [cdtEvents, setCdtEvents] = useState(null);
 
@@ -504,6 +537,7 @@ const [fundEvents,   setFundEvents]   = useState([]);
         setBalance(cdtResult.newBalance);
         setCdtEvents({ interest: cdtResult.interest, days: cdtResult.daysPending });
       }
+      setCdtAssetBonus(cdtResult.cdtBonusPct ?? 0);
     }
 
     // 3. Hipoteca automática si aplica
@@ -882,11 +916,23 @@ const cuotaHoy = loan
       📈 Cuenta de Ahorros (CDT)
     </div>
     {[
-      
+      /*
       ["Tasa base diaria", "0.5%"],
       ["Bonus por SC",      `+${(creditScore / 10_000).toFixed(4)}%`],
 ["Tasa efectiva hoy", `${((0.005 + creditScore / 1_000_000) * 100).toFixed(3)}%`],
 ["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 20_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],
+*/
+
+
+
+      ["Bonus por SC",       `+${(creditScore / 10_000).toFixed(4)}%`],
+["Bonus por activos",  `+${cdtAssetBonus.toFixed(2)}%`],
+["Tasa efectiva hoy",  `${((0.005 + creditScore / 1_000_000 + cdtAssetBonus / 100) * 100).toFixed(3)}%`],
+["Rendimiento est. hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 1_000_000 + cdtAssetBonus / 100)).toLocaleString()}`],
+
+
+
+
 
 
       ["Techo de ahorro", "$20.000.000"],
