@@ -261,7 +261,7 @@ export default function PlayerStats({ userId, layout = "grid" }) {
       const horses = horsesRes.data ?? { apuestas: 0, victorias: 0 };
 
       // ── CrazyTime: calcular stats localmente ──────────────────────────────
-      const ctRows = ctRes.data || [];
+      //const ctRows = ctRes.data || [];
 
       const segCounts = {};
       ctRows.forEach(r => {
