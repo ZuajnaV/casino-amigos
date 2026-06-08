@@ -162,6 +162,38 @@ function CrazyTimeBlock({ ct }) {
   );
 }
 
+
+
+  async function fetchAllCT(userId) {
+  const PAGE = 1000;
+  let from = 0, all = [];
+  while (true) {
+    const { data, error } = await supabase
+      .from("crazytime_history")
+      .select("segment, won, payout, multiplier, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (error || !data || data.length === 0) break;
+    all = all.concat(data);
+    if (data.length < PAGE) break;   // última página
+    from += PAGE;
+  }
+  return all;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function PlayerStats({ userId, layout = "grid" }) {
   const [stats, setStats] = useState(null);
@@ -173,6 +205,27 @@ export default function PlayerStats({ userId, layout = "grid" }) {
     async function load() {
       setLoading(true);
 
+
+
+
+
+        const [bjRes, slotsRes, minesRes, spaceRes, horsesRes, chickenRes] =
+        await Promise.all([
+      supabase.from("blackjack_stats").select("wins, losses, ties, blackjacks").eq("user_id", userId).single(),
+      supabase.rpc("get_slots_stats",    { p_user_id: userId }),
+      supabase.rpc("get_mines_stats",    { p_user_id: userId }),
+      supabase.rpc("get_spaceman_stats", { p_user_id: userId }),
+      supabase.rpc("get_horses_stats",   { p_user_id: userId }),
+      supabase.from("chickenroad_stats").select("hist_net").eq("user_id", userId).single(),
+    ]);
+    const ctRows = await fetchAllCT(userId);
+
+
+
+
+
+
+    /*
       const [bjRes, slotsRes, minesRes, spaceRes, horsesRes, chickenRes, ctRes] =
         await Promise.all([
           supabase
@@ -198,8 +251,9 @@ export default function PlayerStats({ userId, layout = "grid" }) {
             .select("segment, won, payout, multiplier, created_at")
             .eq("user_id", userId)
             .order("created_at", { ascending: false }),
+            
         ]);
-
+*/
       const bj     = bjRes.data    ?? { wins: 0, losses: 0, ties: 0, blackjacks: 0 };
       const slots  = slotsRes.data  ?? { giros: 0, pago_total: 0, tiros_gratis: 0 };
       const mines  = minesRes.data  ?? { partidas: 0, victorias: 0, net_total: 0 };
