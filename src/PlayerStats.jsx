@@ -165,7 +165,7 @@ function CrazyTimeBlock({ ct }) {
 
 
   async function fetchAllCT(userId) {
-  const PAGE = 1000;
+  const PAGE = 10000; // ajustar según necesidad (máx 10000 por consulta)
   let from = 0, all = [];
   while (true) {
     const { data, error } = await supabase
@@ -173,6 +173,7 @@ function CrazyTimeBlock({ ct }) {
       .select("segment, won, payout, multiplier, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
+      .limit(PAGE)
       .range(from, from + PAGE - 1);
     if (error || !data || data.length === 0) break;
     all = all.concat(data);
