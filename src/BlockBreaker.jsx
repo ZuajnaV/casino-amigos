@@ -331,7 +331,7 @@ function update(s, paddleX, fireRef) {
     const destroyable = s.blocks.filter(b => !b.dead && b.type !== "metal");
     if (destroyable.length === 0) {
       //const payment  = PAY_LVL + s.level*1350;     //*s.level;   // PAY_LVL;   7500
-      const payment = PAY_LVL + 1500*s.level+Math.round(((1.6*s.level**2)**(s.level-1)));   // Fórmula de pago escalonado por nivel
+      const payment = PAY_LVL + 1500*s.level+Math.round(((1.6**2)**(s.level-1)));   // Fórmula de pago escalonado por nivel
       s.earned      += payment;
       s.lastLevelPay = payment;
       s.gphase       = "levelclear";
