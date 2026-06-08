@@ -293,7 +293,7 @@ async function handleGraceExpiry(userId, loanId, events) {
 }
 
 // ─── PROCESADOR DE CDT (interés diario) ─────────────────────────────────────
-export async function processCDT(userId, currentBalance, creditScore, bankLevel) {
+export async function processCDT(userId, currentBalance, creditScore, bankLevel, cdtBonus = 0) {
   if (bankLevel < 1) return { newBalance: currentBalance, interest: 0 };
 
   // Sin CDT si hay deuda irrecuperable
@@ -341,11 +341,11 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel)
 
 
   // Bonus CDT de activos no hipotecados
-  const { data: playerAssets } = await supabase
+  /*const { data: playerAssets } = await supabase
     .from("player_assets")
     .select("asset_key, quantity, mortgaged")
     .eq("user_id", userId);
-
+*/
   const cdtBonusPct = (playerAssets || [])
     .filter(a => !a.mortgaged)
     .reduce((sum, a) => {
@@ -358,6 +358,17 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel)
 
   let balance = currentBalance;
   let totalInterest = 0;
+/*
+  for (let d = 0; d < daysPending; d++) {
+    const baseEfectiva = Math.min(balance, TECHO_AHORRO);
+    const tasa = TASA_BASE + (creditScore / 1_000_000) + (cdtBonusPct / 100);
+    const rendimiento = Math.floor(baseEfectiva * tasa);
+    balance += rendimiento;
+    totalInterest += rendimiento;
+  }
+*/
+
+
 
   for (let d = 0; d < daysPending; d++) {
     const baseEfectiva = Math.min(balance, TECHO_AHORRO);
@@ -366,6 +377,7 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel)
     balance += rendimiento;
     totalInterest += rendimiento;
   }
+
 
 
 
@@ -487,7 +499,7 @@ export default function BankPanel({ profile, balance, setBalance, onScChange, on
   const [creditScore, setCreditScore] = useState(profile.credit_score || 0);
   const [ownedAssets, setOwnedAssets] = useState([]);
   const [mortgageEvents, setMortgageEvents] = useState([]);
-  const [cdtAssetBonus, setCdtAssetBonus] = useState(0);
+  //const [cdtAssetBonus, setCdtAssetBonus] = useState(0);
 
     const [cdtEvents, setCdtEvents] = useState(null);
 
@@ -524,6 +536,34 @@ const [fundEvents,   setFundEvents]   = useState([]);
   async function init() {
     await load();
 
+
+
+
+
+
+
+    // Calcular bonus CDT de activos para pasarlo a processCDT
+const { data: assetsForCDT } = await supabase
+  .from("player_assets")
+  .select("asset_key, quantity, mortgaged")
+  .eq("user_id", profile.id);
+
+const cdtBonus = (assetsForCDT || [])
+  .filter(a => !a.mortgaged)
+  .reduce((sum, a) => {
+    const assetData = ASSETS[a.asset_key];
+    return sum + (assetData ? assetData.cdt * a.quantity : 0);
+  }, 0);
+
+const cdtResult = await processCDT(profile.id, result.newBalance, sc, lvl.level, cdtBonus);
+
+
+
+
+
+
+
+
     // 1. Procesar cuotas de préstamo
     const result = await processLoanPayments(profile.id, balance);
     if (result.newBalance !== balance) setBalance(result.newBalance);
@@ -537,7 +577,7 @@ const [fundEvents,   setFundEvents]   = useState([]);
         setBalance(cdtResult.newBalance);
         setCdtEvents({ interest: cdtResult.interest, days: cdtResult.daysPending });
       }
-      setCdtAssetBonus(cdtResult.cdtBonusPct ?? 0);
+      //setCdtAssetBonus(cdtResult.cdtBonusPct ?? 0);
     }
 
     // 3. Hipoteca automática si aplica
@@ -765,6 +805,22 @@ async function withdrawFund() {
       Cargando banco...
     </div>
   );
+
+
+
+
+  const cdtAssetBonus = ownedAssets
+  .filter(a => !a.mortgaged)
+  .reduce((sum, a) => {
+    const assetData = ASSETS[a.asset_key];
+    return sum + (assetData ? assetData.cdt * a.quantity : 0);
+  }, 0);
+
+
+
+
+
+
 
   const isInMora       = loan && loan.mora_days > 0 && loan.status !== "grace";
 const remaining      = loan ? loan.total_debt - loan.paid_amount : 0;
