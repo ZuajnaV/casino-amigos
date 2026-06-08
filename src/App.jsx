@@ -63,8 +63,8 @@ useEffect(() => {
 
     // Precios de activos (mismos que en ShopPanel)
     const ASSET_PRICES = {
-      bicicleta: 160000, moto: 1200000, carro: 4800000,
-      choza: 240000, casa: 1200000, mansion: 32000000,
+      bicicleta: 120000, moto: 900000, carro: 3600000, jet: 9000000,
+      choza: 180000, casa: 900000, cabaña: 3600000, mansion: 24000000,
     };
 
     const sorted = profiles.map(u => {
