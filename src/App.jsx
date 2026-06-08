@@ -11,7 +11,7 @@ import CrazyTimeGame from "./CrazyTime.jsx";
 import PlayerSpace from "./Playerspace.jsx";
 import PlayerStats from "./PlayerStats.jsx";
 import BingoGame from "./Bingo.jsx";
-
+import { ASSETS } from "./ShopPanel.jsx";
 
 const GAMES = [
   { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                       color: "#ff6b35" },
@@ -56,22 +56,25 @@ useEffect(() => {
     const [{ data: profiles }, { data: assets }, { data: loans }] = await Promise.all([
       supabase.from("profiles").select("id, username, avatar, balance, deaths, credit_score"),
       supabase.from("player_assets").select("user_id, asset_key, quantity, mortgaged"),
-      supabase.from("loans").select("user_id, total_debt, paid_amount").eq("status", "active"),
+      //supabase.from("loans").select("user_id, total_debt, paid_amount").eq("status", "active"),
+      supabase.from("loans").select("user_id, total_debt, paid_amount").in("status", ["active", "grace", "pending_mortgage"]),
     ]);
 
     if (!profiles) return;
 
     // Precios de activos (mismos que en ShopPanel)
-    const ASSET_PRICES = {
+    /*const ASSET_PRICES = {
       bicicleta: 120000, moto: 900000, carro: 3600000, jet: 9000000,
       choza: 180000, casa: 900000, cabaña: 3600000, mansion: 24000000,
-    };
+    };*/
 
     const sorted = profiles.map(u => {
       // Valor de activos no hipotecados
       const userAssets = (assets || []).filter(a => a.user_id === u.id && !a.mortgaged);
-      const assetValue = userAssets.reduce((sum, a) => sum + (ASSET_PRICES[a.asset_key] || 0) * a.quantity, 0);
-
+      //const assetValue = userAssets.reduce((sum, a) => sum + (ASSET_PRICES[a.asset_key] || 0) * a.quantity, 0);
+      const assetValue = userAssets.reduce((sum, a) => {const price = ASSETS[a.asset_key]?.price || 0;
+        return sum + price * a.quantity;
+         }, 0);
       // Deuda activa
       const userLoan = (loans || []).find(l => l.user_id === u.id);
       const deuda = userLoan ? userLoan.total_debt - userLoan.paid_amount : 0;
