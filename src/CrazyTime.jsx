@@ -86,7 +86,7 @@ function CoinFlipBonus({ bet, onComplete }) {
 
 
 
-  useEffect(() => {
+  /*useEffect(() => {
   supabase.auth.getSession().then(async ({ data: { session } }) => {
     if (!session) return;
     const { data } = await supabase
@@ -103,7 +103,7 @@ function CoinFlipBonus({ bet, onComplete }) {
       })));
     }
   });
-}, []);
+}, []);*/
 
 
 
@@ -1352,9 +1352,6 @@ setHistory(h => [newEntry, ...h.slice(0, 19)]);
 setBets({});
 setPhase("result");
 setTimeout(() => { setPhase("betting"); setMessage(null); }, 3000);
-      setBets({});
-      setPhase("result");
-      setTimeout(() => { setPhase("betting"); setMessage(null); }, 3000);
     }
   }
 
