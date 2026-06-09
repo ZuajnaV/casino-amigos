@@ -980,7 +980,7 @@ const cuotaHoy = loan
 */
 
 
-
+      ["Tasa base diaria", "0.5%"],
       ["Bonus por SC",       `+${(creditScore / 10_000).toFixed(4)}%`],
 ["Bonus por activos",  `+${cdtAssetBonus.toFixed(2)}%`],
 ["Tasa efectiva hoy",  `${((0.005 + creditScore / 1_000_000 + cdtAssetBonus / 100) * 100).toFixed(3)}%`],
