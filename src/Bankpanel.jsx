@@ -385,7 +385,7 @@ await supabase.from("profiles").update({
   balance,
   cdt_last_processed: today,
 }).eq("id", userId);
-  return { newBalance: balance, interest: totalInterest, daysPending };
+  //return { newBalance: balance, interest: totalInterest, daysPending };
   return { newBalance: balance, interest: totalInterest, daysPending, cdtBonusPct };    //AÑADÍ ESTO PARA SUMAR TAMBIÉN EL BONUS % DE CDT POR ASSETS
 }
 
@@ -970,7 +970,7 @@ const cuotaHoy = loan
 
 ["Tasa base diaria", "0.5%"],
       ["Bonus por SC",       `+${(creditScore / 10_000).toFixed(4)}%`],
-["Bonus por activos",  `+${cdtAssetBonus.toFixed(2)}%`],
+["Bonus por activos",  `+${(cdtAssetBonus / 13.75).toFixed(2)}%`],
 ["Tasa efectiva hoy",  `${((0.005 + creditScore / 1_000_000 + (cdtAssetBonus / 13.75) / 100) * 100).toFixed(3)}%`],
 ["Rendimiento est. hoy", `~$${Math.floor(Math.min(balance, 20_000_000) * (0.005 + creditScore / 1_000_000 + (cdtAssetBonus / 13.75) / 100)).toLocaleString()}`],
 
