@@ -49,7 +49,7 @@ export const ASSETS = {
   mansion: {
     key: "mansion", label: "Mansión", icon: "🏰",
     img: "/Mansion.png", category: "vivienda",
-    price: 24000000, sc: 10000, cdt: 100,     // estaba en 15 el aumento del CDT
+    price: 24000000, sc: 10000, cdt: 50,     // estaba en 15 el aumento del CDT
     desc: "Propiedad de lujo — el pináculo del score",
   },
 };

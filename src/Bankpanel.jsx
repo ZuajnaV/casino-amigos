@@ -8,7 +8,7 @@ function generateMarketForDate() {
   const r1 = Math.random();
   const r2 = Math.random();
   let state, pct;
-
+/* It is the original Market Generator, which uses pure randomness to determine the market state and percentage change. The distribution is as follows:
   if (r1 < 0.25) {
     state = "crisis";
     pct = -(r2 * 5 + 5);           // -10% … -5%
@@ -20,6 +20,31 @@ function generateMarketForDate() {
     pct = r2 * 5 + 5;              // +5% … +10%
   }
   return { state, pct: Math.round(pct * 100) / 100 };
+  */
+
+
+
+  if (r1 < 0.1) {
+    state = "coletazo";
+    pct = -(r2 * 15 + 15);           
+  } else if (r1 < 0.35) {
+    state = "crisis";
+    pct = -(r2 * 10 + 5);
+  } else if (r1 < 0.65) {
+    state = "stability";
+    pct = r2 * 6 - 3;              
+  } else if (r1 < 0.9) {
+    state = "growth";
+    pct = r2 * 12 + 8;              
+  } else {
+    state = "subidon";
+    pct = r2 * 30 + 40;
+  }
+  return { state, pct: Math.round(pct * 100) / 100 };
+
+
+
+
 }
 
 async function getOrCreateMarketForDate(dateStr) {
@@ -321,31 +346,8 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel,
   const daysPending = daysBetween(lastProcessed, today);
 
   if (daysPending <= 0) return { newBalance: currentBalance, interest: 0 };
-/*
-  const TASA_BASE = 0.005;          // 0.5% diario
-  const TECHO_AHORRO = 20_000_000;   // solo genera sobre los primeros 20M
-
-  let balance = currentBalance;
-  let totalInterest = 0;
-
-  for (let d = 0; d < daysPending; d++) {
-    const baseEfectiva = Math.min(balance, TECHO_AHORRO);
-    const tasa = TASA_BASE + (creditScore / 1_000_000);
-    const rendimiento = Math.floor(baseEfectiva * tasa);
-    balance += rendimiento;
-    totalInterest += rendimiento;
-  }
-*/
-
-
-
 
   // Bonus CDT de activos no hipotecados
-  /*const { data: playerAssets } = await supabase
-    .from("player_assets")
-    .select("asset_key, quantity, mortgaged")
-    .eq("user_id", userId);
-*/
   const cdtBonusPct = (playerAssets || [])
     .filter(a => !a.mortgaged)
     .reduce((sum, a) => {
@@ -354,32 +356,18 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel,
     }, 0);
 
   const TASA_BASE = 0.005;          // 0.5% diario
-  const TECHO_AHORRO = 5_000_000;
+  const TECHO_AHORRO = 20_000_000;
 
   let balance = currentBalance;
   let totalInterest = 0;
-/*
+
   for (let d = 0; d < daysPending; d++) {
     const baseEfectiva = Math.min(balance, TECHO_AHORRO);
-    const tasa = TASA_BASE + (creditScore / 1_000_000) + (cdtBonusPct / 100);
+    const tasa = TASA_BASE + (creditScore / 1_000_000) + ((cdtBonusPct / 13.75) / 100);   // le añadí el / 13.75 para que el bonus de activos no sea tan bestia (ej: 10% de bonus por activos sería +0.73pp en vez de +10pp)
     const rendimiento = Math.floor(baseEfectiva * tasa);
     balance += rendimiento;
     totalInterest += rendimiento;
   }
-*/
-
-
-
-  for (let d = 0; d < daysPending; d++) {
-    const baseEfectiva = Math.min(balance, TECHO_AHORRO);
-    const tasa = TASA_BASE + (creditScore / 1_000_000) + (cdtBonusPct / 100);
-    const rendimiento = Math.floor(baseEfectiva * tasa);
-    balance += rendimiento;
-    totalInterest += rendimiento;
-  }
-
-
-
 
 
   // Guardar nuevo balance y fecha
@@ -972,22 +960,19 @@ const cuotaHoy = loan
       📈 Cuenta de Ahorros (CDT)
     </div>
     {[
-      /*
-      ["Tasa base diaria", "0.5%"],
-      ["Bonus por SC",      `+${(creditScore / 10_000).toFixed(4)}%`],
-["Tasa efectiva hoy", `${((0.005 + creditScore / 1_000_000) * 100).toFixed(3)}%`],
-["Rendimiento estimado hoy", `~$${Math.floor(Math.min(balance, 20_000_000) * (0.005 + creditScore / 1_000_000)).toLocaleString()}`],
-*/
-
-
+/*
       ["Tasa base diaria", "0.5%"],
       ["Bonus por SC",       `+${(creditScore / 10_000).toFixed(4)}%`],
 ["Bonus por activos",  `+${cdtAssetBonus.toFixed(2)}%`],
 ["Tasa efectiva hoy",  `${((0.005 + creditScore / 1_000_000 + cdtAssetBonus / 100) * 100).toFixed(3)}%`],
-["Rendimiento est. hoy", `~$${Math.floor(Math.min(balance, 5_000_000) * (0.005 + creditScore / 1_000_000 + cdtAssetBonus / 100)).toLocaleString()}`],
+["Rendimiento est. hoy", `~$${Math.floor(Math.min(balance, 20_000_000) * (0.005 + creditScore / 1_000_000 + cdtAssetBonus / 100)).toLocaleString()}`],
+*/
 
-
-
+["Tasa base diaria", "0.5%"],
+      ["Bonus por SC",       `+${(creditScore / 10_000).toFixed(4)}%`],
+["Bonus por activos",  `+${cdtAssetBonus.toFixed(2)}%`],
+["Tasa efectiva hoy",  `${((0.005 + creditScore / 1_000_000 + (cdtAssetBonus / 13.75) / 100) * 100).toFixed(3)}%`],
+["Rendimiento est. hoy", `~$${Math.floor(Math.min(balance, 20_000_000) * (0.005 + creditScore / 1_000_000 + (cdtAssetBonus / 13.75) / 100)).toLocaleString()}`],
 
 
 
@@ -1511,8 +1496,8 @@ const cuotaHoy = loan
         {/* ── Estado del mercado hoy ── */}
         {marketHistory.length > 0 && (() => {
           const today = marketHistory[marketHistory.length - 1];
-          const colors = { crisis: "#ef4444", stability: "#fbbf24", growth: "#22c55e" };
-          const labels = { crisis: "Crisis", stability: "Estabilidad", growth: "Crecimiento" };
+          const colors = { crisis: "#ef4444", stability: "#fbbf24", growth: "#22c55e", coletazo: "#8b0000", subidon: "#0066cc" };
+          const labels = { crisis: "Crisis", stability: "Estabilidad", growth: "Crecimiento", coletazo: "Coletazo", subidon: "Subidón" };
           const col    = colors[today.state] || "#ffffff";
           return (
             <div style={{
@@ -1525,7 +1510,7 @@ const cuotaHoy = loan
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ color: col, fontWeight: 800, fontSize: 20 }}>
-                  {today.state === "crisis" ? "📉" : today.state === "growth" ? "📈" : "➡️"}{" "}
+                  {today.state === "crisis" ? "📉" : today.state === "growth" ? "📈" : today.state === "coletazo" ? "💥" : today.state === "subidon" ? "⬆️" :  "➡️"}{" "}
                   {labels[today.state]}
                 </span>
                 <span style={{ color: col, fontWeight: 900, fontSize: 25 }}>
@@ -1559,7 +1544,7 @@ const cuotaHoy = loan
               Rendimiento aplicado
             </div>
             {fundEvents.map((e, i) => {
-              const col = e.state === "crisis" ? "#ef4444" : e.state === "growth" ? "#22c55e" : "#fbbf24";
+              const col = e.state === "crisis" ? "#ef4444" : e.state === "growth" ? "#22c55e" : e.state === "coletazo" ? "#8b0000" : e.state === "subidon" ? "#0066cc" : "#fbbf24";
               return (
                 <div key={i} style={{ fontSize: 15, color: col, marginBottom: 3 }}>
                   {e.date} · {e.state} {e.finalPct > 0 ? "+" : ""}{e.finalPct}%
@@ -1790,8 +1775,8 @@ function CandlestickChart({ days }) {
   const midY = H * 0.52;
   const scale = (H * 0.42) / maxRange;
   const spacing = W / (days.length + 1);
-  const stateColors = { crisis: "#ef4444", stability: "#fbbf24", growth: "#22c55e" };
-  const dayLabels = ["Antayer", "Ayer", "Hoy"];
+  const stateColors = { crisis: "#ef4444", stability: "#fbbf24", growth: "#22c55e", coletazo: "#8b0000", subidon: "#0066cc" };
+  const dayLabels = ["Anteayer", "Ayer", "Hoy"];
 
   return (
     <svg width={W} height={H} style={{ display: "block", width: "100%" }}
