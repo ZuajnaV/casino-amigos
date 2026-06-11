@@ -10,7 +10,7 @@ const BOARD_W = COLS * CELL;
 const BOARD_H = ROWS * CELL;
 
 // Pagos por líneas limpiadas
-const LINE_PAY = { 1: 500, 2: 2000, 3: 5000, 4: 10000 };
+const LINE_PAY = { 1: 450, 2: 1500, 3: 3800, 4: 7600 };  // 500, 2000, 5000, 10000
 const BACK_TO_BACK_BONUS = 1.5; // 50% extra si dos Tetris seguidos
 const MAX_SESSION_PAY = 1_000_000;
 // Lock Delay y DAS
@@ -275,7 +275,7 @@ const keysHeld      = useRef({});
 
   // ── Calcular velocidad de caída ────────────────────────────
   function dropMs() {
-    return Math.max(30, 1000 - (levelRef.current - 1) * 95);        // estaba en 80, lo bajé a 60   30, 1000- (levelRef.current - 1) * 85);
+    return Math.max(25, 1000 - (levelRef.current - 1) * 100);        // estaba en 80, lo bajé a 60   30, 1000- (levelRef.current - 1) * 85);
   }
 
   // ── Renderizar canvas ──────────────────────────────────────
