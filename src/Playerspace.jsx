@@ -10,7 +10,7 @@ import ShopPanel, { ASSETS } from "./ShopPanel.jsx";
 import BankPanel, { processLoanPayments } from "./Bankpanel.jsx";
 import PlayerStats from "./PlayerStats.jsx";
 import BubbleShooter from "./Bubbleshooter.jsx";
-
+import TetrisGame from "./TetrisGame.jsx";
 
 
 
@@ -556,6 +556,7 @@ useEffect(() => {
       { id: "blockbreaker", icon: "🧱", name: "Block Breaker", desc: "$30.000 por nivel superado",           color: "#8b5cf6" },
       { id: "geometrix",    icon: "📐", name: "Geometrix",     desc: "$1'385.000 por completar los niveles", color: "#fbbf24" },
       { id: "bubbleshooter", icon: "🫧", name: "Bubble Shooter", desc: "Pop: $500 · Drop: $1.500 · Clear: $30.000", color: "#60a5fa" },
+      { id: "tetris", icon: "🟦", name: "Tetris", desc: "1L=$500 · 2L=$2k · 3L=$5k · Tetris=$10k", color: "#5BC8E8" },
     ].map(job => (
       <div
         key={job.id}
@@ -633,6 +634,11 @@ useEffect(() => {
           <BubbleShooter balance={balance} setBalance={setBalance} onBack={() => setActiveJob(null)} />
         </div>
       )}
+      {activeJob === "tetris" && (
+  <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "#080810", overflowY: "auto" }}>
+    <TetrisGame balance={balance} setBalance={setBalance} onBack={() => setActiveJob(null)} />
+  </div>
+)}
 
     </div>
   );
