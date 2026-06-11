@@ -757,7 +757,7 @@ clearInterval(arrTimerRef.current);
             }}>
               <div style={{ fontSize: 48, marginBottom: 8 }}>🟦</div>
               <div style={{ color: "#5BC8E8", fontWeight: 900, fontSize: 24, letterSpacing: 3, marginBottom: 6 }}>TETRIS</div>
-              <div style={{ fontSize: 11, color: "#555", marginBottom: 20, textAlign: "center", lineHeight: 1.8 }}>
+              <div style={{ fontSize: 13, color: "#ffffff", marginBottom: 20, textAlign: "center", lineHeight: 1.8 }}>
                 1 línea = $500 · 2 = $2.000<br/>3 = $5.000 · Tetris = $10.000<br/>Back-to-Back Tetris = ×1.5
               </div>
               <button onClick={startGame} style={{
@@ -792,13 +792,13 @@ clearInterval(arrTimerRef.current);
 
           {/* Hold */}
           <div style={{ background: "#0d0d18", border: "1px solid #1e1e2e", borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Hold (C)</div>
+            <div style={{ fontSize: 15, color: "#ffffff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Hold (C)</div>
             <canvas ref={holdRef} width={88} height={72} style={{ display: "block", margin: "0 auto" }} />
           </div>
 
           {/* Next */}
           <div style={{ background: "#0d0d18", border: "1px solid #1e1e2e", borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Next</div>
+            <div style={{ fontSize: 15, color: "#ffffff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Next</div>
             <canvas ref={nextRef} width={88} height={72} style={{ display: "block", margin: "0 auto" }} />
           </div>
 
@@ -809,7 +809,7 @@ clearInterval(arrTimerRef.current);
             { label: "Líneas", val: uiLines, color: "#5BC8E8" },
           ].map(({ label, val, color }) => (
             <div key={label} style={{ background: "#0d0d18", border: "1px solid #1e1e2e", borderRadius: 10, padding: "8px 10px", textAlign: "center" }}>
-              <div style={{ fontSize: 10, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>{label}</div>
+              <div style={{ fontSize: 15, color: "#ffffff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>{label}</div>
               <div style={{ fontSize: 18, fontWeight: 700, color }}>{val}</div>
             </div>
           ))}
@@ -820,13 +820,13 @@ clearInterval(arrTimerRef.current);
             border: `1px solid ${uiEarned > 0 ? "#00d4aa44" : "#1e1e2e"}`,
             borderRadius: 10, padding: "8px 10px", textAlign: "center",
           }}>
-            <div style={{ fontSize: 10, color: "#555", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Ganado</div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "#00d4aa" }}>+${uiEarned.toLocaleString()}</div>
+            <div style={{ fontSize: 15, color: "#ffffff", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 }}>Ganado</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "#00d4aa" }}>+${uiEarned.toLocaleString()}</div>
           </div>
 
           {/* Teclado */}
           <div style={{ background: "#0d0d18", border: "1px solid #1e1e2e", borderRadius: 10, padding: "8px" }}>
-            <div style={{ fontSize: 9, color: "#333", lineHeight: 1.9, textAlign: "center" }}>
+            <div style={{ fontSize: 15, color: "#ffffff", lineHeight: 1.9, textAlign: "center" }}>
               ← → mover<br/>↑ rotar<br/>↓ bajar<br/>⎵ hard drop<br/>C guardar
             </div>
           </div>
@@ -847,7 +847,7 @@ clearInterval(arrTimerRef.current);
         </div>
       </div>
 
-      <div style={{ marginTop: 10, fontSize: 11, color: "#333", textAlign: "center" }}>
+      <div style={{ marginTop: 10, fontSize: 15, color: "#ffffff", textAlign: "center" }}>
         Máx. ${MAX_SESSION_PAY.toLocaleString()} por sesión · El cobro es automático al morir
       </div>
     </div>
