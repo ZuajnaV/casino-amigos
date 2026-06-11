@@ -61,7 +61,7 @@ const WHEEL_SEGMENTS = [
   { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
   ];
 
-const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 15, 20, 25, 40, 50];
+const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 12, 15, 20, 25, 50, 100];
 const SEGMENT_TYPES = ["1", "2", "5", "10", "coin_flip", "cash_hunt", "pachinko", "crazy_time"];
 
 const SEGMENT_INFO = {
