@@ -348,12 +348,16 @@ export async function processCDT(userId, currentBalance, creditScore, bankLevel,
   if (daysPending <= 0) return { newBalance: currentBalance, interest: 0 };
 
   // Bonus CDT de activos no hipotecados
-  const cdtBonusPct = (playerAssets || [])
+ /* const cdtBonusPct = (playerAssets || [])
     .filter(a => !a.mortgaged)
     .reduce((sum, a) => {
       const assetData = ASSETS[a.asset_key];
       return sum + (assetData ? assetData.cdt * a.quantity : 0);
-    }, 0);
+    }, 0);*/
+
+
+    const cdtBonusPct = cdtBonus;
+
 
   const TASA_BASE = 0.005;          // 0.5% diario
   const TECHO_AHORRO = 20_000_000;
@@ -520,6 +524,7 @@ const [fundEvents,   setFundEvents]   = useState([]);
   setLoading(false);
 }, [profile.id]);
 
+/*
   useEffect(() => {
   async function init() {
     await load();
@@ -595,6 +600,88 @@ if (fundResult.processed) {
   }
   init();
 }, [profile.id]);
+
+*/
+
+
+
+
+useEffect(() => {
+  async function init() {
+    await load();
+
+    // 1. Procesar cuotas de préstamo
+    const result = await processLoanPayments(profile.id, balance);
+    if (result.newBalance !== balance) setBalance(result.newBalance);
+
+    // 2. Obtener SC actualizado
+    const { data: profData } = await supabase
+      .from("profiles").select("credit_score").eq("id", profile.id).single();
+    const sc  = profData?.credit_score || 0;
+    const lvl = bankLevelFor(sc);
+
+    // 3. Procesar CDT si nivel 1+
+    if (lvl.level >= 1) {
+      const { data: assetsForCDT } = await supabase
+        .from("player_assets")
+        .select("asset_key, quantity, mortgaged")
+        .eq("user_id", profile.id);
+
+      const cdtBonus = (assetsForCDT || [])
+        .filter(a => !a.mortgaged)
+        .reduce((sum, a) => {
+          const assetData = ASSETS[a.asset_key];
+          return sum + (assetData ? assetData.cdt * a.quantity : 0);
+        }, 0);
+
+      const cdtResult = await processCDT(profile.id, result.newBalance, sc, lvl.level, cdtBonus);
+      if (cdtResult.interest > 0) {
+        setBalance(cdtResult.newBalance);
+        setCdtEvents({ interest: cdtResult.interest, days: cdtResult.daysPending });
+      }
+    }
+
+    // 4. Hipoteca automática si aplica
+    if (result.events.length > 0) {
+      setEvents(result.events);
+      const mortgageTrigger = result.events.find(e => e.type === "mortgage_trigger");
+      if (mortgageTrigger) {
+        const mResult = await executeMortgage(
+          profile.id, mortgageTrigger.loanId, mortgageTrigger.remainingDebt
+        );
+        setMortgageEvents(mResult.mortgaged);
+      }
+      await load();
+    }
+
+    // 5. Fondo de inversión
+    const fundResult = await processInvestmentFund(profile.id, sc);
+    if (fundResult.processed) {
+      setFund(fundResult.fund);
+      setFundEvents(fundResult.events || []);
+      const { data: mkt } = await supabase
+        .from("market_daily").select("*")
+        .order("date", { ascending: false }).limit(3);
+      if (mkt) setMarketHistory([...mkt].reverse());
+    }
+  }
+  init();
+}, [profile.id]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ── Solicitar préstamo ─────────────────────────────────────────────────────
   async function requestLoan() {
