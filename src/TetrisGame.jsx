@@ -350,6 +350,7 @@ export default function TetrisGame({ balance, setBalance, onBack }) {
   }
 
   // ── Cobrar y guardar ───────────────────────────────────────
+  /*
   async function saveEarned() {
     const earned = earnedRef.current;
     if (earned <= 0 || savingRef.current) return;
@@ -368,7 +369,45 @@ export default function TetrisGame({ balance, setBalance, onBack }) {
       savingRef.current = false;
       setSaving(false);
     }
+  }*/
+
+
+
+
+async function saveEarned() {
+  const earned = earnedRef.current;
+  if (earned <= 0 || savingRef.current) return;
+  
+  savingRef.current = true;
+  earnedRef.current = 0;    // ← agregar esta línea aquí
+  setSaving(true);
+  
+  const newBal = balRef.current + earned;
+  setBalance(newBal);
+  balRef.current = newBal;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await supabase.from("profiles").update({ balance: newBal }).eq("id", session.user.id);
+    }
+  } catch (e) { console.error(e); }
+  finally {
+    savingRef.current = false;
+    setSaving(false);
   }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ── Fin del juego ──────────────────────────────────────────
   async function endGame() {
