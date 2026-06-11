@@ -748,7 +748,7 @@ const CT_WHEEL_LAYOUT = [
   "TRIPLE", 25, 10, "DOUBLE", 15, 50, 10, "DOUBLE",
   25, 50, 15, "DOUBLE", 10, 20, 15, "TRIPLE", 
   10, 50, 25, "DOUBLE", 15, 10, 20, "DOUBLE", 
-  15, 25, 20, "TRIPLE", 10, 50, 15,
+  15, 25, 20, "TRIPLE", 10, 50, 15, 100,
 ];
 
 
