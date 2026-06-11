@@ -727,7 +727,7 @@ function PachinkoBonus({ bet, topSlotMult = 1, onComplete }) {
 // ─── CRAZY TIME BONUS WHEEL SEGMENTS ─────────────────────────────────────────
 // Distribución de probabilidades de los 64 segmentos (como el juego real)
 
-
+/*
 const CT_WHEEL_LAYOUT = [
   10, "DOUBLE", 20, 40, "TRIPLE", 10, 5, "DOUBLE",
   100, 20, "DOUBLE", 50, 10, "TRIPLE", 20, 5,
@@ -737,7 +737,22 @@ const CT_WHEEL_LAYOUT = [
   "DOUBLE", 10, 20, "TRIPLE", 5, 10, "DOUBLE", 20,
   500, "DOUBLE", 10, 5, 20, "TRIPLE", 40, 10,
   "DOUBLE", 20, 5, 100, "DOUBLE", 10, 20, 5,
+];*/
+
+
+const CT_WHEEL_LAYOUT = [
+  "DOUBLE", 25, 100, 15, "DOUBLE", 10, 50, 15,
+  "DOUBLE", 10, 25, 15, "DOUBLE", 10, 20, 15,
+  "TRIPLE", 10, 15, 20, "TRIPLE", 15, 50, 10,
+  "DOUBLE", 25, 10, 15, "TRIPLE", 20, 100, 10,
+  "TRIPLE", 25, 10, "DOUBLE", 15, 50, 10, "DOUBLE",
+  25, 50, 15, "DOUBLE", 10, 20, 15, "TRIPLE", 
+  10, 50, 25, "DOUBLE", 15, 10, 20, "DOUBLE", 
+  15, 25, 20, "TRIPLE", 10, 50, 15,
 ];
+
+
+
 
 function CrazyTimeBonus({ bet, onComplete }) {
   // La rueda se genera una sola vez al montar el componente
