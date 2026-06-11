@@ -13,6 +13,12 @@ const BOARD_H = ROWS * CELL;
 const LINE_PAY = { 1: 500, 2: 2000, 3: 5000, 4: 10000 };
 const BACK_TO_BACK_BONUS = 1.5; // 50% extra si dos Tetris seguidos
 const MAX_SESSION_PAY = 500_000;
+// Lock Delay y DAS
+const LOCK_DELAY    = 500;  // ms antes de fijar la pieza
+const MAX_LK_MOVES  = 15;   // máximo de reinicios del lock delay
+const DAS           = 150;  // ms antes de empezar el auto-repeat
+const ARR           = 50;   // ms entre repeticiones
+
 
 const COLORS = {
   I: "#5BC8E8", O: "#F5C518", T: "#9B59B6",
@@ -233,6 +239,14 @@ export default function TetrisGame({ balance, setBalance, onBack }) {
   const rafRef      = useRef(null);
   const savingRef   = useRef(false);
 
+
+
+  const lockTimerRef  = useRef(null);
+const lockMovesRef  = useRef(0);
+const dasTimerRef   = useRef(null);
+const arrTimerRef   = useRef(null);
+const keysHeld      = useRef({});
+
   // UI state
   const [phase,   setPhase]   = useState("idle"); // idle | playing | gameover
   const [uiScore, setUiScore] = useState(0);
@@ -290,6 +304,8 @@ export default function TetrisGame({ balance, setBalance, onBack }) {
 
   // ── Bloquear pieza y generar la siguiente ──────────────────
   function lockAndNext() {
+    cancelLock();               // ← nueva
+  lockMovesRef.current = 0;   // ← nueva
     boardRef.current = placePiece(boardRef.current, currentRef.current);
     const { board: newBoard, cleared } = clearLines(boardRef.current);
     boardRef.current = newBoard;
@@ -338,7 +354,83 @@ export default function TetrisGame({ balance, setBalance, onBack }) {
     }
   }
 
+
+
+
+  // Programa el bloqueo de la pieza tras LOCK_DELAY ms
+function scheduleLock() {
+  if (lockTimerRef.current) return; // ya programado
+  lockTimerRef.current = setTimeout(() => {
+    lockTimerRef.current = null;
+    lockMovesRef.current = 0;
+    if (!runningRef.current) return;
+    lockAndNext();
+    render();
+  }, LOCK_DELAY);
+}
+
+// Cancela el bloqueo pendiente
+function cancelLock() {
+  clearTimeout(lockTimerRef.current);
+  lockTimerRef.current = null;
+}
+
+// Llamar después de cada movimiento lateral / rotación
+function afterMove() {
+  const onGround = !isValid(boardRef.current, currentRef.current, 1);
+  if (onGround) {
+    if (lockMovesRef.current < MAX_LK_MOVES) {
+      lockMovesRef.current++;
+      cancelLock();
+      scheduleLock(); // reinicia el temporizador
+    }
+    // Si ya llegó al límite, dejamos que el timer existente corra
+  } else {
+    // La pieza puede seguir cayendo → cancelar lock
+    cancelLock();
+    lockMovesRef.current = 0;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
   // ── Tick de gravedad ───────────────────────────────────────
+
+
+
+function gameTick() {
+  if (!runningRef.current) return;
+  if (isValid(boardRef.current, currentRef.current, 1)) {
+    currentRef.current = { ...currentRef.current, r: currentRef.current.r + 1 };
+    // Puede seguir cayendo → cancelar cualquier lock pendiente
+    cancelLock();
+    lockMovesRef.current = 0;
+  } else {
+    // Toca el suelo → programar bloqueo (si no está ya programado)
+    scheduleLock();
+  }
+  render();
+}
+
+
+
+
+
+
+
+
+
+/*
+
   function gameTick() {
     if (!runningRef.current) return;
     if (isValid(boardRef.current, currentRef.current, 1)) {
@@ -348,32 +440,8 @@ export default function TetrisGame({ balance, setBalance, onBack }) {
     }
     render();
   }
-
+*/
   // ── Cobrar y guardar ───────────────────────────────────────
-  /*
-  async function saveEarned() {
-    const earned = earnedRef.current;
-    if (earned <= 0 || savingRef.current) return;
-    savingRef.current = true;
-    setSaving(true);
-    const newBal = balRef.current + earned;
-    setBalance(newBal);
-    balRef.current = newBal;
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await supabase.from("profiles").update({ balance: newBal }).eq("id", session.user.id);
-      }
-    } catch (e) { console.error(e); }
-    finally {
-      savingRef.current = false;
-      setSaving(false);
-    }
-  }*/
-
-
-
-
 async function saveEarned() {
   const earned = earnedRef.current;
   if (earned <= 0 || savingRef.current) return;
@@ -397,18 +465,6 @@ async function saveEarned() {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
   // ── Fin del juego ──────────────────────────────────────────
   async function endGame() {
     runningRef.current = false;
@@ -431,6 +487,20 @@ async function saveEarned() {
     holdRef2.current    = null;
     holdUsedRef.current = false;
     lastTetrisRef.current = false;
+
+
+
+    cancelLock();
+lockMovesRef.current = 0;
+clearTimeout(dasTimerRef.current);
+clearInterval(arrTimerRef.current);
+keysHeld.current = {};
+
+
+
+
+
+
     runningRef.current  = true;
 
     currentRef.current  = spawnPiece(nextFromBag());
@@ -444,6 +514,112 @@ async function saveEarned() {
   }
 
   // ── Controles de teclado ───────────────────────────────────
+
+
+
+
+useEffect(() => {
+  function move(dc) {
+    const c = currentRef.current;
+    if (!c || !runningRef.current) return;
+    if (isValid(boardRef.current, c, 0, dc)) {
+      currentRef.current = { ...c, c: c.c + dc };
+      afterMove();
+      render();
+    }
+  }
+
+  function onKeyDown(e) {
+    if (!runningRef.current) return;
+    const cur = currentRef.current;
+    if (!cur) return;
+
+    // ── Movimiento horizontal con DAS ──
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      if (keysHeld.current[e.key]) return; // ya presionada
+      keysHeld.current[e.key] = true;
+      const dc = e.key === "ArrowLeft" ? -1 : 1;
+
+      move(dc); // movimiento inmediato
+
+      clearTimeout(dasTimerRef.current);
+      clearInterval(arrTimerRef.current);
+      dasTimerRef.current = setTimeout(() => {
+        arrTimerRef.current = setInterval(() => move(dc), ARR);
+      }, DAS);
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        if (isValid(boardRef.current, cur, 1)) {
+          currentRef.current = { ...cur, r: cur.r + 1 };
+          scoreRef.current += 1;
+          afterMove();
+        }
+        break;
+      case "ArrowUp":
+        currentRef.current = tryRotate(boardRef.current, cur);
+        afterMove();
+        break;
+      case " ": {
+        const gd = ghostDrop(boardRef.current, cur);
+        scoreRef.current += gd * 2;
+        currentRef.current = { ...cur, r: cur.r + gd };
+        cancelLock();
+        lockAndNext();
+        break;
+      }
+      case "c": case "C": case "Shift": {
+        if (holdUsedRef.current) break;
+        holdUsedRef.current = true;
+        if (!holdRef2.current) {
+          holdRef2.current = cur.type;
+          currentRef.current = nextPieceRef.current;
+          nextPieceRef.current = spawnPiece(nextFromBag());
+        } else {
+          const tmp = holdRef2.current;
+          holdRef2.current = cur.type;
+          currentRef.current = spawnPiece(tmp);
+        }
+        cancelLock();
+        lockMovesRef.current = 0;
+        break;
+      }
+    }
+    render();
+  }
+
+  function onKeyUp(e) {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      keysHeld.current[e.key] = false;
+      clearTimeout(dasTimerRef.current);
+      clearInterval(arrTimerRef.current);
+    }
+  }
+
+  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keyup",   onKeyUp);
+  return () => {
+    window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("keyup",   onKeyUp);
+    clearTimeout(dasTimerRef.current);
+    clearInterval(arrTimerRef.current);
+  };
+}, [render]);
+
+
+
+
+
+
+
+
+
+
+
+
+/*
   useEffect(() => {
     function onKey(e) {
       if (!runningRef.current) return;
@@ -498,6 +674,9 @@ async function saveEarned() {
     return () => window.removeEventListener("keydown", onKey);
   }, [render]);
 
+*/
+
+
   // ── Renderizar en idle para preview ───────────────────────
   useEffect(() => {
     render();
@@ -508,6 +687,13 @@ async function saveEarned() {
     return () => {
       clearInterval(dropTimerRef.current);
       cancelAnimationFrame(rafRef.current);
+
+
+        clearTimeout(dasTimerRef.current);
+clearInterval(arrTimerRef.current);
+
+
+
     };
   }, []);
 
