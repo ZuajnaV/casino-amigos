@@ -275,7 +275,7 @@ const keysHeld      = useRef({});
 
   // ── Calcular velocidad de caída ────────────────────────────
   function dropMs() {
-    return Math.max(60, 1000 - (levelRef.current - 1) * 85);    // caída más rápida cada nivel, mínimo 80ms
+    return Math.max(30, 1000 - (levelRef.current - 1) * 95);        // estaba en 80, lo bajé a 60   30, 1000- (levelRef.current - 1) * 85);
   }
 
   // ── Renderizar canvas ──────────────────────────────────────
