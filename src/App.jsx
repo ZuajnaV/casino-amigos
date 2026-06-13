@@ -12,6 +12,7 @@ import PlayerSpace from "./Playerspace.jsx";
 import PlayerStats from "./PlayerStats.jsx";
 import BingoGame from "./Bingo.jsx";
 import { ASSETS } from "./ShopPanel.jsx";
+import BaccaratGame from "./Baccarat.jsx";
 
 const GAMES = [
   { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                       color: "#ff6b35" },
@@ -23,6 +24,7 @@ const GAMES = [
   { id: "horses",      name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",              color: "#ef4444" },
   { id: "crazytime",   name: "Crazy Time",    icon: "💥🎆🎡🎆💥", desc: "¡El juego más loco del casino!",                color: "#f97316" },
   { id: "bingo", icon: "🎱", name: "Bingo", desc: "¡Haz bingo y gana grandes premios!", color: "#fbbf24" },
+  { id: "baccarat", name: "Baccarat", icon: "🃏", desc: "El juego de cartas más popular del casino", color: "#10b981" }
 ];
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈","🗿","🚨","🗽","🛸","🛰️"];
@@ -63,11 +65,6 @@ useEffect(() => {
     if (!profiles) return;
 
     // Precios de activos (mismos que en ShopPanel)
-    /*const ASSET_PRICES = {
-      bicicleta: 120000, moto: 900000, carro: 3600000, jet: 9000000,
-      choza: 180000, casa: 900000, cabaña: 3600000, mansion: 24000000,
-    };*/
-
     const sorted = profiles.map(u => {
       // Valor de activos no hipotecados
       const userAssets = (assets || []).filter(a => a.user_id === u.id && !a.mortgaged);
@@ -175,7 +172,6 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
       </div>
 
       {/* Panel de stats del jugador */}
-      {/*{showStats && <PlayerStats userId={profile.id} />}*/}
       {showStats && <PlayerStats userId={profile.id} layout="flex" />}
 
 
@@ -434,22 +430,12 @@ export default function App() {
       </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
 <div style={{ padding: "20px 16px" }}>
         {!game && <Lobby profile={profile} balance={balance} setGame={setGame} onDeposit={handleDeposit} />}
         {game === "slots"       && <SlotsGame       balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "blackjack"   && <BlackjackGame   balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "roulette"    && <RouletteGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
+        {game === "baccarat"    && <BaccaratGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "mines"       && <MinesGames      balance={balance} setBalance={setBalance} onBack={handleBack} onGameEnd={(fb) => { balanceRef.current = fb; }} />}
         {game === "spaceman"    && <SpacemanGame    balance={balance} setBalance={setBalance} onBack={handleBack} />}
         {game === "chickenroad" && <ChickenRoadGame balance={balance} onBalanceChange={setBalance} onBack={handleBack} />}
