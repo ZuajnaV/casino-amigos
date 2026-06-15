@@ -215,7 +215,9 @@ function HandArea({ label, cards, score, showScore, accentColor, isWinner, glowA
           {dragon7 && <div style={{ fontSize:9, color:"#fbbf24", marginTop:1 }}>🐉 Dragon 7</div>}
           {panda8  && <div style={{ fontSize:9, color:"#22c55e", marginTop:1 }}>🐼 Panda 8</div>}
         </div>
-        {showScore && (
+{/*{showScore && (*/}
+
+        {cards.length && (
           <div style={{
             fontSize:24, fontWeight:900, color:"#fff",
             background: isWinner ? accentColor : "rgba(255,255,255,0.12)",
@@ -392,7 +394,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
     setPhase("dealing");
     setDispPlayer([]);
     setDispBanker([]);
-    setShowScore(false);
+    //setShowScore(false);
     setOutcome(null);
     setDragon7(false);
     setPanda8(false);
@@ -435,8 +437,8 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
     }
 
     // ── Revelar puntuaciones ─────────────────────────────────────────
-    setShowScore(true);
-    await sleep(350);
+    //setShowScore(true);
+    //await sleep(350);
 
     // ── Calcular resultado y pagar ───────────────────────────────────
     const { winnings, results: res, outcome: oc, dragon7: d7, panda8: p8 } =
