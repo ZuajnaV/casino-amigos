@@ -164,7 +164,7 @@ function BacCard({ card }) {
   const isRed = card && ["♥","♦"].includes(card.s);
   return (
     <div style={{
-      width: 120, height: 157,
+      width: 140, height: 177,
       borderRadius: 8,
       border: "1px solid rgba(255,255,255,0.2)",
       boxShadow: "0 4px 14px rgba(0,0,0,0.65)",
@@ -180,10 +180,10 @@ function BacCard({ card }) {
         padding:"4px 5px", boxSizing:"border-box",
         animation: "bacFlip 0.32s ease 60ms both",
       }}>
-        <div style={{ fontSize:25, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.r}</div>
-        <div style={{ fontSize:25, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.s}</div>
-        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:35, color:isRed?"#c0392b":"#1a1a1a" }}>{card.s}</div>
-        <div style={{ fontSize:25, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1, alignSelf:"flex-end", transform:"rotate(180deg)" }}>{card.r}</div>
+        <div style={{ fontSize:30, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.r}</div>
+        <div style={{ fontSize:30, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.s}</div>
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:40, color:isRed?"#c0392b":"#1a1a1a" }}>{card.s}</div>
+        <div style={{ fontSize:30, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1, alignSelf:"flex-end", transform:"rotate(180deg)" }}>{card.r}</div>
       </div>
     </div>
   );
@@ -231,7 +231,7 @@ function HandArea({ label, cards, score, showScore, accentColor, isWinner, glowA
       </div>
 
       {/* Cartas */}
-      <div style={{ display:"flex", gap:6, flexWrap:"wrap", minHeight:157 }}>
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap", minHeight:177 }}>
         {cards.map((c, i) => (
           <BacCard key={i} card={c} />
         ))}
