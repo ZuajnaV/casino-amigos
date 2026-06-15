@@ -164,7 +164,7 @@ function BacCard({ card }) {
   const isRed = card && ["♥","♦"].includes(card.s);
   return (
     <div style={{
-      width: 85, height: 122,
+      width: 100, height: 137,
       borderRadius: 8,
       border: "1px solid rgba(255,255,255,0.2)",
       boxShadow: "0 4px 14px rgba(0,0,0,0.65)",
@@ -180,10 +180,10 @@ function BacCard({ card }) {
         padding:"4px 5px", boxSizing:"border-box",
         animation: "bacFlip 0.32s ease 60ms both",
       }}>
-        <div style={{ fontSize:16, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.r}</div>
-        <div style={{ fontSize:16, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.s}</div>
+        <div style={{ fontSize:20, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.r}</div>
+        <div style={{ fontSize:20, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.s}</div>
         <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:25, color:isRed?"#c0392b":"#1a1a1a" }}>{card.s}</div>
-        <div style={{ fontSize:16, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1, alignSelf:"flex-end", transform:"rotate(180deg)" }}>{card.r}</div>
+        <div style={{ fontSize:20, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1, alignSelf:"flex-end", transform:"rotate(180deg)" }}>{card.r}</div>
       </div>
     </div>
   );
@@ -231,12 +231,12 @@ function HandArea({ label, cards, score, showScore, accentColor, isWinner, glowA
       </div>
 
       {/* Cartas */}
-      <div style={{ display:"flex", gap:6, flexWrap:"wrap", minHeight:122 }}>
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap", minHeight:137 }}>
         {cards.map((c, i) => (
           <BacCard key={i} card={c} />
         ))}
         {cards.length === 0 && (
-          <div style={{ width:68, height:98, border:"2px dashed rgba(255,255,255,0.07)", borderRadius:8 }} />
+          <div style={{ width:100, height:137, border:"2px dashed rgba(255,255,255,0.07)", borderRadius:8 }} />
         )}
       </div>
     </div>
@@ -272,8 +272,8 @@ function BetSpot({ label, sublabel, accent, amount, onClick, disabled, isActive,
       boxShadow: isActive ? `0 0 16px ${accent}44` : "none",
       position:"relative", minWidth:0,
     }}>
-      <div style={{ fontSize: small ? 11 : 12, color:accent, fontWeight:800, letterSpacing:1.5, textTransform:"uppercase" }}>{label}</div>
-      {sublabel && <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", marginTop:2 }}>{sublabel}</div>}
+      <div style={{ fontSize: small ? 15 : 17, color:accent, fontWeight:800, letterSpacing:1.5, textTransform:"uppercase" }}>{label}</div>
+      {sublabel && <div style={{ fontSize:12, color:"rgba(208, 208, 208, 0.78)", marginTop:2 }}>{sublabel}</div>}
       {amount > 0 && (
         <div style={{
           position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)",
@@ -285,7 +285,7 @@ function BetSpot({ label, sublabel, accent, amount, onClick, disabled, isActive,
           ${amount.toLocaleString()}
         </div>
       )}
-      <div style={{ fontSize:9, color:"rgba(255,255,255,0.22)", marginTop: small ? 4 : 6 }}>{payLabel}</div>
+      <div style={{ fontSize:12, color:"rgba(208, 208, 208, 0.78)", marginTop: small ? 4 : 6 }}>{payLabel}</div>
     </button>
   );
 }
@@ -297,17 +297,17 @@ function History({ rounds }) {
   if (!rounds.length) return null;
   return (
     <div style={{ marginTop:16 }}>
-      <div style={{ fontSize:9, color:"rgba(255,255,255,0.28)", letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>Historial</div>
+      <div style={{ fontSize:12, color:"rgba(194, 194, 194, 0.8)", letterSpacing:2, textTransform:"uppercase", marginBottom:6 }}>Historial</div>
       <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
         {rounds.slice(-35).reverse().map((r, i) => {
           const col   = r==="player"?"#3b82f6": r==="banker"?"#ef4444":"#fbbf24";
           const label = r==="player"?"J": r==="banker"?"B":"E";
           return (
             <div key={i} style={{
-              width:24, height:24, borderRadius:"50%",
+              width:30, height:30, borderRadius:"50%",
               background:col+"2a", border:`2px solid ${col}`,
               display:"flex", alignItems:"center", justifyContent:"center",
-              fontSize:10, fontWeight:900, color:col,
+              fontSize:15, fontWeight:900, color:col,
             }}>{label}</div>
           );
         })}
@@ -587,7 +587,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
         <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:14, flexWrap:"wrap" }}>
           {CHIP_VALUES.map(v => (
             <button key={v} onClick={()=>setChipVal(v)} style={{
-              width:46, height:46, borderRadius:"50%",
+              width:50, height:50, borderRadius:"50%",
               background: chipVal===v ? CHIP_COLORS[v] : CHIP_COLORS[v]+"2a",
               border:`3px solid ${CHIP_COLORS[v]}`,
               color: chipVal===v ? "#000" : CHIP_COLORS[v],
