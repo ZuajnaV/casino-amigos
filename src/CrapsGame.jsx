@@ -84,12 +84,29 @@ export default function CrapsGame({ balance, setBalance, onBack }) {
     if (!anyBet) { setMsg("Haz al menos una apuesta primero"); setMsgColor("#f59e0b"); return; }
 
     setRolling(true);
-    for (let i = 0; i < 14; i++) {
+    /*for (let i = 0; i < 14; i++) {
       setDice([Math.ceil(Math.random()*6), Math.ceil(Math.random()*6)]);
       await sleep(55);
     }
     const d1 = Math.ceil(Math.random()*6), d2 = Math.ceil(Math.random()*6);
-    setDice([d1, d2]);
+    setDice([d1, d2]);*/
+
+    for (let i = 0; i < 14; i++) {
+  setDice([Math.ceil(Math.random()*6), Math.ceil(Math.random()*6)]);
+  await sleep(55);
+}
+
+// 🛠️ CONFIGURACIÓN DE PRUEBAS: 
+// Cambia 'null' por un array con los dos dados que quieras probar. Ej: [4, 3]
+// Déjalo en 'null' cuando quieras activar el azar real (normal).
+const FORCED_DICE = [5,6]; 
+
+const d1 = FORCED_DICE ? FORCED_DICE[0] : Math.ceil(Math.random()*6);
+const d2 = FORCED_DICE ? FORCED_DICE[1] : Math.ceil(Math.random()*6);
+
+setDice([d1, d2]);
+//FIN PRUEBAS
+
     await sleep(500);
     const total = d1 + d2;
     setHistory(p => [...p.slice(-29), total]);
