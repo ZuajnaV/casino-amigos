@@ -13,6 +13,7 @@ import PlayerStats from "./PlayerStats.jsx";
 import BingoGame from "./Bingo.jsx";
 import { ASSETS } from "./ShopPanel.jsx";
 import BaccaratGame from "./Baccarat.jsx";
+import CrapsGame from "./CrapsGame.jsx";
 
 const GAMES = [
   { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                       color: "#ff6b35" },
@@ -24,7 +25,8 @@ const GAMES = [
   { id: "horses",      name: "Horse Race",    icon: "🐎", desc: "Apuesta en la carrera de caballos",              color: "#ef4444" },
   { id: "crazytime",   name: "Crazy Time",    icon: "💥🎆🎡🎆💥", desc: "¡El juego más loco del casino!",                color: "#f97316" },
   { id: "bingo", icon: "🎱", name: "Bingo", desc: "¡Haz bingo y gana grandes premios!", color: "#fbbf24" },
-  { id: "baccarat", name: "Baccarat", icon: "🃏", desc: "El juego de cartas más popular del casino", color: "#10b981" }
+  { id: "baccarat", name: "Baccarat", icon: "🃏", desc: "El juego de cartas más popular del casino", color: "#10b981" },
+  { id: "craps", name: "Craps", icon: "🎲", desc: "¡Apuesta a los dados y gana a lo grande!", color: "#22c55e" }
 ];
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈","🗿","🚨","🗽","🛸","🛰️"];
@@ -463,6 +465,7 @@ export default function App() {
             onBack={handleBack}
           />
         )}
+        {game === "craps" && <CrapsGame balance={balance} setBalance={setBalance} onBack={handleBack} />}
       </div>
 
 
