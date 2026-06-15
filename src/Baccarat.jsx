@@ -164,7 +164,7 @@ function BacCard({ card }) {
   const isRed = card && ["♥","♦"].includes(card.s);
   return (
     <div style={{
-      width: 100, height: 137,
+      width: 120, height: 157,
       borderRadius: 8,
       border: "1px solid rgba(255,255,255,0.2)",
       boxShadow: "0 4px 14px rgba(0,0,0,0.65)",
@@ -180,10 +180,10 @@ function BacCard({ card }) {
         padding:"4px 5px", boxSizing:"border-box",
         animation: "bacFlip 0.32s ease 60ms both",
       }}>
-        <div style={{ fontSize:20, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.r}</div>
-        <div style={{ fontSize:20, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.s}</div>
-        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:25, color:isRed?"#c0392b":"#1a1a1a" }}>{card.s}</div>
-        <div style={{ fontSize:20, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1, alignSelf:"flex-end", transform:"rotate(180deg)" }}>{card.r}</div>
+        <div style={{ fontSize:25, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.r}</div>
+        <div style={{ fontSize:25, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1 }}>{card.s}</div>
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:35, color:isRed?"#c0392b":"#1a1a1a" }}>{card.s}</div>
+        <div style={{ fontSize:25, fontWeight:700, color:isRed?"#c0392b":"#1a1a1a", lineHeight:1, alignSelf:"flex-end", transform:"rotate(180deg)" }}>{card.r}</div>
       </div>
     </div>
   );
@@ -209,11 +209,11 @@ function HandArea({ label, cards, score, showScore, accentColor, isWinner, glowA
       {/* Header */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
         <div>
-          <div style={{ fontSize:11, fontWeight:700, color:accentColor, letterSpacing:2, textTransform:"uppercase" }}>
+          <div style={{ fontSize:20, fontWeight:700, color:accentColor, letterSpacing:2, textTransform:"uppercase" }}>
             {label}
           </div>
-          {dragon7 && <div style={{ fontSize:9, color:"#fbbf24", marginTop:1 }}>🐉 Dragon 7</div>}
-          {panda8  && <div style={{ fontSize:9, color:"#22c55e", marginTop:1 }}>🐼 Panda 8</div>}
+          {dragon7 && <div style={{ fontSize:15, color:"#fbbf24", marginTop:1 }}>🐉 Dragon 7</div>}
+          {panda8  && <div style={{ fontSize:15, color:"#22c55e", marginTop:1 }}>🐼 Panda 8</div>}
         </div>
 {/*{showScore && (*/}
 
@@ -231,12 +231,12 @@ function HandArea({ label, cards, score, showScore, accentColor, isWinner, glowA
       </div>
 
       {/* Cartas */}
-      <div style={{ display:"flex", gap:6, flexWrap:"wrap", minHeight:137 }}>
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap", minHeight:157 }}>
         {cards.map((c, i) => (
           <BacCard key={i} card={c} />
         ))}
         {cards.length === 0 && (
-          <div style={{ width:100, height:137, border:"2px dashed rgba(255,255,255,0.07)", borderRadius:8 }} />
+          <div style={{ width:120, height:157, border:"2px dashed rgba(255,255,255,0.07)", borderRadius:8 }} />
         )}
       </div>
     </div>
