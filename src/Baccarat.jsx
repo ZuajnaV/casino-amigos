@@ -484,7 +484,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
   }
 
   return (
-    <div style={{ maxWidth:640, margin:"0 auto", fontFamily:"'Georgia', serif", color:"#fff" }}>
+    <div style={{ maxWidth:900, margin:"0 auto", fontFamily:"'Georgia', serif", color:"#fff" }}>  {/*maxWidth:640 */}
       <style>{CARD_CSS}</style>
 
       {/* ── Header ─────────────────────────────────────────────────── */}
@@ -500,7 +500,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
       </div>
 
       {/* ── Mesa ───────────────────────────────────────────────────── */}
-      <div style={{ background:"radial-gradient(ellipse at 50% 55%, #0b3a1a 0%, #061308 100%)", border:"2px solid rgba(255,255,255,0.07)", borderRadius:18, padding:"20px 14px", marginBottom:16, position:"relative", overflow:"hidden" }}>
+      <div style={{ background:"radial-gradient(ellipse at 50% 55%, #0b3a1a 0%, #061308 100%)", border:"2px solid rgba(255,255,255,0.07)", borderRadius:18, padding:"20px 28px", marginBottom:16, position:"relative", overflow:"hidden" }}>  {/*padding:"20px 14px" */}
         {/* Patrón de tapete */}
         <div style={{ position:"absolute", inset:0, backgroundImage:"repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 18px)", pointerEvents:"none" }} />
 
@@ -587,7 +587,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
         <div style={{ display:"flex", gap:8, justifyContent:"center", marginBottom:14, flexWrap:"wrap" }}>
           {CHIP_VALUES.map(v => (
             <button key={v} onClick={()=>setChipVal(v)} style={{
-              width:50, height:50, borderRadius:"50%",
+              width:55, height:55, borderRadius:"50%",
               background: chipVal===v ? CHIP_COLORS[v] : CHIP_COLORS[v]+"2a",
               border:`3px solid ${CHIP_COLORS[v]}`,
               color: chipVal===v ? "#000" : CHIP_COLORS[v],
