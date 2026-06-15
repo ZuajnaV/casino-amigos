@@ -99,7 +99,7 @@ export default function CrapsGame({ balance, setBalance, onBack }) {
 // 🛠️ CONFIGURACIÓN DE PRUEBAS: 
 // Cambia 'null' por un array con los dos dados que quieras probar. Ej: [4, 3]
 // Déjalo en 'null' cuando quieras activar el azar real (normal).
-const FORCED_DICE = [5,6]; 
+const FORCED_DICE = [6,6]; 
 
 const d1 = FORCED_DICE ? FORCED_DICE[0] : Math.ceil(Math.random()*6);
 const d2 = FORCED_DICE ? FORCED_DICE[1] : Math.ceil(Math.random()*6);
