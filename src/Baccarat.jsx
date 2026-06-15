@@ -492,9 +492,9 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
         <button onClick={onBack} style={{ background:"transparent", border:"1px solid rgba(255,255,255,0.14)", borderRadius:8, color:"#777", fontSize:13, padding:"6px 12px", cursor:"pointer" }}>← Lobby</button>
         <div style={{ textAlign:"center" }}>
           <div style={{ fontSize:22, fontWeight:900, letterSpacing:3, background:"linear-gradient(90deg,#fbbf24,#f97316,#fbbf24)", backgroundSize:"200% auto", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", animation:"bacShimmer 3s linear infinite" }}>BACCARAT</div>
-          <div style={{ fontSize:9, color:"rgba(255,255,255,0.28)", letterSpacing:2 }}>EZ · 8 MAZOS · PUNTO BANCO</div>
+          <div style={{ fontSize:11, color:"rgb(190, 190, 190)", letterSpacing:2 }}>EZ · 8 MAZOS · PUNTO BANCO</div>
         </div>
-        <div style={{ background:"rgba(251,191,36,0.1)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:20, padding:"6px 14px", fontSize:13, fontWeight:700, color:"#fbbf24" }}>
+        <div style={{ background:"rgba(251,191,36,0.1)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:20, padding:"6px 14px", fontSize:16, fontWeight:700, color:"#fbbf24" }}>
           💰 {balance.toLocaleString()}
         </div>
       </div>
@@ -526,7 +526,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
 
         {/* Título del resultado */}
         {phase === "result" && (
-          <div style={{ textAlign:"center", fontSize:20, fontWeight:900, letterSpacing:2, padding:"6px 0 2px",
+          <div style={{ textAlign:"center", fontSize:25, fontWeight:900, letterSpacing:2, padding:"6px 0 2px",
             color: outcome==="player"?"#3b82f6": outcome==="banker"?"#ef4444":"#fbbf24",
             animation:"bacPulse 1.2s ease-in-out 2",
           }}>
@@ -544,7 +544,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
                 background: resultColor(res)+"18",
                 border:`1px solid ${resultColor(res)}44`,
                 borderRadius:8, padding:"4px 10px",
-                fontSize:11, color:resultColor(res), fontWeight:700,
+                fontSize:15, color:resultColor(res), fontWeight:700,
               }}>
                 {SPOT_LABELS[spot]}: {resultText(res)} fichas
               </div>
@@ -554,7 +554,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
 
         {/* Indicador "repartiendo" */}
         {phase === "dealing" && !showScore && (
-          <div style={{ textAlign:"center", fontSize:12, color:"rgba(255,255,255,0.3)", marginTop:4, letterSpacing:1 }}>
+          <div style={{ textAlign:"center", fontSize:15, color:"rgb(161, 161, 161)", marginTop:4, letterSpacing:1 }}>
             ● ● ●
           </div>
         )}
@@ -591,7 +591,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
               background: chipVal===v ? CHIP_COLORS[v] : CHIP_COLORS[v]+"2a",
               border:`3px solid ${CHIP_COLORS[v]}`,
               color: chipVal===v ? "#000" : CHIP_COLORS[v],
-              fontWeight:900, fontSize:9, cursor:"pointer",
+              fontWeight:900, fontSize:15, cursor:"pointer",
               transform: chipVal===v ? "scale(1.16)" : "scale(1)",
               transition:"all 0.14s",
               boxShadow: chipVal===v ? `0 0 14px ${CHIP_COLORS[v]}88` : "none",
@@ -605,7 +605,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
       {/* ── Mensaje ─────────────────────────────────────────────────── */}
       {msg && (
         <div style={{
-          textAlign:"center", fontSize:14, fontWeight:700,
+          textAlign:"center", fontSize:20, fontWeight:700,
           color: msg.startsWith("🏆")?"#22c55e": msg.startsWith("🤝")?"#fbbf24":"#ff6666",
           marginBottom:12, padding:"8px 12px",
           background:"rgba(0,0,0,0.32)", borderRadius:8,
@@ -621,21 +621,21 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
             flex:1, padding:"13px",
             background: totalBet>0?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.03)",
             border:"1px solid rgba(255,255,255,0.11)", borderRadius:10,
-            color: totalBet>0?"#fff":"#444", fontSize:14, fontWeight:700,
+            color: totalBet>0?"#fff":"#444", fontSize:20, fontWeight:700,
             cursor: totalBet>0?"pointer":"default",
           }}>🗑 Borrar</button>
           <button onClick={rebet} disabled={!lastBets} style={{
             flex:1, padding:"13px",
             background: lastBets?"rgba(255,255,255,0.08)":"rgba(255,255,255,0.03)",
             border:"1px solid rgba(255,255,255,0.11)", borderRadius:10,
-            color: lastBets?"#fff":"#444", fontSize:14, fontWeight:700,
+            color: lastBets?"#fff":"#444", fontSize:20, fontWeight:700,
             cursor: lastBets?"pointer":"default",
           }}>🔁 Repetir</button>
           <button onClick={deal} disabled={totalBet===0} style={{
             flex:2, padding:"13px",
             background: totalBet>0?"linear-gradient(135deg,#fbbf24,#f97316)":"rgba(255,255,255,0.05)",
             border:"none", borderRadius:10,
-            color: totalBet>0?"#000":"#444", fontSize:15, fontWeight:900,
+            color: totalBet>0?"#000":"#444", fontSize:20, fontWeight:900,
             cursor: totalBet>0?"pointer":"default",
             boxShadow: totalBet>0?"0 4px 20px rgba(251,191,36,0.32)":"none",
             transition:"all 0.2s",
@@ -645,7 +645,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
         </>)}
 
         {phase === "dealing" && (
-          <div style={{ flex:1, textAlign:"center", color:"rgba(255,255,255,0.4)", fontSize:14, padding:"13px", letterSpacing:1 }}>
+          <div style={{ flex:1, textAlign:"center", color:"rgba(255,255,255,0.4)", fontSize:20, padding:"13px", letterSpacing:1 }}>
             Repartiendo...
           </div>
         )}
@@ -655,7 +655,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
             flex:1, padding:"13px",
             background:"linear-gradient(135deg,#fbbf24,#f97316)",
             border:"none", borderRadius:10,
-            color:"#000", fontSize:15, fontWeight:900, cursor:"pointer",
+            color:"#000", fontSize:20, fontWeight:900, cursor:"pointer",
             boxShadow:"0 4px 20px rgba(251,191,36,0.28)",
           }}>
             Nueva ronda →
@@ -664,7 +664,7 @@ export default function BaccaratGame({ balance, setBalance, onBack }) {
       </div>
 
       {/* ── Nota de reglas ──────────────────────────────────────────── */}
-      <div style={{ marginTop:14, padding:"10px 14px", background:"rgba(0,0,0,0.22)", borderRadius:10, fontSize:10, color:"rgba(255,255,255,0.22)", lineHeight:1.7 }}>
+      <div style={{ marginTop:14, padding:"10px 14px", background:"rgba(0,0,0,0.22)", borderRadius:10, fontSize:14, color:"rgb(172, 172, 172)", lineHeight:1.7 }}>
         <strong style={{color:"rgba(255,255,255,0.38)"}}>EZ Baccarat:</strong>{" "}
         Sin comisión en Banca. Si Banca gana con 7 en 3 cartas → <span style={{color:"#fbbf24"}}>Dragon 7 🐉</span> (apuesta Banca = Push).
         {" "}<strong style={{color:"rgba(255,255,255,0.38)"}}>Panda 8 🐼:</strong>{" "}
