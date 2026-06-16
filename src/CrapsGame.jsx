@@ -234,14 +234,14 @@ async function roll() {
 
 
 
-// 2. 🚨 REGLA ESTRICTA PARA EL TIRO DE SALIDA (Come-Out)
-  // Si no hay punto activo, el tirador DEBE tener dinero en Pass Line o Don't Pass
-  if (phase === "come-out") {
-    if (bets.passLine === 0 && bets.dontPass === 0) {
-      setMsg("Fase de salida — Obligatorio apostar en Pass Line o Don't Pass para lanzar");
-      setMsgColor("#f59e0b");
-      return; // Detiene el lanzamiento
-    }
+// 1. 🌟 VALIDACIÓN CORRECTA: ¿Hay dinero en riesgo para ESTE tiro específico?
+  // Evaluamos únicamente el objeto 'bets'. Si pusieron fichas en Pass, Field, Any7, Yo11, etc., será > 0.
+  const hasActiveBetsThisTurn = Object.values(bets).some(v => v > 0);
+
+  if (!hasActiveBetsThisTurn) {
+    setMsg("Haz al menos una nueva apuesta para este tiro");
+    setMsgColor("#f59e0b");
+    return; // Frena el tiro si no hay fichas nuevas en el tablero
   }
 
 
