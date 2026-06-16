@@ -205,6 +205,26 @@ export default function CrapsGame({ balance, setBalance, onBack }) {
       setMsgColor("#aaa");
 
     } else {
+      // 🔓 En Fase de Salida (come-out) retiramos libremente lo puesto en este turno
+    const total = Object.values(bets).reduce((a,b)=>a+b,0);
+    if (total === 0) return;
+
+    const newBal = balRef.current + total;
+    balRef.current = newBal;
+    setBalance(newBal);
+    
+    // Limpiamos el tablero de este tiro, pero NO tocamos comeNums ni dontComeNums
+    setBets({ ...EMPTY_BETS }); 
+    
+    setMsg("Apuestas del turno retiradas (Números del Come permanecen activos)"); 
+    setMsgColor("#aaa");
+  }
+}
+      
+      
+      /*
+      
+      
       // 🔓 En Fase de Salida (come-out) el jugador es libre de retirar TODO lo que guste
       const total = Object.values(bets).reduce((a,b)=>a+b,0);
       if (total === 0) return;
@@ -217,43 +237,33 @@ export default function CrapsGame({ balance, setBalance, onBack }) {
       setMsg("Todas las apuestas retiradas"); 
       setMsgColor("#aaa");
     }
-  }
+  }*/
 
 // ── Lanzar dados (nueva versión con 3D) ──────────────────────
 const [rolling3D, setRolling3D] = useState(false);
 const [finalDice, setFinalDice] = useState(null);
 const [isSpinning, setIsSpinning] = useState(false);
-
+/*
 async function roll() {
   if (rolling) return;
-  const anyBet = Object.values(bets).some(v => v > 0) ||
-                 Object.keys(comeNums).length > 0 ||
-                 Object.keys(dontComeNums).length > 0;
-  if (!anyBet) { setMsg("Haz al menos una apuesta primero"); setMsgColor("#f59e0b"); return; }
-
-
-
-
-// 1. 🌟 VALIDACIÓN CORRECTA: ¿Hay dinero en riesgo para ESTE tiro específico?
-  // Evaluamos únicamente el objeto 'bets'. Si pusieron fichas en Pass, Field, Any7, Yo11, etc., será > 0.
-  const hasActiveBetsThisTurn = Object.values(bets).some(v => v > 0);
-
-  if (!hasActiveBetsThisTurn) {
-    setMsg("Haz al menos una nueva apuesta para este tiro");
-    setMsgColor("#f59e0b");
-    return; // Frena el tiro si no hay fichas nuevas en el tablero
+  if (phase === "come-out") {
+    // En Fase de Salida, el tirador (tú) DEBE tener una apuesta obligatoria en la línea principal
+    if (bets.passLine === 0 && bets.dontPass === 0) {
+      setMsg("Fase de salida — Obligatorio apostar en Pass Line o Don't Pass para iniciar la ronda");
+      setMsgColor("#f59e0b");
+      return; // Bloquea el tiro
+    }
+  } else {
+    // En Fase del Punto, basta con que haya algo en riesgo: fichas nuevas o números del pasado activos
+    const anyActive = Object.values(bets).some(v => v > 0) ||
+                      Object.keys(comeNums).length > 0 ||
+                      Object.keys(dontComeNums).length > 0;
+    if (!anyActive) {
+      setMsg("Haz al menos una apuesta primero");
+      setMsgColor("#f59e0b");
+      return; // Bloquea el tiro
+    }
   }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -285,7 +295,157 @@ async function roll() {
   setHistory(p => [...p.slice(-29), total]);
   resolve(total);
   setRolling(false);
+}*/
+
+
+
+
+
+
+
+
+
+
+  async function roll() {
+  if (rolling) return;
+
+
+/*
+    // 1. 🌟 Definimos qué apuestas realmente TRABAJAN/ACTIVAN el Tiro de Salida
+  const hasActiveComeOutBets = 
+    bets.passLine > 0 || bets.dontPass > 0 || bets.field > 0 ||
+    bets.anySeven > 0 || bets.anyCraps > 0 || bets.yo > 0 || 
+    bets.aces > 0 || bets.boxcars > 0;
+
+  // 2. Evaluamos el estado general del tablero para la fase del punto
+  const hasAnyTableBets = Object.values(bets).some(v => v > 0);
+  const hasOldComeBets  = Object.keys(comeNums).length > 0 || Object.keys(dontComeNums).length > 0;
+
+  // 3. 🚨 CONTROL DE FLUJO DE TIRO CORREGIDO
+  if (phase === "come-out") {
+    // En salida, no puedes usar apuestas "dormidas" (como el Place 6 del pasado) para tirar gratis.
+    // Obligatorio poner una apuesta que juegue activamente en este tiro.
+    if (!hasActiveComeOutBets) {
+      setMsg("Fase de salida — Haz una apuesta activa (Pass Line, Field o Props) para lanzar");
+      setMsgColor("#f59e0b");
+      return; // Bloquea el tiro
+    }
+  } else {
+    // En Fase del Punto, basta con tener cualquier ficha en el tablero o un Come del pasado activo
+    if (!hasAnyTableBets && !hasOldComeBets) {
+      setMsg("Haz al menos una apuesta primero");
+      setMsgColor("#f59e0b");
+      return; // Bloquea el tiro
+    }
+  }*/
+
+
+// 1. 🌟 ACTUALIZADO: Añadimos Big 6 y Big 8 a las apuestas que activan la Fase de Salida
+  const hasActiveComeOutBets = 
+    bets.passLine > 0 || bets.dontPass > 0 || bets.field > 0 ||
+    bets.anySeven > 0 || bets.anyCraps > 0 || bets.yo > 0 || 
+    bets.aces > 0 || bets.boxcars > 0 ||
+    bets.big6 > 0 || bets.big8 > 0; // 👈 ¡Sumamos estos dos aquí!
+
+  // 2. Evaluamos el estado general del tablero para la fase del punto
+  const hasAnyTableBets = Object.values(bets).some(v => v > 0);
+  const hasOldComeBets  = Object.keys(comeNums).length > 0 || Object.keys(dontComeNums).length > 0;
+
+  // 3. Control de flujo de tiro
+  if (phase === "come-out") {
+    if (!hasActiveComeOutBets) {
+      setMsg("Fase de salida — Haz una apuesta activa (Pass Line, Field, Big 6/8 o Props) para lanzar");
+      setMsgColor("#f59e0b");
+      return; // Bloquea el tiro
+    }
+  } else {
+    if (!hasAnyTableBets && !hasOldComeBets) {
+      setMsg("Haz al menos una apuesta primero");
+      setMsgColor("#f59e0b");
+      return; // Bloquea el tiro
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+  // 1. 🌟 Verificamos si hay dinero NUEVO puesto en el tablero para ESTE tiro exacto
+  const hasNewBets = Object.values(bets).some(v => v > 0);
+
+  // 2. Verificamos si arrastramos números activos del Come de la ronda anterior
+  const hasOldComeBets = Object.keys(comeNums).length > 0 || Object.keys(dontComeNums).length > 0;
+
+  // 3. 🚨 CONTROL DE FLUJO INTELIGENTE POR FASES
+  if (phase === "come-out") {
+    // En salida, NO puedes tirar gratis apoyándote solo en los Come del pasado.
+    // Pero eres 100% libre de apostar lo que quieras (Pass Line, Field, Yo, Aces, Box 12, etc.)
+    if (!hasNewBets) {
+      setMsg("Fase de salida — Haz al menos una nueva apuesta (Pass Line, Field o Props) para lanzar");
+      setMsgColor("#f59e0b");
+      return; // Bloquea el tiro si no pusiste fichas nuevas
+    }
+  } else {
+    // En Fase del Punto, basta con que haya algo activo: fichas nuevas O los números del pasado
+    if (!hasNewBets && !hasOldComeBets) {
+      setMsg("Haz al menos una apuesta primero");
+      setMsgColor("#f59e0b");
+      return; // Bloquea el tiro si la mesa está vacía
+    }
+  }
+*/
+  // ── Paso A: calcular resultado AHORA, en memoria ──────────
+  const FORCED_DICE = null;
+  const d1 = FORCED_DICE ? FORCED_DICE[0] : Math.ceil(Math.random() * 6);
+  const d2 = FORCED_DICE ? FORCED_DICE[1] : Math.ceil(Math.random() * 6);
+
+  setRolling(true);
+  setDice([d1, d2]);       // los dados conocen su valor final desde el inicio
+  setFinalDice(null);       // ocultar panel 2D
+  setRolling3D(true);
+  setIsSpinning(true);      // giro loco
+
+  // ── Paso B: giro descontrolado 1200 ms ───────────────────
+  await sleep(1200);
+
+  // ── Paso C: freno — CSS transition se encarga ────────────
+  setIsSpinning(false);
+
+  // ── Paso D: pausa 1000 ms con dados clavados en 3D ───────
+  await sleep(1000);
+
+  // ── Paso E: cerrar 3D, revelar 2D, resolver apuestas ─────
+  setRolling3D(false);
+  setFinalDice([d1, d2]);   // activa animación popIn en panel 2D
+
+  const total = d1 + d2;
+  setHistory(p => [...p.slice(-29), total]);
+  resolve(total);
+  setRolling(false);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // ── Resolver tiro ────────────────────────────────────────────
   function resolve(total) {
