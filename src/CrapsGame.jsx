@@ -682,8 +682,8 @@ if (phase === "point") {
           <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
             {[{key:"big6",label:"BIG\n6"},{key:"big8",label:"BIG\n8"}].map(({key,label}) => (
               <BetArea key={key} betKey={key} style={{ flex:1, padding:"6px 4px", textAlign:"center", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
-                <div style={{ fontSize:25, fontWeight:900, color:"#ef4444", whiteSpace:"pre-line", lineHeight:1 }}>{label}</div>
-                <div style={{ fontSize:15, color:"rgba(255, 255, 255, 0.62)", marginTop:2 }}>1:1</div>
+                <div style={{ fontSize:20, fontWeight:900, color:"#ef4444", whiteSpace:"pre-line", lineHeight:1 }}>{label}</div>
+                <div style={{ fontSize:12, color:"rgba(255, 255, 255, 0.62)", marginTop:2 }}>1:1</div>
               </BetArea>
             ))}
           </div>
@@ -710,7 +710,7 @@ if (phase === "point") {
           </div>
 
           {/* Pay table mini */}
-          <div style={{ background:"rgba(0,0,0,0.3)", borderRadius:6, padding:"6px 8px", fontSize:15, color:"rgba(255,255,255,0.4)", lineHeight:2 }}>
+          <div style={{ background:"rgba(0,0,0,0.3)", borderRadius:6, padding:"6px 8px", fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:2 }}>
             <div style={{ color:"#fbbf24", fontWeight:700, marginBottom:2 }}>Place Bets</div>
             <div>4/10 → 9:5</div>
             <div>5/9 → 7:5</div>
