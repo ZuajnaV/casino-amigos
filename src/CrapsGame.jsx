@@ -231,6 +231,32 @@ async function roll() {
                  Object.keys(dontComeNums).length > 0;
   if (!anyBet) { setMsg("Haz al menos una apuesta primero"); setMsgColor("#f59e0b"); return; }
 
+
+
+
+// 2. 🚨 REGLA ESTRICTA PARA EL TIRO DE SALIDA (Come-Out)
+  // Si no hay punto activo, el tirador DEBE tener dinero en Pass Line o Don't Pass
+  if (phase === "come-out") {
+    if (bets.passLine === 0 && bets.dontPass === 0) {
+      setMsg("Fase de salida — Obligatorio apostar en Pass Line o Don't Pass para lanzar");
+      setMsgColor("#f59e0b");
+      return; // Detiene el lanzamiento
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── Paso A: calcular resultado AHORA, en memoria ──────────
   const FORCED_DICE = null;
   const d1 = FORCED_DICE ? FORCED_DICE[0] : Math.ceil(Math.random() * 6);
