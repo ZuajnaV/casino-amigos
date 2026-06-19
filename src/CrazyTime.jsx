@@ -1288,18 +1288,17 @@ const TOP_SLOT_SECTOR_POOL = [
   ];
 //FIN PRUEBAS PARA NO MATCH
 
-
 const tsSegment = TOP_SLOT_SECTOR_POOL[Math.floor(Math.random() * TOP_SLOT_SECTOR_POOL.length)];
+  let tsRes = null; // Definimos tsRes en el alcance correcto de la función
 
-if (tsSegment === "NO_MATCH") {
-    setTopSlotResult(null); // Tu componente TopSlot ya sabe pintar el "— × —" si es null
-  } else {
-    // Para el multiplicador, puedes mantener tu array o ponderar para que x2 y x5 salgan más que x50 y x100
+  if (tsSegment !== "NO_MATCH") {
     const tsMult = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
-    setTopSlotResult({ segment: tsSegment, multiplier: tsMult });
+    tsRes = { segment: tsSegment, multiplier: tsMult };
   }
 
-
+  // Mantenemos tu delay original de 500ms para revelar el resultado en la interfaz
+  setTimeout(() => setTopSlotResult(tsRes), 500);
+  // ──────────────────────────────────────────────────────────────────────────
 
 
 
@@ -1379,7 +1378,8 @@ if (tsSegment === "NO_MATCH") {
       const numValue = parseInt(landed.type);
       if (!isNaN(numValue) && userBetOnLanded > 0) {
         let mult = numValue;
-        if (tsRes.segment === landed.type) mult *= tsRes.multiplier;
+        //if (tsRes.segment === landed.type) mult *= tsRes.multiplier;
+        if (tsRes?.segment === landed.type) mult *= tsRes.multiplier;
         winnings = userBetOnLanded * mult + userBetOnLanded;
       }
 
