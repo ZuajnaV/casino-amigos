@@ -1270,8 +1270,46 @@ function spin() {
   setTopSlotResult(null);
   setMessage(null);
 
-  const tsSegment = SEGMENT_TYPES[Math.floor(Math.random() * SEGMENT_TYPES.length)];
-  const tsMult    = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
+
+
+
+
+
+//PRUEBAS PARA NO MATCH
+const TOP_SLOT_SECTOR_POOL = [
+    "1", "1", "1", "1", "1",       // Frecuentes
+    "2", "2", "2", "2",
+    "5", "5", "5",
+    "10", "10",
+    "coin_flip", "coin_flip",       // Bonos comunes
+    "cash_hunt", "pachinko",
+    "crazy_time",                   // Bono raro
+    "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH"
+  ];
+//FIN PRUEBAS PARA NO MATCH
+
+
+const tsSegment = TOP_SLOT_SECTOR_POOL[Math.floor(Math.random() * TOP_SLOT_SECTOR_POOL.length)];
+
+if (tsSegment === "NO_MATCH") {
+    setTopSlotResult(null); // Tu componente TopSlot ya sabe pintar el "— × —" si es null
+  } else {
+    // Para el multiplicador, puedes mantener tu array o ponderar para que x2 y x5 salgan más que x50 y x100
+    const tsMult = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
+    setTopSlotResult({ segment: tsSegment, multiplier: tsMult });
+  }
+
+
+
+
+
+
+
+
+
+
+  //const tsSegment = SEGMENT_TYPES[Math.floor(Math.random() * SEGMENT_TYPES.length)];
+  //const tsMult    = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
   const tsRes     = { segment: tsSegment, multiplier: tsMult };
   setTimeout(() => setTopSlotResult(tsRes), 500);
 
@@ -1445,7 +1483,12 @@ function handleBonusComplete(payout, mult, ...args) {
       {/* Bonus overlay */}
       {bonus && (
         <div style={styles.bonusOverlay}>
-          {bonus.type === "coin_flip" && <CoinFlipBonus bet={bonus.bet} onComplete={handleBonusComplete} />}
+          {bonus.type === "coin_flip" && (
+          <CoinFlipBonus bet={bonus.bet} 
+          topSlotMult={topSlotResult?.segment === "coin_flip" ? topSlotResult.multiplier : 1}
+          onComplete={handleBonusComplete} />
+        )}
+
           {bonus.type === "cash_hunt" && (
   <CashHuntBonus
     bet={bonus.bet}
@@ -1460,7 +1503,10 @@ function handleBonusComplete(payout, mult, ...args) {
         onComplete={handleBonusComplete}
       />
     )}
-          {bonus.type === "crazy_time" && <CrazyTimeBonus bet={bonus.bet} onComplete={handleBonusComplete} />}
+          {bonus.type === "crazy_time" && (
+          <CrazyTimeBonus bet={bonus.bet} 
+          topSlotMult={topSlotResult?.segment === "crazy_time" ? topSlotResult.multiplier : 1}
+          onComplete={handleBonusComplete} />)}
         </div>
       )}
 
