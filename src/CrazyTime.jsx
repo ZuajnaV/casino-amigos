@@ -1309,7 +1309,7 @@ const tsSegment = TOP_SLOT_SECTOR_POOL[Math.floor(Math.random() * TOP_SLOT_SECTO
 
   //const tsSegment = SEGMENT_TYPES[Math.floor(Math.random() * SEGMENT_TYPES.length)];
   //const tsMult    = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
-  const tsRes     = { segment: tsSegment, multiplier: tsMult };
+  //const tsRes     = { segment: tsSegment, multiplier: tsMult };
   setTimeout(() => setTopSlotResult(tsRes), 500);
 
   const SEG = 360 / WHEEL_SEGMENTS.length;
