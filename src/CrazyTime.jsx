@@ -1284,7 +1284,7 @@ const TOP_SLOT_SECTOR_POOL = [
     "coin_flip", "coin_flip",       // Bonos comunes
     "cash_hunt", "pachinko",
     "crazy_time",                   // Bono raro
-    "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH"
+    "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH"
   ];
 //FIN PRUEBAS PARA NO MATCH
 
