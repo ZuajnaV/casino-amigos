@@ -6,59 +6,7 @@ import CrazyTimeDoor from "./CrazyTimeDoor.jsx";
 // ─── WHEEL CONFIGURATION ────────────────────────────────────────────────────
 // 54 segments in order matching the real Crazy Time wheel
 const WHEEL_SEGMENTS = [
-  { type: "crazy_time", label: "CRAZY\nTIME", color: "#ff6b00", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
   { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "cash_hunt", label: "CASH\nHUNT", color: "#f5a623", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "pachinko", label: "PACHI-\nNKO", color: "#9b59b6", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "cash_hunt", label: "CASH\nHUNT", color: "#f5a623", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "coin_flip", label: "COIN\nFLIP", color: "#e84393", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
-  { type: "10", label: "10", color: "#d0021b", textColor: "#fff" },
-  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
-  { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
   ];
 
 const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 12, 15, 20, 25, 50, 100];
@@ -76,36 +24,24 @@ const SEGMENT_INFO = {
 };
 
 // ─── COIN FLIP BONUS ─────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
 function CoinFlipBonus({ bet, onComplete }) {
   const [redMult]  = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
   const [blueMult] = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
   const [chosen,   setChosen]   = useState(null);
   const [result,   setResult]   = useState(null);
   const [flipping, setFlipping] = useState(false);
-  const [animState, setAnimState] = useState("idle"); // idle | flipping | done-red | done-blue
-
-
-
-  /*useEffect(() => {
-  supabase.auth.getSession().then(async ({ data: { session } }) => {
-    if (!session) return;
-    const { data } = await supabase
-      .from("crazytime_history")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    if (data) {
-      setHistory(data.map(h => ({
-        type: h.segment,
-        win: h.won,
-        amount: h.payout,
-      })));
-    }
-  });
-}, []);*/
-
-
+  const [animState, setAnimState] = useState("idle");
+  // idle | to-red | to-blue | done-red | done-blue
 
   function selectColor(color) {
     if (chosen || flipping) return;
@@ -115,10 +51,15 @@ function CoinFlipBonus({ bet, onComplete }) {
   function flip() {
     if (!chosen || flipping) return;
     setFlipping(true);
-    setAnimState("flipping");
 
+    // ── Resultado calculado ANTES de la animación ──────────
+    const landed = Math.random() < 0.5 ? "red" : "blue";
+
+    // Animar hacia la cara correcta desde el inicio
+    setAnimState("to-" + landed);
+
+    // Al terminar la animación (1.9s), fijar resultado
     setTimeout(() => {
-      const landed = Math.random() < 0.5 ? "red" : "blue";
       setAnimState("done-" + landed);
       setResult(landed);
       setFlipping(false);
@@ -133,12 +74,6 @@ function CoinFlipBonus({ bet, onComplete }) {
     }
   }, [result]);
 
-  // Animación:
-  // - coinJump: sube y baja (en el wrapper externo)
-  // - coinRotateToRed: termina en 0°/360° = cara roja visible
-  // - coinRotateToBlue: termina en 180° = cara azul visible
-  const SPIN_DURATION = "1.9s";
-
   return (
     <div style={bonusStyles.wrap}>
       <style>{`
@@ -150,12 +85,16 @@ function CoinFlipBonus({ bet, onComplete }) {
           91%  { transform: translateY(5px);    }
           100% { transform: translateY(0px);    }
         }
-        @keyframes coinRotateRed {
+        /* Gira rápido al inicio, decelera hasta quedar en rojo (0° = cara frontal) */
+        @keyframes spinToRed {
           0%   { transform: rotateY(0deg);    }
+          60%  { transform: rotateY(1300deg); }
           100% { transform: rotateY(1440deg); }
         }
-        @keyframes coinRotateBlue {
+        /* Igual pero termina en azul (180° = cara trasera) */
+        @keyframes spinToBlue {
           0%   { transform: rotateY(0deg);    }
+          60%  { transform: rotateY(1480deg); }
           100% { transform: rotateY(1620deg); }
         }
         @keyframes glowRed  { 0%,100%{box-shadow:0 0 18px #e8474788} 50%{box-shadow:0 0 36px #e84747cc} }
@@ -170,29 +109,30 @@ function CoinFlipBonus({ bet, onComplete }) {
       {/* ── Moneda con dos caras ── */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 28, perspective: "600px" }}>
 
-        {/* Wrapper vertical (sube/baja) */}
+        {/* Wrapper vertical: sube y baja */}
         <div style={{
-          animation: animState === "flipping"
-            ? `coinJump ${SPIN_DURATION} ease-in-out forwards`
+          animation: animState === "to-red" || animState === "to-blue"
+            ? "coinJump 1.9s ease-in-out forwards"
             : "none",
         }}>
-          {/* Inner: rotación Y (muestra cara roja o azul) */}
+          {/* Inner: rotación Y hacia la cara correcta */}
           <div style={{
             width: 130, height: 130,
             position: "relative",
             transformStyle: "preserve-3d",
-            animation: animState === "flipping"
-              ? `coinRotateRed ${SPIN_DURATION} ease-in-out forwards`  // placeholder, se sobreescribe
-              : animState === "done-red"
-                ? `coinRotateRed ${SPIN_DURATION} ease-in-out forwards`
-                : animState === "done-blue"
-                  ? `coinRotateBlue ${SPIN_DURATION} ease-in-out forwards`
-                  : "none",
-            // Cuando ya terminó, fijar la rotación final
-            transform: animState === "done-blue" ? "rotateY(1620deg)" : undefined,
+            // Animar hacia la cara correcta
+            animation:
+              animState === "to-red"   ? "spinToRed  1.9s linear forwards" :
+              animState === "to-blue"  ? "spinToBlue 1.9s linear forwards" :
+              "none",
+            // Fijar posición final cuando ya terminó
+            transform:
+              animState === "done-red"  ? "rotateY(1440deg)" :
+              animState === "done-blue" ? "rotateY(1620deg)" :
+              undefined,
           }}>
 
-            {/* CARA FRONTAL — Rojo */}
+            {/* CARA FRONTAL — Rojo (visible en 0°, 360°, 720°...) */}
             <div style={{
               position: "absolute", inset: 0,
               borderRadius: "50%",
@@ -201,7 +141,7 @@ function CoinFlipBonus({ bet, onComplete }) {
               WebkitBackfaceVisibility: "hidden",
               display: "flex", flexDirection: "column",
               alignItems: "center", justifyContent: "center",
-              animation: animState === "done-red" ? "glowRed 1s 1.9s infinite" : "none",
+              animation: animState === "done-red" ? "glowRed 1s 0s infinite" : "none",
               boxShadow: "0 4px 20px #0008",
             }}>
               <div style={{ fontSize: 34 }}>🔴</div>
@@ -209,7 +149,7 @@ function CoinFlipBonus({ bet, onComplete }) {
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)" }}>ROJO</div>
             </div>
 
-            {/* CARA TRASERA — Azul (rotada 180° en Y) */}
+            {/* CARA TRASERA — Azul (visible en 180°, 540°...) */}
             <div style={{
               position: "absolute", inset: 0,
               borderRadius: "50%",
@@ -219,7 +159,7 @@ function CoinFlipBonus({ bet, onComplete }) {
               transform: "rotateY(180deg)",
               display: "flex", flexDirection: "column",
               alignItems: "center", justifyContent: "center",
-              animation: animState === "done-blue" ? "glowBlue 1s 1.9s infinite" : "none",
+              animation: animState === "done-blue" ? "glowBlue 1s 0s infinite" : "none",
               boxShadow: "0 4px 20px #0008",
             }}>
               <div style={{ fontSize: 34 }}>🔵</div>
@@ -285,6 +225,23 @@ function CoinFlipBonus({ bet, onComplete }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─── CASH HUNT BONUS ─────────────────────────────────────────────────────────
   // ─── CASH HUNT BONUS ─────────────────────────────────────────────────────────
