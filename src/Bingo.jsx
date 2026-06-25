@@ -174,11 +174,15 @@ function RoomLobby({ room, myCards, onBuyCard, onReady, balance, loading }) {
 
       <div>
         <div style={{ fontSize: 15, color: "#ffffff", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Mis cartones ({myCount}/{MAX_CARDS})</div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {myCards.map((card, i) => (
-            <BingoCard key={i} card={card} calledNumbers={new Set()} playerMarked={new Set()} isWinner={false} justCalled={null} />
-          ))}
-        </div>
+<div style={{
+  display: "grid",
+  gridTemplateColumns: "repeat(4, 1fr)",
+  gap: 8,
+}}>
+  {myCards.map((card, i) => (
+    <BingoCard key={i} card={card} calledNumbers={new Set()} playerMarked={new Set()} isWinner={false} />
+  ))}
+</div>
         <button onClick={onBuyCard} disabled={!canBuy || loading} style={{
           marginTop: 10, background: canBuy ? "#fbbf24" : "#1a1a26",
           border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 18, fontWeight: 800,
@@ -777,20 +781,23 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
 </div>
 
 {/* Cartones — sin justCalled */}
-<div style={{ display: "flex", gap: 8, paddingBottom: 8 }}>
+<div style={{
+  display: "grid",
+  gridTemplateColumns: "repeat(4, 1fr)",
+  gap: 8,
+  paddingBottom: 8,
+}}>
   {myCards.map((card, i) => (
-    <div key={i} style={{ flex: 1, minWidth: 0 }}>
-      <BingoCard
-        card={card}
-        calledNumbers={calledNumbers}
-        playerMarked={playerMarked}
-        onMarkNumber={toggleMark}
-        isWinner={!!myWin}
-        // ← ya no pasas justCalled
-      />
-    </div>
+    <BingoCard
+      key={i}
+      card={card}
+      calledNumbers={calledNumbers}
+      playerMarked={playerMarked}
+      onMarkNumber={toggleMark}
+      isWinner={!!myWin}
+    />
   ))}
-</div> 
+</div>
 
           {/* Jugadores */}
           <div style={{ marginTop:16, background:"rgba(13,13,20,0.8)", border:"1px solid #1e1e2e", borderRadius:10, padding:"10px 14px" }}>
