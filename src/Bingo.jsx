@@ -5,7 +5,7 @@ import { supabase } from "./supabase";
 //  CONSTANTES
 // ═══════════════════════════════════════════════════════════════
 const CARD_PRICE    = 20_000;
-const MAX_CARDS     = 4;
+const MAX_CARDS     = 10;
 const MAX_PLAYERS   = 10;
 const RAKE_PCT      = 0.05;
 const BINGO_LETTERS = ["B", "I", "N", "G", "O"];
