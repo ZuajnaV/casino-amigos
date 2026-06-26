@@ -176,7 +176,7 @@ function RoomLobby({ room, myCards, onBuyCard, onReady, balance, loading }) {
         <div style={{ fontSize: 15, color: "#ffffff", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Mis cartones ({myCount}/{MAX_CARDS})</div>
 <div style={{
   display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
+  gridTemplateColumns: "repeat(5, 1fr)",
   gap: 8,
 }}>
   {myCards.map((card, i) => (
