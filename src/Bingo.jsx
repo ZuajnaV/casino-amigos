@@ -783,7 +783,7 @@ export default function BingoGame({ profile, balance, setBalance, onBack }) {
 {/* Cartones — sin justCalled */}
 <div style={{
   display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
+  gridTemplateColumns: "repeat(5, 1fr)",
   gap: 8,
   paddingBottom: 8,
 }}>
