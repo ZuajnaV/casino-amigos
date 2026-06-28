@@ -10,6 +10,7 @@ import RTPCT from "./Rtpct.jsx";
 const WHEEL_SEGMENTS = [
   { type: "crazy_time", label: "CRAZY\nTIME", color: "#ff6b00", textColor: "#fff" },
   { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
+  { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
   { type: "5", label: "5", color: "#7ed321", textColor: "#fff" },
   { type: "1", label: "1", color: "#e8e8e8", textColor: "#000" },
   { type: "2", label: "2", color: "#f7c948", textColor: "#000" },
