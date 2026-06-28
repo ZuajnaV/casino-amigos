@@ -3,7 +3,7 @@ import { useState } from "react";
 // ─── Datos extraídos del componente CrazyTimeGame ───────────────────────────
 // (deben coincidir exactamente con los arreglos usados en CrazyTime.jsx)
 const WHEEL_SEGMENTS = [
-  "crazy_time","1","5","1","2","pachinko","1","5","1","2","1","coin_flip",
+  "crazy_time","1","2","5","1","2","pachinko","1","5","1","2","1","coin_flip",
   "1","2","1","10","2","cash_hunt","1","2","1","5","1","coin_flip","1","5",
   "2","10","1","pachinko","1","2","5","1","2","coin_flip","1","10","1","5",
   "1","cash_hunt","1","2","5","1","2","coin_flip","2","1","10","2","1"
@@ -120,7 +120,7 @@ export default function RTPCT() {
 
   return (
     <div style={{
-      maxWidth: 640, margin: "0 auto", fontFamily: "'Georgia', serif", color: "#fff",
+      maxWidth: 1100, margin: "0 auto", fontFamily: "'Georgia', serif", color: "#fff",
       background: "#0d0d14", borderRadius: 16, padding: 20,
       border: "1px solid #1e1e2e",
     }}>
@@ -198,71 +198,79 @@ export default function RTPCT() {
             </div>
           </div>
 
-          {/* Segmentos de la rueda */}
-          <div>
-            <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
-              🎡 Segmentos de la rueda principal
-            </div>
-            {wheelSorted.map(([type, count]) => {
-              const info = SEGMENT_LABELS[type];
-              return (
-                <StatBar
-                  key={type}
-                  label={info?.label || type}
-                  emoji={info?.emoji}
-                  count={count}
-                  total={result.N}
-                  color={info?.color}
-                />
-              );
-            })}
-          </div>
+          {/* Tres bloques lado a lado */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 16,
+          }}>
 
-          {/* Top Slot — segmento */}
-          <div>
-            <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
-              ⭐ Resultados Top Slot (segmento)
-            </div>
-            {topSlotSorted.map(([type, count]) => {
-              if (type === "NO_MATCH") {
+            {/* Segmentos de la rueda */}
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #1e1e2e", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+                🎡 Rueda principal
+              </div>
+              {wheelSorted.map(([type, count]) => {
+                const info = SEGMENT_LABELS[type];
                 return (
                   <StatBar
                     key={type}
-                    label="Sin Top Slot (-x-)"
+                    label={info?.label || type}
+                    emoji={info?.emoji}
                     count={count}
                     total={result.N}
-                    color="#555"
+                    color={info?.color}
                   />
                 );
-              }
-              const info = SEGMENT_LABELS[type];
-              return (
-                <StatBar
-                  key={type}
-                  label={info?.label || type}
-                  emoji={info?.emoji}
-                  count={count}
-                  total={result.N}
-                  color={info?.color}
-                />
-              );
-            })}
-          </div>
-
-          {/* Top Slot — multiplicadores */}
-          <div>
-            <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
-              ✖️ Multiplicadores (solo cuando hubo match)
+              })}
             </div>
-            {multSorted.map(([mult, count]) => (
-              <StatBar
-                key={mult}
-                label={`×${mult}`}
-                count={count}
-                total={result.topSlotActiveCount}
-                color="#00d4aa"
-              />
-            ))}
+
+            {/* Top Slot — segmento */}
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #1e1e2e", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+                ⭐ Top Slot (segmento)
+              </div>
+              {topSlotSorted.map(([type, count]) => {
+                if (type === "NO_MATCH") {
+                  return (
+                    <StatBar
+                      key={type}
+                      label="Sin Top Slot (-x-)"
+                      count={count}
+                      total={result.N}
+                      color="#555"
+                    />
+                  );
+                }
+                const info = SEGMENT_LABELS[type];
+                return (
+                  <StatBar
+                    key={type}
+                    label={info?.label || type}
+                    emoji={info?.emoji}
+                    count={count}
+                    total={result.N}
+                    color={info?.color}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Top Slot — multiplicadores */}
+            <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #1e1e2e", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
+                ✖️ Multiplicadores (con match)
+              </div>
+              {multSorted.map(([mult, count]) => (
+                <StatBar
+                  key={mult}
+                  label={`×${mult}`}
+                  count={count}
+                  total={result.topSlotActiveCount}
+                  color="#00d4aa"
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
