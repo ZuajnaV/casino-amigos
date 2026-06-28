@@ -15,6 +15,9 @@ import { ASSETS } from "./ShopPanel.jsx";
 import BaccaratGame from "./Baccarat.jsx";
 import CrapsGame from "./CrapsGame.jsx";
 
+
+
+
 const GAMES = [
   { id: "slots",       name: "Tragamonedas",  icon: "🎰", desc: "Tira y cruza los dedos",                       color: "#ff6b35" },
   { id: "blackjack",   name: "Blackjack",     icon: "🃏", desc: "Planta o pide. 21 gana.",                       color: "#00d4aa" },
@@ -39,9 +42,6 @@ function Lobby({ profile, balance, setGame, onDeposit }) {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositLoading, setDepositLoading] = useState(false);
   const [showStats, setShowStats] = useState(false);   // ← nuevo
-
-
-
 
 
   // En Lobby, junto a los otros useState:
@@ -136,6 +136,11 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
   </div>
 )}
 
+  
+
+
+
+
 
           <div style={{ fontSize: 13, color: "#555" }}>Bienvenido</div>
           <div style={{ fontSize: 22, fontWeight: 700 }}>{profile.avatar} {profile.username}</div>
@@ -170,7 +175,6 @@ const roi = ((neto / capitalBase) * 100).toFixed(1);
 }}>
   🏠 Mi Espacio
 </button>
-
       </div>
 
       {/* Panel de stats del jugador */}

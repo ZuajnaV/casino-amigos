@@ -3,6 +3,8 @@ import { supabase } from "./supabase";
 import CrazyTimeDoor from "./CrazyTimeDoor.jsx";
 
 
+import RTPCT from "./RTPCT.jsx";
+
 // ─── WHEEL CONFIGURATION ────────────────────────────────────────────────────
 // 54 segments in order matching the real Crazy Time wheel
 const WHEEL_SEGMENTS = [
@@ -76,15 +78,6 @@ const SEGMENT_INFO = {
 };
 
 // ─── COIN FLIP BONUS ─────────────────────────────────────────────────────────
-
-
-
-
-
-
-
-
-
 
 function CoinFlipBonus({ bet, onComplete }) {
   const [redMult]  = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
@@ -278,24 +271,6 @@ function CoinFlipBonus({ bet, onComplete }) {
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ─── CASH HUNT BONUS ─────────────────────────────────────────────────────────
   // ─── CASH HUNT BONUS ─────────────────────────────────────────────────────────
 const CASH_HUNT_SYMBOLS = ["🐰", "🎩", "⭐", "🎪", "🎭", "🍀", "🎲", "🎯", "🌟", "🦋", "🎨", "🔮", "🎸", "🌈", "🦄"];
 const GRID_COLS = 12;
@@ -710,7 +685,6 @@ function PachinkoBonus({ bet, topSlotMult = 1, onComplete }) {
   </div>
 )}
 
-
       {/* Mensajes */}
       {phase === "dropping" && (
         <div style={{ textAlign: "center", color: "#aaa", fontSize: 20 }}>
@@ -736,19 +710,6 @@ function PachinkoBonus({ bet, topSlotMult = 1, onComplete }) {
 // ─── CRAZY TIME BONUS WHEEL SEGMENTS ─────────────────────────────────────────
 // Distribución de probabilidades de los 64 segmentos (como el juego real)
 
-/*
-const CT_WHEEL_LAYOUT = [
-  10, "DOUBLE", 20, 40, "TRIPLE", 10, 5, "DOUBLE",
-  100, 20, "DOUBLE", 50, 10, "TRIPLE", 20, 5,
-  "DOUBLE", 10, 1000, "DOUBLE", 20, 5, "TRIPLE", 40,
-  10, "DOUBLE", 20, 5, "DOUBLE", 100, 10, 20,
-  5, "TRIPLE", 50, 10, "DOUBLE", 20, 5, 40,
-  "DOUBLE", 10, 20, "TRIPLE", 5, 10, "DOUBLE", 20,
-  500, "DOUBLE", 10, 5, 20, "TRIPLE", 40, 10,
-  "DOUBLE", 20, 5, 100, "DOUBLE", 10, 20, 5,
-];*/
-
-
 const CT_WHEEL_LAYOUT = [
   "DOUBLE", 25, 100, 15, "DOUBLE", 10, 50, 15,
   "DOUBLE", 10, 25, 15, "DOUBLE", 10, 20, 15,
@@ -759,9 +720,6 @@ const CT_WHEEL_LAYOUT = [
   10, 50, 25, "DOUBLE", 15, 10, 20, "DOUBLE", 
   15, 25, 20, "TRIPLE", 10, 50, 15, 100,
 ];
-
-
-
 
 function CrazyTimeBonus({ bet, onComplete }) {
   // La rueda se genera una sola vez al montar el componente
@@ -1127,9 +1085,6 @@ function CrazyTimeBonus({ bet, onComplete }) {
   );
 }
 
-
-
-
 // ─── MAIN WHEEL COMPONENT ────────────────────────────────────────────────────
 // En el componente MainWheel, acepta el prop:
 function MainWheel({ wheelRef }) {
@@ -1190,7 +1145,6 @@ function TopSlot({ result }) {
   );
 }
 
-
 // ─── MAIN GAME ────────────────────────────────────────────────────────────────
 export default function CrazyTimeGame({ balance, setBalance, onBack }) {
   const [bets, setBets]               = useState({});
@@ -1203,12 +1157,12 @@ export default function CrazyTimeGame({ balance, setBalance, onBack }) {
   const [history, setHistory]         = useState([]);
   const [phase, setPhase]             = useState("betting");
   const [pendingBets, setPendingBets] = useState({});
-
-
-
-
-  //const [showIntro, setShowIntro] = useState(true);
   const [showCrazyTimeDoor, setShowCrazyTimeDoor] = useState(false);
+
+
+  const [showRTP, setShowRTP] = useState(false);  //para el simulador de RTP de crazy time
+
+
 
 
   // Cargar últimos 20 registros globales para el historial visual
@@ -1257,10 +1211,7 @@ function placeBet(type) {
 function clearBets() {
   setPendingBets({});
 }
-
-
   const activeBetsRef = useRef({});
-
 
 function spin() {
   if (totalPending === 0 || spinning) return;
@@ -1278,10 +1229,6 @@ function spin() {
   setLandedSegment(null);
   setTopSlotResult(null);
   setMessage(null);
-
-
-
-
 
 
 //PRUEBAS PARA NO MATCH
@@ -1308,17 +1255,6 @@ const tsSegment = TOP_SLOT_SECTOR_POOL[Math.floor(Math.random() * TOP_SLOT_SECTO
   // Mantenemos tu delay original de 500ms para revelar el resultado en la interfaz
   setTimeout(() => setTopSlotResult(tsRes), 500);
   // ──────────────────────────────────────────────────────────────────────────
-
-
-
-
-
-
-
-
-  //const tsSegment = SEGMENT_TYPES[Math.floor(Math.random() * SEGMENT_TYPES.length)];
-  //const tsMult    = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
-  //const tsRes     = { segment: tsSegment, multiplier: tsMult };
   setTimeout(() => setTopSlotResult(tsRes), 500);
 
   const SEG = 360 / WHEEL_SEGMENTS.length;
@@ -1358,22 +1294,13 @@ const tsSegment = TOP_SLOT_SECTOR_POOL[Math.floor(Math.random() * TOP_SLOT_SECTO
       animRef.current = requestAnimationFrame(frame);
       return;
     }
-
     setSpinning(false);
     const landed = WHEEL_SEGMENTS[targetIdx];
     setLandedSegment({ ...landed, index: targetIdx });
 
     const userBetOnLanded = activeBetsRef.current[landed.type] || 0;
     const isBonus = ["coin_flip","cash_hunt","pachinko","crazy_time"].includes(landed.type);
-/*
-    if (isBonus && userBetOnLanded > 0) {
-      setPhase("bonus");
-      setBonus({ type: landed.type, bet: userBetOnLanded });
-    } 
-    
-    */
-    
-    
+  
     if (isBonus && userBetOnLanded > 0) {
   if (landed.type === "crazy_time") {
     // Mostrar la animación de puerta ANTES de abrir el minijuego
@@ -1436,8 +1363,6 @@ function handleBonusComplete(payout, mult, ...args) {
 });
 
 });
-
-
   setBonus(null);
   setBets({});
   setPhase("result");
@@ -1447,13 +1372,8 @@ function handleBonusComplete(payout, mult, ...args) {
   );
   setTimeout(() => { setPhase("betting"); setMessage(null); }, 3500);
 }
-
   return (
-
-
 <>
-    {/*{showIntro && <CrazyTimeDoor onComplete={() => setShowIntro(false)} />}{*/}
-
     {showCrazyTimeDoor && (
       <CrazyTimeDoor onComplete={() => {
         setShowCrazyTimeDoor(false);
@@ -1461,16 +1381,6 @@ function handleBonusComplete(payout, mult, ...args) {
         setBonus({ type: "crazy_time", bet: activeBetsRef.current["crazy_time"] || 0 });
       }} />
     )}
-
-
-
-
-
-
-
-
-
-
 
     <div style={styles.wrap}>
       <style>{`
@@ -1562,7 +1472,6 @@ function handleBonusComplete(payout, mult, ...args) {
           )}
         </div>
 
-
         {/* Betting Panel */}
         <div style={{ flex: 1, minWidth: 260 }}>
           {/* Bet amount */}
@@ -1573,7 +1482,7 @@ function handleBonusComplete(payout, mult, ...args) {
 <div style={styles.card}>
   <div style={styles.sectionTitle}>🪙 Ficha activa</div>
   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-    {[500, 1000, 5000, 10000, 50000, 100000].map(v => (
+    {[500, 1000, 5000, 10000, 20000, 50000, 100000].map(v => (
       <button
         key={v}
         onClick={() => setBetInput(String(v))}
@@ -1603,6 +1512,27 @@ function handleBonusComplete(payout, mult, ...args) {
 
     {/* Botones rápidos al lado del título */}
     <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+
+
+
+
+
+
+
+    <button onClick={() => setShowRTP(true)} >📊 RTP</button>
+
+{showRTP && (
+  <div style={styles.bonusOverlay} onClick={() => setShowRTP(false)}>
+    <div onClick={e => e.stopPropagation()}>
+      <RTPCT />
+    </div>
+  </div>
+)}
+
+
+
+
+    
       {/* Botón: apostar en todos los multiplicadores */}
       <button
         onClick={() => {
@@ -1771,17 +1701,9 @@ function handleBonusComplete(payout, mult, ...args) {
         <div style={{ color: "#333", fontSize: 11, textAlign: "center", marginTop: 16 }}>
           RTP teórico: 95.41% · Juega responsablemente 🎰
         </div>
-
-
   </div>
     </>
     );
-
-
-
-
-
-
 }
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
