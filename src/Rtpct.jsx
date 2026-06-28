@@ -120,9 +120,10 @@ export default function RTPCT() {
 
   return (
     <div style={{
-      maxWidth: 1100, margin: "0 auto", fontFamily: "'Georgia', serif", color: "#fff",
+      width: "100%", maxWidth: 1400, margin: "0 auto",
+      fontFamily: "'Georgia', serif", color: "#fff",
       background: "#0d0d14", borderRadius: 16, padding: 20,
-      border: "1px solid #1e1e2e",
+      border: "1px solid #1e1e2e", boxSizing: "border-box",
     }}>
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 18 }}>
@@ -198,11 +199,13 @@ export default function RTPCT() {
             </div>
           </div>
 
-          {/* Tres bloques lado a lado */}
+          {/* Tres bloques siempre lado a lado — si no entran, hace scroll horizontal en vez de apilarse */}
+          <div style={{ width: "100%", overflowX: "auto" }}>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns: "repeat(3, minmax(260px, 1fr))",
             gap: 16,
+            minWidth: 820,
           }}>
 
             {/* Segmentos de la rueda */}
@@ -271,6 +274,7 @@ export default function RTPCT() {
                 />
               ))}
             </div>
+          </div>
           </div>
         </div>
       )}
