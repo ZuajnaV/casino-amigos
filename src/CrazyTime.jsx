@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 import CrazyTimeDoor from "./CrazyTimeDoor.jsx";
 
 
-import RTPCT from "./RTPCT.jsx";
+import RTPCT from "./Rtpct.jsx";
 
 // ─── WHEEL CONFIGURATION ────────────────────────────────────────────────────
 // 54 segments in order matching the real Crazy Time wheel
