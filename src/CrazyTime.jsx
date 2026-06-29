@@ -1558,6 +1558,7 @@ function handleBonusComplete(payout, mult, ...args) {
   </div>
 )}
 
+HACER EL CAMBIO
 */}
 
 
