@@ -9,7 +9,19 @@ const WHEEL_SEGMENTS = [
   "1","cash_hunt","1","2","5","1","2","coin_flip","2","1","10","2","1"
 ];
 
-const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 12, 15, 20, 25, 50, 100];
+const TOP_SLOT_MULTIPLIER_POOL = [
+  2,2,2,2,2,2,2,2,2,2,   // 2x  — muy frecuente
+  3,3,3,3,3,3,3,3,       // 3x
+  5,5,5,5,5,5,           // 5x
+  7,7,7,7,               // 7x
+  10,10,10,10,           // 10x
+  12,12,12,              // 12x
+  15,15,                 // 15x
+  20,20,                 // 20x
+  25,                    // 25x
+  50,                    // 50x — raro
+  100,                   // 100x — muy raro
+];
 
 const TOP_SLOT_SECTOR_POOL = [
   "1","1","1","1","1",
@@ -43,7 +55,7 @@ function runSimulation(N) {
 
   for (const t of new Set(WHEEL_SEGMENTS)) wheelCounts[t] = 0;
   for (const t of new Set(TOP_SLOT_SECTOR_POOL)) topSlotSegCounts[t] = 0;
-  for (const m of TOP_SLOT_MULTIPLIERS) topSlotMultCounts[m] = 0;
+  for (const m of new Set(TOP_SLOT_MULTIPLIER_POOL)) topSlotMultCounts[m] = 0;
 
   for (let i = 0; i < N; i++) {
     const landed = WHEEL_SEGMENTS[Math.floor(Math.random() * WHEEL_SEGMENTS.length)];
@@ -53,7 +65,7 @@ function runSimulation(N) {
     topSlotSegCounts[tsSeg]++;
 
     if (tsSeg !== "NO_MATCH") {
-      const mult = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
+      const mult = TOP_SLOT_MULTIPLIER_POOL[Math.floor(Math.random() * TOP_SLOT_MULTIPLIER_POOL.length)];
       topSlotMultCounts[mult]++;
       multSum += mult;
     }

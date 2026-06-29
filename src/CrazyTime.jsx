@@ -64,7 +64,27 @@ const WHEEL_SEGMENTS = [
   { type: "1", label: "1", color: "#3a7bd5", textColor: "#fff" },
   ];
 
-const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 12, 15, 20, 25, 50, 100];
+//const TOP_SLOT_MULTIPLIERS = [2, 3, 5, 7, 10, 12, 15, 20, 25, 50, 100];
+
+
+const TOP_SLOT_MULTIPLIER_POOL = [
+  2,2,2,2,2,2,2,2,2,2,   // 2x  — muy frecuente
+  3,3,3,3,3,3,3,3,       // 3x
+  5,5,5,5,5,5,           // 5x
+  7,7,7,7,               // 7x
+  10,10,10,10,           // 10x
+  12,12,12,              // 12x
+  15,15,                 // 15x
+  20,20,                 // 20x
+  25,                    // 25x
+  50,                    // 50x — raro
+  100,                   // 100x — muy raro
+];
+
+
+
+
+
 const SEGMENT_TYPES = ["1", "2", "5", "10", "coin_flip", "cash_hunt", "pachinko", "crazy_time"];
 
 const SEGMENT_INFO = {
@@ -81,8 +101,12 @@ const SEGMENT_INFO = {
 // ─── COIN FLIP BONUS ─────────────────────────────────────────────────────────
 
 function CoinFlipBonus({ bet, onComplete }) {
-  const [redMult]  = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
-  const [blueMult] = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
+  //const [redMult]  = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
+  //const [blueMult] = useState(() => TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)]);
+
+const [redMult]  = useState(() => TOP_SLOT_MULTIPLIER_POOL[Math.floor(Math.random() * TOP_SLOT_MULTIPLIER_POOL.length)]);
+const [blueMult] = useState(() => TOP_SLOT_MULTIPLIER_POOL[Math.floor(Math.random() * TOP_SLOT_MULTIPLIER_POOL.length)]);
+
   const [chosen,   setChosen]   = useState(null);
   const [result,   setResult]   = useState(null);
   const [flipping, setFlipping] = useState(false);
@@ -1249,7 +1273,10 @@ const tsSegment = TOP_SLOT_SECTOR_POOL[Math.floor(Math.random() * TOP_SLOT_SECTO
   let tsRes = null; // Definimos tsRes en el alcance correcto de la función
 
   if (tsSegment !== "NO_MATCH") {
-    const tsMult = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
+    //const tsMult = TOP_SLOT_MULTIPLIERS[Math.floor(Math.random() * TOP_SLOT_MULTIPLIERS.length)];
+
+    const tsMult = TOP_SLOT_MULTIPLIER_POOL[Math.floor(Math.random() * TOP_SLOT_MULTIPLIER_POOL.length)];
+
     tsRes = { segment: tsSegment, multiplier: tsMult };
   }
 
