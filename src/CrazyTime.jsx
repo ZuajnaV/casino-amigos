@@ -1285,7 +1285,7 @@ const tsSegment = TOP_SLOT_SECTOR_POOL[Math.floor(Math.random() * TOP_SLOT_SECTO
   // ──────────────────────────────────────────────────────────────────────────
   setTimeout(() => setTopSlotResult(tsRes), 500);
 
-  const SEG = 360 / WHEEL_SEGMENTS.length;
+  /*const SEG = 360 / WHEEL_SEGMENTS.length;
   const targetIdx = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
 
   // Centro del segmento destino en coordenadas de la rueda (sin rotar)
@@ -1296,6 +1296,40 @@ const tsSegment = TOP_SLOT_SECTOR_POOL[Math.floor(Math.random() * TOP_SLOT_SECTO
 
   // Rotación necesaria para que segCenter quede en 0° (arriba)
   const targetMod = (360 - (segCenter % 360)) % 360;
+*/
+
+
+
+
+
+  // ── Calibración visual ──────────────────────────────────────────
+  const SEG = 360 / WHEEL_SEGMENTS.length;
+const WHEEL_ANGLE_OFFSET = -SEG*0.2;   // ← grados; ajusta si el puntero no coincide con la imagen
+const LANDING_JITTER     = 0; // 0 = siempre cae en el centro · 1 = puede tocar el borde del segmento
+
+//const SEG = 360 / WHEEL_SEGMENTS.length;
+const targetIdx = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+
+// Punto de caída dentro del segmento (ya no siempre el centro exacto)
+const jitter = (Math.random() - 0.5) * SEG * LANDING_JITTER;
+const landingAngle = targetIdx * SEG + SEG / 2 + jitter;
+
+// Rotación actual normalizada a [0, 360)
+const currentMod = ((rotRef.current % 360) + 360) % 360;
+
+// Rotación necesaria para que landingAngle quede bajo el puntero
+const targetMod = (360 - ((landingAngle + WHEEL_ANGLE_OFFSET) % 360)) % 360;
+
+
+
+
+
+
+
+
+
+
+
 
   // Delta mínimo para llegar al destino desde la posición actual
   let delta = ((targetMod - currentMod) + 360) % 360;
