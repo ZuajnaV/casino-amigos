@@ -390,8 +390,8 @@ export default function App() {
   async function handleBack() {
     await saveBalance(balanceRef.current);
     setGame(null);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) await loadProfile(session.user.id);
+    /*const { data: { session } } = await supabase.auth.getSession();
+    if (session) await loadProfile(session.user.id);*/
   }
 
   async function handleLogout() {
