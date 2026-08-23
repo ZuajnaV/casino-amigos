@@ -14,6 +14,7 @@ import BingoGame from "./Bingo.jsx";
 import { ASSETS } from "./ShopPanel.jsx";
 import BaccaratGame from "./Baccarat.jsx";
 import CrapsGame from "./CrapsGame.jsx";
+import PokerGame from "./PokerGame.jsx";
 
 
 
@@ -29,7 +30,8 @@ const GAMES = [
   { id: "crazytime",   name: "Crazy Time",    icon: "💥🎆🎡🎆💥", desc: "¡El juego más loco del casino!",                color: "#f97316" },
   { id: "bingo", icon: "🎱", name: "Bingo", desc: "¡Haz bingo y gana grandes premios!", color: "#fbbf24" },
   { id: "baccarat", name: "Baccarat", icon: "🃏", desc: "El juego de cartas más popular del casino", color: "#10b981" },
-  { id: "craps", name: "Craps", icon: "🎲", desc: "¡Apuesta a los dados y gana a lo grande!", color: "#22c55e" }
+  { id: "craps", name: "Craps", icon: "🎲", desc: "¡Apuesta a los dados y gana a lo grande!", color: "#22c55e" },
+  { id: "poker", name: "Póquer", icon: "🃏", desc: "Texas Hold'em · 2-6 jugadores · No-Limit", color: "#22c55e", tag: "MULTIJUGADOR" }
 ];
 
 const AVATARS = ["🎩","💃","🕶️","👑","🎭","🦊","🐯","🎪","🃏","🎲","😈","🗿","🚨","🗽","🛸","🛰️"];
@@ -474,20 +476,14 @@ export default function App() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        {game === "poker" && (
+  <PokerGame
+    profile={profile}
+    balance={balance}
+    setBalance={setBalance}
+    onBack={handleBack}
+  />
+)}
 
 
 
