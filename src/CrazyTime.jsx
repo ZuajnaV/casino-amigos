@@ -1574,29 +1574,6 @@ function handleBonusComplete(payout, mult, ...args) {
 
     {/* Botones rápidos al lado del título */}
     <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-
-
-
-
-
-{/*    ACTIVAR EL SIMULADOR DE RTP DE CRAZY TIME, DIRIGIDO EN EL ARCHIVO RTPCT.JSX, PARA QUE SE ABRA EN UN OVERLAY SOBRE EL JUEGO, Y SE PUEDA CERRAR AL HACER CLICK FUERA DEL COMPONENTE.
-        AL HACER UN CAMBIO EN EL COMPONENTE, REALIZARLO TAMBIÉN EN RTPCT.JSX, YA QUE ES EL MISMO CÓDIGO, SOLO QUE SE ABRE EN UN OVERLAY. TAMBIÉN SE PUEDE ABRIR EL SIMULADOR DE RTP DE CRAZY TIME DESDE EL BOTÓN DE LA PÁGINA PRINCIPAL DEL CASINO  
-
-    <button onClick={() => setShowRTP(true)} >📊 RTP</button>
-
-{showRTP && (
-  <div style={styles.bonusOverlay} onClick={() => setShowRTP(false)}>
-    <div onClick={e => e.stopPropagation()}>
-      <RTPCT />
-    </div>
-  </div>
-)}
-
-HACER EL CAMBIO
-*/}
-
-
-    
       {/* Botón: apostar en todos los multiplicadores */}
       <button
         onClick={() => {

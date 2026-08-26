@@ -27,16 +27,6 @@ function parseCard(card) {
   const suit  = card.slice(-1);
   return { rank, suit, display: RANK_DISPLAY[rank] || rank };
 }
-
-/*
-function api(path, body) {
-  return fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }).then(r => r.json());
-}*/
-
 // ═══════════════════════════════════════════════════════════════
 //  COMPONENTE: Carta individual
 // ═══════════════════════════════════════════════════════════════
@@ -388,6 +378,7 @@ function PokerLobby({ profile, balance, onJoinRoom, onCreateRoom }) {
         buy_in_max:  200000,
         max_seats:   6,
         status:      "waiting",
+        host_user_id: profile.id,
       })
       .select()
       .single();
@@ -583,15 +574,15 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
 }
 
 
-
-
-
-
   // ── Determinar si soy el creador de la sala (primer jugador en sentarse) ──
-const amIHost = players.length > 0 &&
+/*const amIHost = players.length > 0 &&
   players.sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0]?.user_id === profile.id;
 
 const canStart = amIHost && players.filter(p => p.status !== "sitting_out").length >= 2 && room?.status === "waiting";
+*/
+const amIHost = room?.host_user_id === profile.id;
+const canStart = amIHost && players.filter(p => p.status !== "sitting_out").length >= 2 && room?.status === "waiting";
+
 
 // ── Iniciar partida desde el cliente ─────────────────────────────────────
 async function startHand() {
@@ -1101,6 +1092,7 @@ async function leaveRoom() {
           revealedCards={revealedCards}
           onAction={handleAction}
           onLeave={leaveRoom}
+          onBack={onBack}
           toast={toast}
         />
       )}
