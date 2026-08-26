@@ -611,6 +611,105 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
 
 
 
+
+
+  // ── Determinar si soy el creador de la sala (primer jugador en sentarse) ──
+const amIHost = players.length > 0 &&
+  players.sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0]?.user_id === profile.id;
+
+const canStart = amIHost && players.filter(p => p.status !== "sitting_out").length >= 2 && room?.status === "waiting";
+
+// ── Iniciar partida desde el cliente ─────────────────────────────────────
+async function startHand() {
+  const activePlayers = [...players]
+    .filter(p => p.status !== "sitting_out")
+    .sort((a, b) => a.seat_index - b.seat_index);
+
+  if (activePlayers.length < 2) return;
+
+  // 1. Crear y mezclar baraja
+  const SUITS  = ["s","h","d","c"];
+  const RANKS  = ["2","3","4","5","6","7","8","9","T","J","Q","K","A"];
+  let deck = [];
+  for (const s of SUITS) for (const r of RANKS) deck.push(`${r}${s}`);
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+
+  // 2. Rotar dealer
+  const prevDealer = room.dealer_seat ?? -1;
+  const newDealer  = (prevDealer + 1) % activePlayers.length;
+  const sbIdx      = (newDealer + 1) % activePlayers.length;
+  const bbIdx      = (newDealer + 2) % activePlayers.length;
+  const firstIdx   = (newDealer + 3) % activePlayers.length;
+
+  const SB_AMOUNT = room.small_blind;
+  const BB_AMOUNT = room.big_blind;
+
+  // 3. Repartir 2 cartas a cada jugador y guardar en su fila (RLS las protege)
+  for (const p of activePlayers) {
+    const holeCards = [deck.shift(), deck.shift()];
+    await supabase.from("poker_players").update({
+      hole_cards:      holeCards,
+      current_bet:     0,
+      total_bet_round: 0,
+      status:          "active",
+    }).eq("id", p.id);
+  }
+
+  // 4. Cobrar blinds
+  const sb = activePlayers[sbIdx];
+  const bb = activePlayers[bbIdx];
+  const sbAmt = Math.min(SB_AMOUNT, sb.chips_stack);
+  const bbAmt = Math.min(BB_AMOUNT, bb.chips_stack);
+
+  await supabase.from("poker_players").update({
+    chips_stack:     sb.chips_stack - sbAmt,
+    current_bet:     sbAmt,
+    total_bet_round: sbAmt,
+    status:          sb.chips_stack <= SB_AMOUNT ? "all_in" : "active",
+  }).eq("id", sb.id);
+
+  await supabase.from("poker_players").update({
+    chips_stack:     bb.chips_stack - bbAmt,
+    current_bet:     bbAmt,
+    total_bet_round: bbAmt,
+    status:          bb.chips_stack <= BB_AMOUNT ? "all_in" : "active",
+  }).eq("id", bb.id);
+
+  // 5. Actualizar sala
+  await supabase.from("poker_rooms").update({
+    status:               "playing",
+    phase:                "pre-flop",
+    community_cards:      [],
+    pot_total:            sbAmt + bbAmt,
+    dealer_seat:          activePlayers[newDealer].seat_index,
+    current_turn_user_id: activePlayers[firstIdx].user_id,
+    turn_started_at:      new Date().toISOString(),
+    deck_state:           deck,  // cartas restantes
+    sb_user_id:           sb.user_id,
+    bb_user_id:           bb.user_id,
+  }).eq("id", room.id);
+
+  // 6. Broadcast para que cada jugador cargue sus hole cards
+  await supabase.channel(`poker:${room.id}`).send({
+    type: "broadcast", event: "HAND_STARTED",
+    payload: {
+      dealerSeat:  activePlayers[newDealer].seat_index,
+      sbUserId:    sb.user_id,
+      bbUserId:    bb.user_id,
+      firstToAct:  activePlayers[firstIdx].user_id,
+      expiresAt:   Date.now() + 20_000,
+    },
+  });
+
+  setExpiresAt(Date.now() + 20_000);
+}
+
+
+
+
   return (
     <div style={{
       position: "relative", width: "100%", height: "100vh",
@@ -633,6 +732,10 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
           85%  { transform: translateY(0); opacity: 1; }
           100% { transform: translateY(-20px); opacity: 0; }
         }
+        @keyframes pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(34,197,94,0.4); }
+  50%       { box-shadow: 0 0 28px rgba(34,197,94,0.8); }
+}
       `}</style>
 
       {/* Mesa ovalada */}
@@ -746,11 +849,27 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
           </div>
         </div>
 
-        <div style={{
-          background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)",
-          borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 700, color: "#fbbf24",
-        }}>
-          {myPlayer ? `💰 ${myPlayer.chips_stack.toLocaleString()}` : `Saldo: ${profile.balance?.toLocaleString()}`}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Botón iniciar — solo visible para el host cuando hay 2+ jugadores */}
+          {canStart && (
+            <button onClick={startHand} style={{
+              padding: "8px 18px", borderRadius: 10, border: "none",
+              background: "linear-gradient(135deg, #22c55e, #16a34a)",
+              color: "#000", fontWeight: 800, fontSize: 13,
+              cursor: "pointer",
+              boxShadow: "0 0 16px rgba(34,197,94,0.4)",
+              animation: "pulse 1.5s ease-in-out infinite",
+            }}>
+              ▶ Iniciar partida
+            </button>
+          )}
+
+          <div style={{
+            background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)",
+            borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 700, color: "#fbbf24",
+          }}>
+            {myPlayer ? `💰 ${myPlayer.chips_stack.toLocaleString()}` : `Saldo: ${profile.balance?.toLocaleString()}`}
+          </div>
         </div>
       </div>
 
@@ -839,11 +958,30 @@ export default function PokerGame({ profile, balance, setBalance, onBack }) {
         setExpiresAt(payload.expiresAt);
         break;
 
-      case "HAND_STARTED":
+      /*case "HAND_STARTED":
         setExpiresAt(payload.expiresAt);
         setRevealedCards({});
         showToast("🃏", "Nueva mano", `Dealer: Asiento ${(payload.dealerSeat || 0) + 1}`);
-        break;
+        break;*/
+
+        case "HAND_STARTED":
+  setExpiresAt(payload.expiresAt);
+  setRevealedCards({});
+  // Cada jugador recarga sus propias hole cards (RLS devuelve solo las suyas)
+  supabase.from("poker_players_public")
+    .select("hole_cards")
+    .eq("room_id", activeRoom?.id)
+    .eq("user_id", profile.id)
+    .single()
+    .then(({ data }) => {
+      if (data?.hole_cards?.length) setMyHoleCards(data.hole_cards);
+    });
+  showToast("🃏", "¡Mano iniciada!", `Dealer: Asiento ${(payload.dealerSeat ?? 0) + 1}`);
+  break;
+
+
+
+
 
       case "PLAYER_ACTION": {
         const icons = { fold:"🗑", check:"✓", call:"📞", bet:"💰", raise:"⬆", all_in:"💥" };
