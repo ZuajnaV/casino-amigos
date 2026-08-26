@@ -23,8 +23,8 @@ export function usePokerRealtime(roomId, userId, onEvent) {
 
     // ── Canal público de la sala ─────────────────────────────
     channelRef.current = supabase
-      .channel(`poker:${roomId}`)
-      .on("broadcast", { event: "*" }, ({ event, payload }) => {
+  .channel(`poker:${roomId}`, { config: { broadcast: { self: true } } })
+  .on("broadcast", { event: "*" }, ({ event, payload }) => {
         onEvent?.(event, payload);
 
         // Re-cargar estado de sala/jugadores ante cualquier evento
