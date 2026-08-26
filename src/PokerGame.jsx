@@ -28,13 +28,14 @@ function parseCard(card) {
   return { rank, suit, display: RANK_DISPLAY[rank] || rank };
 }
 
+/*
 function api(path, body) {
   return fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   }).then(r => r.json());
-}
+}*/
 
 // ═══════════════════════════════════════════════════════════════
 //  COMPONENTE: Carta individual
@@ -360,6 +361,7 @@ function PokerLobby({ profile, balance, onJoinRoom, onCreateRoom }) {
     setLoading(false);
   }
 
+  /*
   async function createRoom() {
     setCreating(true);
     const res = await api("/api/poker/create", {
@@ -370,7 +372,36 @@ function PokerLobby({ profile, balance, onJoinRoom, onCreateRoom }) {
     });
     setCreating(false);
     if (res.room) onCreateRoom(res.room);
+  }*/
+
+  async function createRoom() {
+  setCreating(true);
+  try {
+    const { data: room, error } = await supabase
+      .from("poker_rooms")
+      .insert({
+        name:        `Mesa de ${profile.username}`,
+        small_blind: 500,
+        big_blind:   1000,
+        buy_in_min:  10000,
+        buy_in_max:  200000,
+        max_seats:   6,
+        status:      "waiting",
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    onCreateRoom(room);
+  } catch (e) {
+    console.error("Error creando mesa:", e.message);
+  } finally {
+    setCreating(false);
   }
+}
+
+
+
+
 
   return (
     <div style={{
@@ -529,6 +560,7 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
     setSitTarget(seatIndex);
   }
 
+  /*
   async function confirmBuyIn(amount, seatIndex) {
     setJoining(true);
     await api("/api/poker/join", {
@@ -539,7 +571,45 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
     });
     setSitTarget(null);
     setJoining(false);
+  }*/
+
+
+
+  async function confirmBuyIn(amount, seatIndex) {
+  setJoining(true);
+  try {
+    const { error } = await supabase.rpc("sit_at_poker_table", {
+      p_user_id:  profile.id,
+      p_room_id:  room.id,
+      p_seat:     seatIndex,
+      p_buy_in:   amount,
+      p_username: profile.username,
+      p_avatar:   profile.avatar || "🎰",
+    });
+    if (error) throw error;
+
+    // Ver si hay 2+ jugadores para iniciar
+    const { data: players } = await supabase
+      .from("poker_players")
+      .select("id")
+      .eq("room_id", room.id)
+      .neq("status", "sitting_out");
+
+    if (players?.length >= 2) {
+      await supabase.from("poker_rooms")
+        .update({ status: "playing" })
+        .eq("id", room.id);
+    }
+  } catch (e) {
+    console.error("Error al sentarse:", e.message);
+  } finally {
+    setSitTarget(null);
+    setJoining(false);
   }
+}
+
+
+
 
   return (
     <div style={{
@@ -826,6 +896,7 @@ export default function PokerGame({ profile, balance, setBalance, onBack }) {
   }
 
   // ── Salir de la sala ───────────────────────────────────────
+  /*
   async function leaveRoom() {
     if (activeRoom && profile) {
       await api("/api/poker/leave", { userId: profile.id, roomId: activeRoom.id });
@@ -833,7 +904,39 @@ export default function PokerGame({ profile, balance, setBalance, onBack }) {
     setActiveRoom(null);
     setMyHoleCards([]);
     setView("lobby");
+  }*/
+
+async function leaveRoom() {
+  if (activeRoom && profile) {
+    try {
+      const { data: player } = await supabase
+        .from("poker_players")
+        .select("chips_stack")
+        .eq("room_id", activeRoom.id)
+        .eq("user_id", profile.id)
+        .single();
+
+      if (player?.chips_stack > 0) {
+        const newBal = balance + player.chips_stack;
+        await supabase.from("profiles")
+          .update({ balance: newBal })
+          .eq("id", profile.id);
+        setBalance(newBal);
+      }
+
+      await supabase.from("poker_players")
+        .update({ status: "sitting_out", chips_stack: 0 })
+        .eq("room_id", activeRoom.id)
+        .eq("user_id", profile.id);
+    } catch (e) {
+      console.error("Error al salir:", e.message);
+    }
   }
+  setActiveRoom(null);
+  setMyHoleCards([]);
+  setView("lobby");
+}
+
 
   // ── Enviar acción ──────────────────────────────────────────
   async function handleAction(action, amount = 0) {
