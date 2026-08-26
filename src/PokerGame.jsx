@@ -536,7 +536,8 @@ function BuyInDialog({ room, seatIndex, balance, onConfirm, onCancel }) {
 //  COMPONENTE: Mesa de juego
 // ═══════════════════════════════════════════════════════════════
 //function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast }) {
-function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast, onBack }) {
+//function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast, onBack }) {
+function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast, onBack, onHandStarted }) {
   const myPlayer = players.find(p => p.user_id === profile.id);
   const isMyTurn = room?.current_turn_user_id === profile.id;
   const [sitTarget, setSitTarget] = useState(null);
@@ -658,19 +659,27 @@ async function startHand() {
   }).eq("id", room.id);
 
   // 6. Broadcast para que cada jugador cargue sus hole cards
+  const handStartedPayload = {
+    dealerSeat:  activePlayers[newDealer].seat_index,
+    sbUserId:    sb.user_id,
+    bbUserId:    bb.user_id,
+    firstToAct:  activePlayers[firstIdx].user_id,
+    expiresAt:   Date.now() + 20_000,
+  };
+
   await supabase.channel(`poker:${room.id}`).send({
     type: "broadcast", event: "HAND_STARTED",
-    payload: {
-      dealerSeat:  activePlayers[newDealer].seat_index,
-      sbUserId:    sb.user_id,
-      bbUserId:    bb.user_id,
-      firstToAct:  activePlayers[firstIdx].user_id,
-      expiresAt:   Date.now() + 20_000,
-    },
+    payload: handStartedPayload,
   });
+
+  // El host no recibe su propio broadcast por defecto en Supabase,
+  // así que actualizamos su estado manualmente aquí.
+  onHandStarted?.(handStartedPayload);
 
   setExpiresAt(Date.now() + 20_000);
 }
+
+
 
 
 
@@ -796,52 +805,58 @@ async function startHand() {
 
       {/* Header */}
       <div style={{
-        position: "absolute", top: 0, left: 0, right: 0,
+        position: "absolute", top: 0, left: 0, right: 0, height: 56,
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "10px 16px",
-        background: "linear-gradient(180deg, rgba(5,8,16,0.95) 0%, transparent 100%)",
+        padding: "0 16px",
+        background: "rgba(5,8,16,0.97)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
         zIndex: 30,
       }}>
-                <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6 }}>
           <button onClick={onLeave} style={{
-            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 8, color: "#64748b", fontSize: 12, padding: "6px 12px", cursor: "pointer",
+            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 8, color: "#e2e8f0", fontSize: 12, fontWeight: 700, padding: "6px 12px", cursor: "pointer",
           }}>← Salir</button>
           <button onClick={onBack} style={{
-            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 8, color: "#64748b", fontSize: 12, padding: "6px 12px", cursor: "pointer",
+            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 8, color: "#e2e8f0", fontSize: 12, fontWeight: 700, padding: "6px 12px", cursor: "pointer",
           }}>🏠 Volver</button>
         </div>
+
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>{room?.name}</div>
-          <div style={{ fontSize: 10, color: "#475569" }}>
+          <div style={{ fontSize: 10, color: "#94a3b8" }}>
             BB {room?.big_blind?.toLocaleString()} · {players.length} jugadores
           </div>
         </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {/* Botón iniciar — solo visible para el host cuando hay 2+ jugadores */}
-          {canStart && (
-            <button onClick={startHand} style={{
-              padding: "8px 18px", borderRadius: 10, border: "none",
-              background: "linear-gradient(135deg, #22c55e, #16a34a)",
-              color: "#000", fontWeight: 800, fontSize: 13,
-              cursor: "pointer",
-              boxShadow: "0 0 16px rgba(34,197,94,0.4)",
-              animation: "pulse 1.5s ease-in-out infinite",
-            }}>
-              ▶ Iniciar partida
-            </button>
-          )}
-
-          <div style={{
-            background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)",
-            borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 700, color: "#fbbf24",
-          }}>
-            {myPlayer ? `💰 ${myPlayer.chips_stack.toLocaleString()}` : `Saldo: ${profile.balance?.toLocaleString()}`}
-          </div>
+        <div style={{
+          background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)",
+          borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 700, color: "#fbbf24",
+        }}>
+          {myPlayer ? `💰 ${myPlayer.chips_stack.toLocaleString()}` : `Saldo: ${profile.balance?.toLocaleString()}`}
         </div>
       </div>
+
+      {/* Barra de inicio — siempre debajo del header, nunca lo atraviesa */}
+      {canStart && (
+        <div style={{
+          position: "absolute", top: 56, left: 0, right: 0,
+          display: "flex", justifyContent: "center", padding: "10px 0",
+          zIndex: 29,
+        }}>
+          <button onClick={startHand} style={{
+            padding: "10px 22px", borderRadius: 10, border: "none",
+            background: "linear-gradient(135deg, #22c55e, #16a34a)",
+            color: "#000", fontWeight: 800, fontSize: 14,
+            cursor: "pointer",
+            boxShadow: "0 0 16px rgba(34,197,94,0.4)",
+            animation: "pulse 1.5s ease-in-out infinite",
+          }}>
+            ▶ Iniciar partida
+          </button>
+        </div>
+      )}
 
       {/* Toast de eventos */}
       {toast && (
@@ -917,6 +932,10 @@ export default function PokerGame({ profile, balance, setBalance, onBack }) {
   }
 
   // ── Handler de eventos Realtime ────────────────────────────
+    function syncHoleCardsNow(payload) {
+    handleEvent("HAND_STARTED", payload);
+  }
+
   function handleEvent(event, payload) {
     switch (event) {
       case "YOUR_HOLE_CARDS":
@@ -1093,6 +1112,7 @@ async function leaveRoom() {
           onAction={handleAction}
           onLeave={leaveRoom}
           onBack={onBack}
+          onHandStarted={syncHoleCardsNow}
           toast={toast}
         />
       )}
