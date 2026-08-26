@@ -148,7 +148,8 @@ function PlayerSeat({
 
   const isFolded  = player.status === "folded";
   const isAllIn   = player.status === "all_in";
-  const isDealerS = player.seat_index === dealerSeat;
+  //const isDealerS = player.seat_index === dealerSeat;
+  const isDealerS = dealerSeat != null && player.seat_index === dealerSeat;
   const isSB      = player.user_id === sbUserId;
   const isBB      = player.user_id === bbUserId;
   const cards     = isMe ? (myHoleCards || []) : (revealedCards?.[player.user_id] || []);
@@ -543,7 +544,8 @@ function BuyInDialog({ room, seatIndex, balance, onConfirm, onCancel }) {
 // ═══════════════════════════════════════════════════════════════
 //  COMPONENTE: Mesa de juego
 // ═══════════════════════════════════════════════════════════════
-function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast }) {
+//function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast }) {
+function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast, onBack }) {
   const myPlayer = players.find(p => p.user_id === profile.id);
   const isMyTurn = room?.current_turn_user_id === profile.id;
   const [sitTarget, setSitTarget] = useState(null);
@@ -560,21 +562,6 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
     setSitTarget(seatIndex);
   }
 
-  /*
-  async function confirmBuyIn(amount, seatIndex) {
-    setJoining(true);
-    await api("/api/poker/join", {
-      userId: profile.id, roomId: room.id,
-      seatIndex, buyIn: amount,
-      username: profile.username,
-      avatar: profile.avatar || "🎰",
-    });
-    setSitTarget(null);
-    setJoining(false);
-  }*/
-
-
-
   async function confirmBuyIn(amount, seatIndex) {
   setJoining(true);
   try {
@@ -587,19 +574,6 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
       p_avatar:   profile.avatar || "🎰",
     });
     if (error) throw error;
-
-    // Ver si hay 2+ jugadores para iniciar
-    const { data: players } = await supabase
-      .from("poker_players")
-      .select("id")
-      .eq("room_id", room.id)
-      .neq("status", "sitting_out");
-
-    if (players?.length >= 2) {
-      await supabase.from("poker_rooms")
-        .update({ status: "playing" })
-        .eq("id", room.id);
-    }
   } catch (e) {
     console.error("Error al sentarse:", e.message);
   } finally {
@@ -837,11 +811,16 @@ async function startHand() {
         background: "linear-gradient(180deg, rgba(5,8,16,0.95) 0%, transparent 100%)",
         zIndex: 30,
       }}>
-        <button onClick={onLeave} style={{
-          background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 8, color: "#64748b", fontSize: 12, padding: "6px 12px", cursor: "pointer",
-        }}>← Salir</button>
-
+                <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={onLeave} style={{
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 8, color: "#64748b", fontSize: 12, padding: "6px 12px", cursor: "pointer",
+          }}>← Salir</button>
+          <button onClick={onBack} style={{
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 8, color: "#64748b", fontSize: 12, padding: "6px 12px", cursor: "pointer",
+          }}>🏠 Volver</button>
+        </div>
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>{room?.name}</div>
           <div style={{ fontSize: 10, color: "#475569" }}>
