@@ -70,13 +70,18 @@ export function usePokerRealtime(roomId, userId, onEvent) {
   }, [roomId, userId]);
 
   // ── Helpers de acción ────────────────────────────────────────
-  async function sendAction(action, amount = 0) {
-    await fetch("/api/poker/action", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ userId, roomId, action, amount }),
-    });
+async function sendAction(action, amount = 0) {
+  const res = await fetch("/api/poker/action", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ userId, roomId, action, amount }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error("Error en acción de póquer:", res.status, err.error);
   }
+  return res;
+}
 
   return { room, players, sendAction, reload: loadState };
 }
