@@ -604,9 +604,39 @@ async function startHand() {
   }
 
   // 2. Rotar dealer
+
+
+
+
+    // 2. Rotar dealer
   const prevDealer = room.dealer_seat ?? -1;
   const newDealer  = (prevDealer + 1) % activePlayers.length;
-  /*
+
+  let sbIdx, bbIdx, firstIdx;
+
+  if (activePlayers.length === 2) {
+    // Heads-up: el dealer es SB y actúa primero pre-flop
+    sbIdx = newDealer;
+    bbIdx = (newDealer + 1) % 2;
+    firstIdx = newDealer;
+  } else {
+    sbIdx = (newDealer + 1) % activePlayers.length;
+    bbIdx = (newDealer + 2) % activePlayers.length;
+    firstIdx = (newDealer + 3) % activePlayers.length;
+  }
+
+
+
+
+
+
+
+
+
+/*
+  const prevDealer = room.dealer_seat ?? -1;
+  const newDealer  = (prevDealer + 1) % activePlayers.length;
+  
   const sbIdx      = (newDealer + 1) % activePlayers.length;
   const bbIdx      = (newDealer + 2) % activePlayers.length;
   const firstIdx   = (newDealer + 3) % activePlayers.length;
