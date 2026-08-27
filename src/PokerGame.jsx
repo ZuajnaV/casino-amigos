@@ -722,8 +722,6 @@ async function startHand() {
   // El host no recibe su propio broadcast por defecto en Supabase,
   // así que actualizamos su estado manualmente aquí.
   onHandStarted?.(handStartedPayload);
-
-  setExpiresAt(Date.now() + 20_000);
 }
 
 
