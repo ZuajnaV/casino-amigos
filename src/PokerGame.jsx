@@ -543,6 +543,38 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
   const [sitTarget, setSitTarget] = useState(null);
   const [joining,   setJoining]   = useState(false);
 
+
+
+
+
+
+
+    // Auto-acción si se acaba el tiempo del turno (el servidor no puede
+  // mantener temporizadores vivos entre invocaciones serverless)
+  useEffect(() => {
+    if (!isMyTurn || !expiresAt) return;
+    const msLeft = expiresAt - Date.now();
+    if (msLeft <= 0) return;
+
+    const timer = setTimeout(() => {
+      const callAmt = Math.max(0, (room?.current_high_bet || 0) - (myPlayer?.current_bet || 0));
+      onAction(callAmt === 0 ? "check" : "fold");
+    }, msLeft + 300); // pequeño margen de gracia
+
+    return () => clearTimeout(timer);
+  }, [isMyTurn, expiresAt]);
+
+
+
+
+
+
+
+
+
+
+
+
   const maxSeats = room?.max_seats || 6;
   const seats    = Array.from({ length: maxSeats }, (_, i) => {
     const player = players.find(p => p.seat_index === i);
