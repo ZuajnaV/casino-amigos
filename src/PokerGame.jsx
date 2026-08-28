@@ -535,18 +535,11 @@ function BuyInDialog({ room, seatIndex, balance, onConfirm, onCancel }) {
 // ═══════════════════════════════════════════════════════════════
 //  COMPONENTE: Mesa de juego
 // ═══════════════════════════════════════════════════════════════
-//function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast }) {
-//function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast, onBack }) {
 function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, onLeave, revealedCards, toast, onBack, onHandStarted }) {
   const myPlayer = players.find(p => p.user_id === profile.id);
   const isMyTurn = room?.current_turn_user_id === profile.id;
   const [sitTarget, setSitTarget] = useState(null);
   const [joining,   setJoining]   = useState(false);
-
-
-
-
-
 
 
     // Auto-acción si se acaba el tiempo del turno (el servidor no puede
@@ -563,16 +556,6 @@ function PokerTable({ room, players, profile, myHoleCards, expiresAt, onAction, 
 
     return () => clearTimeout(timer);
   }, [isMyTurn, expiresAt]);
-
-
-
-
-
-
-
-
-
-
 
 
   const maxSeats = room?.max_seats || 6;
